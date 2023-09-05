@@ -20,6 +20,7 @@ import com.hazelcast.internal.util.Preconditions;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.spi.annotation.PrivateApi;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -30,10 +31,11 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 /**
  * Describes a single resource to deploy to the Jet cluster.
- * TODO - agreed will be exposed, but migrated to an {@code internal} package
+ * TODO: decide whether to expose this -- based on later notes, probably not
  *
  * @since Jet 3.0
- */public class ResourceConfig implements IdentifiedDataSerializable {
+ */
+public class ResourceConfig implements IdentifiedDataSerializable {
 
     private URL url;
     private String id;
@@ -49,7 +51,7 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
      * @param id            id of the resource
      * @param resourceType  type of the resource
      */
-    public ResourceConfig(@Nonnull URL url, @Nonnull String id, @Nonnull ResourceType resourceType) {
+    ResourceConfig(@Nonnull URL url, @Nonnull String id, @Nonnull ResourceType resourceType) {
         Preconditions.checkNotNull(url, "url");
         Preconditions.checkNotNull(resourceType, "resourceType");
         Preconditions.checkHasText(id, "id cannot be null or empty");

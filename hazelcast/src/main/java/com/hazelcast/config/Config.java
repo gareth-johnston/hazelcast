@@ -168,8 +168,6 @@ public class Config {
             Collections.singletonMap(DEFAULT_DEVICE_NAME, new LocalDeviceConfig())
     );
 
-    private final Map<String, NamespaceConfig> namespaceConfigs = new ConcurrentHashMap<>();
-
     // @since 3.12
     private AdvancedNetworkConfig advancedNetworkConfig = new AdvancedNetworkConfig();
 
