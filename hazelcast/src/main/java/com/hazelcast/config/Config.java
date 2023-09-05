@@ -168,6 +168,8 @@ public class Config {
             Collections.singletonMap(DEFAULT_DEVICE_NAME, new LocalDeviceConfig())
     );
 
+    private final Map<String, NamespaceConfig> namespaceConfigs = new ConcurrentHashMap<>();
+
     // @since 3.12
     private AdvancedNetworkConfig advancedNetworkConfig = new AdvancedNetworkConfig();
 
@@ -3223,6 +3225,17 @@ public class Config {
             return new DataConnectionConfigReadOnly(config);
         }
         return new DataConnectionConfigReadOnly(getDataConnectionConfig("default"));
+    }
+
+    // dynamic config semantics: add-or-replace namespace config
+    public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {
+        namespaceConfigs.put(namespaceConfig.getName(), namespaceConfig);
+        return this;
+    }
+
+    public Config removeNamespaceConfig(String namespaceName) {
+        namespaceConfigs.remove(namespaceName);
+        return this;
     }
 
     /**
