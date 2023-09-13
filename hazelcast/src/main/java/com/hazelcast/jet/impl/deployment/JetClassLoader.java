@@ -16,33 +16,42 @@
 
 package com.hazelcast.jet.impl.deployment;
 
+import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.impl.JobRepository;
+import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.map.IMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.function.Supplier;
+import java.util.zip.InflaterInputStream;
 
-import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
 import static com.hazelcast.jet.Util.idToString;
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
+import static com.hazelcast.jet.impl.util.Util.uncheckCall;
 
-public class JetClassLoader extends MapResourceClassLoader {
+public class JetClassLoader extends JetDelegatingClassLoader {
 
     private static final String JOB_URL_PROTOCOL = "jet-job-resource";
 
     private final long jobId;
     private final String jobName;
+    private final Supplier<IMap<String, byte[]>> resourcesSupplier;
     private final ILogger logger;
-    private final URLFactory urlFactory;
+    private final JobResourceURLStreamHandler jobResourceURLStreamHandler;
+
+    private volatile boolean isShutdown;
 
     public JetClassLoader(
             @Nonnull ILogger logger,
@@ -51,15 +60,91 @@ public class JetClassLoader extends MapResourceClassLoader {
             long jobId,
             @Nonnull JobRepository jobRepository
     ) {
-        super(parent, () -> jobRepository.getJobResources(jobId), false);
+        super(parent);
         this.jobName = jobName;
         this.jobId = jobId;
+        this.resourcesSupplier = Util.memoizeConcurrent(() -> jobRepository.getJobResources(jobId));
         this.logger = logger;
-        this.urlFactory = resource -> new URL(JOB_URL_PROTOCOL, null, -1, resource, new JobResourceURLStreamHandler());
+        this.jobResourceURLStreamHandler = new JobResourceURLStreamHandler();
     }
 
     @Override
-    boolean checkShutdown(String resource) {
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        if (isEmpty(name)) {
+            return null;
+        }
+        InputStream classBytesStream = resourceStream(toClassResourceId(name));
+        if (classBytesStream == null) {
+            throw new ClassNotFoundException(name + ". Add it using " + JobConfig.class.getSimpleName()
+                    + " or start all members with it on classpath");
+        }
+        byte[] classBytes = uncheckCall(() -> IOUtil.toByteArray(classBytesStream));
+        definePackage(name);
+        return defineClass(name, classBytes, 0, classBytes.length);
+    }
+
+    /**
+     * Defines the package if it is not already defined for the given class
+     * name.
+     *
+     * @param className the class name
+     */
+    private void definePackage(String className) {
+        if (isEmpty(className)) {
+            return;
+        }
+        int lastDotIndex = className.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            return;
+        }
+        String packageName = className.substring(0, lastDotIndex);
+        if (getPackage(packageName) != null) {
+            return;
+        }
+        try {
+            definePackage(packageName, null, null, null, null, null, null, null);
+        } catch (IllegalArgumentException ignored) {
+        }
+    }
+
+    @Override
+    protected URL findResource(String name) {
+        if (checkShutdown(name) || isEmpty(name) || !resourcesSupplier.get().containsKey(classKeyName(name))) {
+            return null;
+        }
+        try {
+            return new URL(JOB_URL_PROTOCOL, null, -1, name, jobResourceURLStreamHandler);
+        } catch (MalformedURLException e) {
+            // this should never happen with custom URLStreamHandler
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected Enumeration<URL> findResources(String name) {
+        return new SingleURLEnumeration(findResource(name));
+    }
+
+    public void shutdown() {
+        isShutdown = true;
+    }
+
+    public boolean isShutdown() {
+        return isShutdown;
+    }
+
+    private InputStream resourceStream(String name) {
+        if (checkShutdown(name)) {
+            return null;
+        }
+        byte[] classData = resourcesSupplier.get().get(classKeyName(name));
+        if (classData == null) {
+            return null;
+        }
+        return new InflaterInputStream(new ByteArrayInputStream(classData));
+    }
+
+    private boolean checkShutdown(String resource) {
         if (!isShutdown) {
             return false;
         }
@@ -75,28 +160,8 @@ public class JetClassLoader extends MapResourceClassLoader {
         return true;
     }
 
-    @Override
-    protected URL findResource(String name) {
-        if (checkShutdown(name) || isNullOrEmpty(name) || !resourcesSupplier.get().containsKey(classKeyName(name))) {
-            return null;
-        }
-        try {
-            return urlFactory.create(name);
-        } catch (MalformedURLException e) {
-            // this should never happen with custom URLStreamHandler
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected Enumeration<URL> findResources(String name) {
-        return Collections.enumeration(List.of(findResource(name)));
-    }
-
-    @Override
-    ClassNotFoundException newClassNotFoundException(String name) {
-        return new ClassNotFoundException(name + ". Add it using " + JobConfig.class.getSimpleName()
-                + " or start all members with it on classpath");
+    private static boolean isEmpty(String className) {
+        return className == null || className.isEmpty();
     }
 
     private final class JobResourceURLStreamHandler extends URLStreamHandler {
@@ -120,6 +185,32 @@ public class JetClassLoader extends MapResourceClassLoader {
         @Override
         public InputStream getInputStream() {
             return resourceStream(url.getFile());
+        }
+    }
+
+    private static final class SingleURLEnumeration implements Enumeration<URL> {
+
+        private URL url;
+
+        private SingleURLEnumeration(URL url) {
+            this.url = url;
+        }
+
+        @Override
+        public boolean hasMoreElements() {
+            return url != null;
+        }
+
+        @Override
+        public URL nextElement() {
+            if (url == null) {
+                throw new NoSuchElementException();
+            }
+            try {
+                return url;
+            } finally {
+                url = null;
+            }
         }
     }
 
