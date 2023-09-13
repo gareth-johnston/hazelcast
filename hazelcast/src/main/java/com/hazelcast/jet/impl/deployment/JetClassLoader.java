@@ -21,7 +21,6 @@ import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.map.IMap;
-import com.hazelcast.spi.impl.NodeEngine;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,7 +53,7 @@ public class JetClassLoader extends JetDelegatingClassLoader {
     private volatile boolean isShutdown;
 
     public JetClassLoader(
-            @Nonnull NodeEngine nodeEngine,
+            @Nonnull ILogger logger,
             @Nullable ClassLoader parent,
             @Nullable String jobName,
             long jobId,
@@ -64,7 +63,7 @@ public class JetClassLoader extends JetDelegatingClassLoader {
         this.jobName = jobName;
         this.jobId = jobId;
         this.resourcesSupplier = Util.memoizeConcurrent(() -> jobRepository.getJobResources(jobId));
-        this.logger = nodeEngine.getLogger(getClass());
+        this.logger = logger;
         this.jobResourceURLStreamHandler = new JobResourceURLStreamHandler();
     }
 
