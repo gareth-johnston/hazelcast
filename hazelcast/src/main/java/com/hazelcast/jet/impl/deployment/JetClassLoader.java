@@ -16,41 +16,42 @@
 
 package com.hazelcast.jet.impl.deployment;
 
+<<<<<<< Upstream, based on master
 import com.hazelcast.jet.config.JobConfig;
+=======
+>>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.logging.ILogger;
-import com.hazelcast.map.IMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+<<<<<<< Upstream, based on master
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+=======
+>>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.util.Enumeration;
-import java.util.NoSuchElementException;
-import java.util.function.Supplier;
-import java.util.zip.InflaterInputStream;
 
 import static com.hazelcast.jet.Util.idToString;
+<<<<<<< Upstream, based on master
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
+=======
+>>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
 
-public class JetClassLoader extends JetDelegatingClassLoader {
+public class JetClassLoader extends AbstractClassLoader {
 
     private static final String JOB_URL_PROTOCOL = "jet-job-resource";
 
     private final long jobId;
     private final String jobName;
-    private final Supplier<IMap<String, byte[]>> resourcesSupplier;
     private final ILogger logger;
     private final JobResourceURLStreamHandler jobResourceURLStreamHandler;
-
-    private volatile boolean isShutdown;
 
     public JetClassLoader(
             @Nonnull ILogger logger,
@@ -59,15 +60,15 @@ public class JetClassLoader extends JetDelegatingClassLoader {
             long jobId,
             @Nonnull JobRepository jobRepository
     ) {
-        super(parent);
+        super(parent, Util.memoizeConcurrent(() -> jobRepository.getJobResources(jobId)));
         this.jobName = jobName;
         this.jobId = jobId;
-        this.resourcesSupplier = Util.memoizeConcurrent(() -> jobRepository.getJobResources(jobId));
         this.logger = logger;
         this.jobResourceURLStreamHandler = new JobResourceURLStreamHandler();
     }
 
     @Override
+<<<<<<< Upstream, based on master
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         if (isEmpty(name)) {
             return null;
@@ -147,6 +148,9 @@ public class JetClassLoader extends JetDelegatingClassLoader {
     }
 
     private boolean checkShutdown(String resource) {
+=======
+    boolean checkShutdown(String resource) {
+>>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
         if (!isShutdown) {
             return false;
         }
@@ -162,8 +166,9 @@ public class JetClassLoader extends JetDelegatingClassLoader {
         return true;
     }
 
-    private static boolean isEmpty(String className) {
-        return className == null || className.isEmpty();
+    @Override
+    protected URL createUrlForName(String name) throws MalformedURLException {
+        return new URL(JOB_URL_PROTOCOL, null, -1, name, jobResourceURLStreamHandler);
     }
 
     private final class JobResourceURLStreamHandler extends URLStreamHandler {
@@ -187,32 +192,6 @@ public class JetClassLoader extends JetDelegatingClassLoader {
         @Override
         public InputStream getInputStream() {
             return resourceStream(url.getFile());
-        }
-    }
-
-    private static final class SingleURLEnumeration implements Enumeration<URL> {
-
-        private URL url;
-
-        private SingleURLEnumeration(URL url) {
-            this.url = url;
-        }
-
-        @Override
-        public boolean hasMoreElements() {
-            return url != null;
-        }
-
-        @Override
-        public URL nextElement() {
-            if (url == null) {
-                throw new NoSuchElementException();
-            }
-            try {
-                return url;
-            } finally {
-                url = null;
-            }
         }
     }
 
