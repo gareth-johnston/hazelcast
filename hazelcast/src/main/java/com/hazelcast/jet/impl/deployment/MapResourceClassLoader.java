@@ -65,7 +65,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         ClassLoader.registerAsParallelCapable();
     }
 
-    public MapResourceClassLoader(ClassLoader parent,
+    protected MapResourceClassLoader(ClassLoader parent,
                                      @Nonnull Supplier<? extends Map<String, byte[]>> resourcesSupplier,
                                      boolean childFirst) {
         super(parent);
