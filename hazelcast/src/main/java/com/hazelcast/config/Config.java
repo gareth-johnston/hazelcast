@@ -3238,6 +3238,11 @@ public class Config {
         return this;
     }
 
+    Map<String, NamespaceConfig> getNamespaceConfigs() {
+        // TODO probably immutable deep copy?
+        return Collections.unmodifiableMap(namespaceConfigs);
+    }
+
     /**
      * Gets the TpcConfig. Can't return null.
      *

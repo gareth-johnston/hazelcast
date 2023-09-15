@@ -19,6 +19,8 @@ package com.hazelcast.config;
 import com.hazelcast.internal.config.ServicesConfig;
 import com.hazelcast.spi.annotation.PrivateApi;
 
+import java.util.Map;
+
 /**
  * Private API for accessing configuration at runtime
  *
@@ -44,5 +46,9 @@ public final class ConfigAccessor {
 
     public static boolean isInstanceTrackingEnabledSet(Config config) {
         return config.getInstanceTrackingConfig().isEnabledSet;
+    }
+
+    public static Map<String, NamespaceConfig> getNamespaceConfigs(Config config) {
+       return config.getNamespaceConfigs();
     }
 }

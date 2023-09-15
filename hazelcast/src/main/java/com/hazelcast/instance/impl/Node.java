@@ -26,12 +26,14 @@ import com.hazelcast.cluster.Member;
 import com.hazelcast.cluster.MembershipListener;
 import com.hazelcast.cluster.impl.MemberImpl;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.DiscoveryConfig;
 import com.hazelcast.config.DiscoveryStrategyConfig;
 import com.hazelcast.config.EndpointConfig;
 import com.hazelcast.config.JoinConfig;
 import com.hazelcast.config.ListenerConfig;
 import com.hazelcast.config.MemberAttributeConfig;
+import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.UserCodeDeploymentConfig;
 import com.hazelcast.core.DistributedObjectListener;
 import com.hazelcast.core.HazelcastInstanceAware;
@@ -321,6 +323,12 @@ public class Node {
     }
 
     private static ClassLoader getConfigClassloader(Config config) {
+        Map<String, NamespaceConfig> staticNsConfig = ConfigAccessor.getNamespaceConfigs(config);
+        // todo: create the NamespaceAwareClassLoader and set its parent to either the UserCodeDeploymentClassLoader
+        //  (if enabled), or the config.getClassLoader().
+
+        // todo: JetClassLoader requires an ILogger
+
         UserCodeDeploymentConfig userCodeDeploymentConfig = config.getUserCodeDeploymentConfig();
         ClassLoader classLoader;
         if (userCodeDeploymentConfig.isEnabled()) {
