@@ -17,11 +17,14 @@
 package com.hazelcast.jet.impl.deployment;
 
 <<<<<<< Upstream, based on master
+<<<<<<< Upstream, based on master
 import com.hazelcast.jet.config.JobConfig;
 =======
 >>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
+=======
+import com.hazelcast.jet.config.JobConfig;
+>>>>>>> 6df8853 More JetClassLoader refactoring.
 import com.hazelcast.jet.impl.JobRepository;
-import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.logging.ILogger;
 
 import javax.annotation.Nonnull;
@@ -36,22 +39,30 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 
+import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
 import static com.hazelcast.jet.Util.idToString;
+<<<<<<< Upstream, based on master
 <<<<<<< Upstream, based on master
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 =======
 >>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
+=======
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+>>>>>>> 6df8853 More JetClassLoader refactoring.
 
-public class JetClassLoader extends AbstractClassLoader {
+public class JetClassLoader extends MapResourceClassLoader {
 
     private static final String JOB_URL_PROTOCOL = "jet-job-resource";
 
     private final long jobId;
     private final String jobName;
     private final ILogger logger;
-    private final JobResourceURLStreamHandler jobResourceURLStreamHandler;
+    private final URLFactory urlFactory;
 
     public JetClassLoader(
             @Nonnull ILogger logger,
@@ -60,11 +71,11 @@ public class JetClassLoader extends AbstractClassLoader {
             long jobId,
             @Nonnull JobRepository jobRepository
     ) {
-        super(parent, Util.memoizeConcurrent(() -> jobRepository.getJobResources(jobId)));
+        super(parent, () -> jobRepository.getJobResources(jobId), false);
         this.jobName = jobName;
         this.jobId = jobId;
         this.logger = logger;
-        this.jobResourceURLStreamHandler = new JobResourceURLStreamHandler();
+        this.urlFactory = resource -> new URL(JOB_URL_PROTOCOL, null, -1, resource, new JobResourceURLStreamHandler());
     }
 
     @Override
@@ -167,8 +178,27 @@ public class JetClassLoader extends AbstractClassLoader {
     }
 
     @Override
-    protected URL createUrlForName(String name) throws MalformedURLException {
-        return new URL(JOB_URL_PROTOCOL, null, -1, name, jobResourceURLStreamHandler);
+    protected URL findResource(String name) {
+        if (checkShutdown(name) || isNullOrEmpty(name) || !resourcesSupplier.get().containsKey(classKeyName(name))) {
+            return null;
+        }
+        try {
+            return urlFactory.create(name);
+        } catch (MalformedURLException e) {
+            // this should never happen with custom URLStreamHandler
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected Enumeration<URL> findResources(String name) {
+        return Collections.enumeration(List.of(findResource(name)));
+    }
+
+    @Override
+    ClassNotFoundException newClassNotFoundException(String name) {
+        return new ClassNotFoundException(name + ". Add it using " + JobConfig.class.getSimpleName()
+                + " or start all members with it on classpath");
     }
 
     private final class JobResourceURLStreamHandler extends URLStreamHandler {
