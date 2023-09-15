@@ -39,7 +39,7 @@ public class NamespaceConfig implements NamedConfig {
         return name;
     }
 
-    public NamespaceConfig addResourceConfig(ResourceConfig resourceConfig) {
+    public NamespaceConfig addResource(ResourceConfig resourceConfig) {
         resourceConfigs.add(resourceConfig);
         return this;
     }

@@ -17,11 +17,9 @@
 package com.hazelcast.config;
 
 import com.hazelcast.internal.config.ServicesConfig;
-import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.spi.annotation.PrivateApi;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Private API for accessing configuration at runtime
@@ -52,13 +50,5 @@ public final class ConfigAccessor {
 
     public static Map<String, NamespaceConfig> getNamespaceConfigs(Config config) {
        return config.getNamespaceConfigs();
-    }
-
-    public static void setNamespaceConfigs(Config config, Map<String, NamespaceConfig> namespaceConfigs) {
-       config.setNamespaceConfigs(namespaceConfigs);
-    }
-
-    public static Set<ResourceConfig> getResourceConfigs(NamespaceConfig nsConfig) {
-        return nsConfig.getResourceConfigs();
     }
 }

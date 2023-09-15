@@ -168,6 +168,8 @@ public class Config {
             Collections.singletonMap(DEFAULT_DEVICE_NAME, new LocalDeviceConfig())
     );
 
+    private final Map<String, NamespaceConfig> namespaceConfigs = new ConcurrentHashMap<>();
+
     // @since 3.12
     private AdvancedNetworkConfig advancedNetworkConfig = new AdvancedNetworkConfig();
 
@@ -3239,11 +3241,6 @@ public class Config {
     Map<String, NamespaceConfig> getNamespaceConfigs() {
         // TODO probably immutable deep copy?
         return Collections.unmodifiableMap(namespaceConfigs);
-    }
-
-    void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
-        this.namespaceConfigs.clear();
-        this.namespaceConfigs.putAll(namespaceConfigs);
     }
 
     /**
