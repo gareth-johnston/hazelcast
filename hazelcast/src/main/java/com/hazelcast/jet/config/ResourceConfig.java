@@ -50,7 +50,7 @@ public class ResourceConfig implements IdentifiedDataSerializable {
      * @param id            id of the resource
      * @param resourceType  type of the resource
      */
-    ResourceConfig(@Nonnull URL url, @Nonnull String id, @Nonnull ResourceType resourceType) {
+    public ResourceConfig(@Nonnull URL url, @Nonnull String id, @Nonnull ResourceType resourceType) {
         Preconditions.checkNotNull(url, "url");
         Preconditions.checkNotNull(resourceType, "resourceType");
         Preconditions.checkHasText(id, "id cannot be null or empty");

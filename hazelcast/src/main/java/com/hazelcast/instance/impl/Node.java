@@ -68,6 +68,10 @@ import com.hazelcast.internal.dynamicconfig.DynamicConfigurationAwareConfig;
 import com.hazelcast.internal.management.ManagementCenterService;
 import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.hazelcast.internal.metrics.impl.MetricsConfigHelper;
+import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
+import com.hazelcast.internal.namespace.impl.NamespaceServiceImpl;
+import com.hazelcast.internal.namespace.impl.ResourceDefinitionImpl;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.Packet;
 import com.hazelcast.internal.partition.InternalPartitionService;
@@ -82,6 +86,7 @@ import com.hazelcast.internal.services.GracefulShutdownAwareService;
 import com.hazelcast.internal.usercodedeployment.UserCodeDeploymentClassLoader;
 import com.hazelcast.internal.util.Clock;
 import com.hazelcast.internal.util.FutureUtil;
+import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.logging.LoggingService;
@@ -107,16 +112,10 @@ import com.hazelcast.spi.properties.HazelcastProperties;
 import com.hazelcast.version.MemberVersion;
 import com.hazelcast.version.Version;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -323,12 +322,47 @@ public class Node {
     }
 
     private static ClassLoader getConfigClassloader(Config config) {
+        ClassLoader parent = getLegacyUCDClassLoader(config);
         Map<String, NamespaceConfig> staticNsConfig = ConfigAccessor.getNamespaceConfigs(config);
+        if (staticNsConfig.isEmpty()) {
+            return parent;
+        }
         // todo: create the NamespaceAwareClassLoader and set its parent to either the UserCodeDeploymentClassLoader
         //  (if enabled), or the config.getClassLoader().
+        NamespaceServiceImpl namespaceService = new NamespaceServiceImpl(parent);
+        staticNsConfig.forEach((nsName, nsConfig) -> {
+            namespaceService.addNamespace(nsName, resourceDefinitions(nsConfig));
+        });
+        return new NamespaceAwareClassLoader(parent, namespaceService);
+    }
 
-        // todo: JetClassLoader requires an ILogger
+    // todo move all namespace & resource reading out of this class
+    static Set<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
+        Set<ResourceDefinition> resources = new HashSet<>();
+        ConfigAccessor.getResourceConfigs(nsConfig).forEach(resourceConfig -> {
+            try (InputStream is = resourceConfig.getUrl().openStream()) {
+                byte[] payload = is.readAllBytes();
+                // todo implemented nested class reading
+                // todo implement other resource types (JARs, ZIPs etc)
+                ResourceDefinitionImpl resourceDefinition = new ResourceDefinitionImpl(
+                        resourceConfig.getId(),
+                        payload,
+                        ResourceType.CLASS);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Could not open stream for resource id " + resourceConfig.getId() +
+                        " and URL " + resourceConfig.getUrl(), e);
+            }
+        });
+        return resources;
+    }
 
+    /**
+     * If legacy user code deployment feature is enabled, then constructs a classloader to facilitate
+     * legacy UCD, otherwise returns the config's classloader.
+     * @param config
+     * @return
+     */
+    private static ClassLoader getLegacyUCDClassLoader(Config config) {
         UserCodeDeploymentConfig userCodeDeploymentConfig = config.getUserCodeDeploymentConfig();
         ClassLoader classLoader;
         if (userCodeDeploymentConfig.isEnabled()) {
