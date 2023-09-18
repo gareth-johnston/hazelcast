@@ -129,12 +129,18 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     void handleClass(String className, byte[] classBytes, Map<String, byte[]> resourceMap) {
-
-    }
-
-    // similar to a ClientUserCodeDeployment method
-    private void loadClassesFromJar(byte[] jarBytes, Map<String, byte[]> resourceMap) throws IOException {
-
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        OutputStream os = new DeflaterOutputStream(baos, true);
+        try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(classBytes);) {
+            IOUtil.drainTo(inputStream, compressor);
+            byte[] classDefinition = baos.toByteArray();
+            // todo: decide key format for the map resource supplier
+            resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to read class bytes for resource with id "
+                    + className, e);
+        }
     }
 
     private String extractClassName(JarEntry entry) {

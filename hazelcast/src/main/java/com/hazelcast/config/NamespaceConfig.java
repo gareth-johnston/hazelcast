@@ -17,8 +17,13 @@
 package com.hazelcast.config;
 
 import com.hazelcast.jet.config.ResourceConfig;
+import com.hazelcast.jet.config.ResourceType;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,7 +31,7 @@ public class NamespaceConfig implements NamedConfig {
 
     private String name;
 
-    private final Set<ResourceConfig> resourceConfigs = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Map<String, ResourceConfig> resourceConfigs = new ConcurrentHashMap<>();
 
     @Override
     public NamedConfig setName(String name) {
@@ -39,18 +44,25 @@ public class NamespaceConfig implements NamedConfig {
         return name;
     }
 
-    public NamespaceConfig addResource(ResourceConfig resourceConfig) {
-        resourceConfigs.add(resourceConfig);
+    public NamespaceConfig addClass(String className, File classFile) {
+        try {
+            // todo: is ResourceConfig an appropriate internal representation of resources until we need
+            //  to actually read them into byte[]'s and feed them to internal namespace classloaders impl?
+            //  If yes, definitely reusing `ResourceConfig` but making its constructor public is not a good option
+            resourceConfigs.put(className,
+                    new ResourceConfig(classFile.toURI().toURL(), className, ResourceType.CLASS));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
         return this;
     }
 
-    // todo: maybe remove(String id)?
-    public NamespaceConfig removeResourceConfig(ResourceConfig resourceConfig) {
-        resourceConfigs.remove(resourceConfig);
+    public NamespaceConfig removeResourceConfig(String id) {
+        resourceConfigs.remove(id);
         return this;
     }
 
     Set<ResourceConfig> getResourceConfigs() {
-        return Collections.unmodifiableSet(resourceConfigs);
+        return Collections.unmodifiableSet(new HashSet(resourceConfigs.values()));
     }
 }

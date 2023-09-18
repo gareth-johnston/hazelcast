@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -38,8 +37,8 @@ public class NamespaceServiceImplTest {
     }
 
     @Test
-    public void testLoadClassesFromJar() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        namespaceService.addNamespace("ns1", singletonResourceFromClassPath("ChildParent.jar",
+    public void testLoadClassesFromJar() throws Exception {
+        namespaceService.addNamespace("ns1", singletonJarResourceFromClassPath("ChildParent.jar",
                 "ChildParent.jar"));
         ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
         Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
@@ -48,7 +47,19 @@ public class NamespaceServiceImplTest {
         o = klass.getDeclaredConstructor().newInstance();
     }
 
-    Set<ResourceDefinition> singletonResourceFromClassPath(String id, String path) throws IOException {
+    @Test
+    public void testLoadClassFromClassFile() throws Exception {
+        // todo need a compiled class file in test resources, doesn't look like we have one
+        namespaceService.addNamespace("ns1", singletonJarResourceFromClassPath("ChildParent.jar",
+                "ChildParent.jar"));
+        ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
+        Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
+        Object o = klass.getDeclaredConstructor().newInstance();
+        klass = classLoader.loadClass("usercodedeployment.ChildClass");
+        o = klass.getDeclaredConstructor().newInstance();
+    }
+
+    Set<ResourceDefinition> singletonJarResourceFromClassPath(String id, String path) throws IOException {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(path);
         byte[] bytes = IOUtil.readFully(inputStream);
         return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
