@@ -15,12 +15,12 @@ public interface ResourceDefinition {
 
     /**
      * @return the type of the resource.
-     * todo replace ResourceType - it's private API
      */
     ResourceType type();
 
     /**
      * @return the contents of the resource.
+     * todo byte[] or input stream? if the latter, what is its lifecycle?
      */
     byte[] payload();
 }
