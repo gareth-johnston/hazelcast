@@ -45,7 +45,7 @@ import static com.hazelcast.internal.util.Preconditions.isNotNull;
 /**
  * Contains the configuration for an {@link IMap}.
  */
-public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versioned {
+public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versioned, NamespaceAwareConfig {
 
     /**
      * The minimum number of backups
@@ -146,6 +146,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
             .setSize(DEFAULT_MAX_SIZE);
     private TieredStoreConfig tieredStoreConfig = new TieredStoreConfig();
     private List<PartitioningAttributeConfig> partitioningAttributeConfigs;
+    private String namespace = DEFAULT_NAMESPACE;
 
     public MapConfig() {
     }
@@ -185,6 +186,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         this.eventJournalConfig = new EventJournalConfig(config.eventJournalConfig);
         this.tieredStoreConfig = new TieredStoreConfig(config.tieredStoreConfig);
         this.partitioningAttributeConfigs = new ArrayList<>(config.getPartitioningAttributeConfigs());
+        this.namespace = config.namespace;
     }
 
     /**
@@ -833,6 +835,17 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         checkNoNullInside(partitioningAttributeConfigs,
                 "PartitioningAttributeConfig elements can not be null");
         this.partitioningAttributeConfigs = partitioningAttributeConfigs;
+        return this;
+    }
+
+    @Nonnull
+    @Override
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public MapConfig setNamespace(String namespace) {
+        this.namespace = namespace;
         return this;
     }
 

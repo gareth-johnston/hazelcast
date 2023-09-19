@@ -54,6 +54,10 @@ public final class ConfigAccessor {
        return config.getNamespaceConfigs();
     }
 
+    public static void setNamespaceConfigs(Config config, Map<String, NamespaceConfig> namespaceConfigs) {
+       config.setNamespaceConfigs(namespaceConfigs);
+    }
+
     public static Set<ResourceConfig> getResourceConfigs(NamespaceConfig nsConfig) {
         return nsConfig.getResourceConfigs();
     }

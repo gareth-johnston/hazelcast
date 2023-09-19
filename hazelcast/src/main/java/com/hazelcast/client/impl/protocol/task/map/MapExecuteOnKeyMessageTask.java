@@ -19,7 +19,10 @@ package com.hazelcast.client.impl.protocol.task.map;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.MapExecuteOnKeyCodec;
 import com.hazelcast.instance.impl.Node;
+import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
+import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.map.EntryProcessor;
+import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.operation.MapOperation;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
@@ -74,7 +77,7 @@ public class MapExecuteOnKeyMessageTask
 
     @Override
     public String getMethodName() {
-        return SecurityInterceptorConstants.EXECUTE_ON_KEY;
+        return "executeOnKey";
     }
 
     @Override

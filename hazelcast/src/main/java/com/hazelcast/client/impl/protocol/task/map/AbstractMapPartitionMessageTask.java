@@ -19,10 +19,12 @@ package com.hazelcast.client.impl.protocol.task.map;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.task.AbstractPartitionMessageTask;
 import com.hazelcast.instance.impl.Node;
+import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
-import com.hazelcast.internal.nio.Connection;
+
+import java.util.concurrent.CompletableFuture;
 
 abstract class AbstractMapPartitionMessageTask<P> extends AbstractPartitionMessageTask<P> {
 
@@ -31,8 +33,31 @@ abstract class AbstractMapPartitionMessageTask<P> extends AbstractPartitionMessa
     }
 
     protected final MapOperationProvider getMapOperationProvider(String mapName) {
+        MapServiceContext mapServiceContext = getMapServiceContext();
+        return mapServiceContext.getMapOperationProvider(mapName);
+    }
+
+    protected MapServiceContext getMapServiceContext() {
         MapService mapService = getService(MapService.SERVICE_NAME);
         MapServiceContext mapServiceContext = mapService.getMapServiceContext();
-        return mapServiceContext.getMapOperationProvider(mapName);
+        return mapServiceContext;
+    }
+
+    @Override
+    protected CompletableFuture<Object> processInternal() {
+        onStartNsAwareSection();
+        try {
+            return super.processInternal();
+        } finally {
+            onCompleteNsAwareSection();
+        }
+    }
+
+    void onStartNsAwareSection() {
+        // todo
+    }
+
+    void onCompleteNsAwareSection() {
+        // todo
     }
 }
