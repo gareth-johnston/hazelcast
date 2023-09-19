@@ -360,8 +360,8 @@ public class Node {
                         ResourceType.CLASS);
                 resources.add(resourceDefinition);
             } catch (IOException e) {
-                throw new IllegalArgumentException("Could not open stream for resource id " + resourceConfig.getId() +
-                        " and URL " + resourceConfig.getUrl(), e);
+                throw new IllegalArgumentException("Could not open stream for resource id "
+                        + resourceConfig.getId() + " and URL " + resourceConfig.getUrl(), e);
             }
         });
         return resources;

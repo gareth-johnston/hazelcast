@@ -25,7 +25,9 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 
 /**
  * Test static namespace configuration, resource resolution and classloading end-to-end.
