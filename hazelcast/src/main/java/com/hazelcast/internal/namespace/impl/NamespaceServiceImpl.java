@@ -99,8 +99,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
-             JarInputStream inputStream = new JarInputStream(bais);)
-        {
+             JarInputStream inputStream = new JarInputStream(bais);) {
             JarEntry entry;
             do {
                 entry = inputStream.getNextJarEntry();

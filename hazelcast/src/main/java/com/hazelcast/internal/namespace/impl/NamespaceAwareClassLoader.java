@@ -25,7 +25,7 @@ package com.hazelcast.internal.namespace.impl;
  */
 public class NamespaceAwareClassLoader extends ClassLoader {
 
-    public static ThreadLocal<String> NAMESPACE_AWARE = new ThreadLocal<>();
+    public static final ThreadLocal<String> NAMESPACE_AWARE = new ThreadLocal<>();
 
     private final NamespaceServiceImpl namespaceService;
 
