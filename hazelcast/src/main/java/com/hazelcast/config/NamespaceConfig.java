@@ -33,8 +33,15 @@ public class NamespaceConfig implements NamedConfig {
 
     private final Map<String, ResourceConfig> resourceConfigs = new ConcurrentHashMap<>();
 
+    public NamespaceConfig() {
+    }
+
+    public NamespaceConfig(String name) {
+        this.name = name;
+    }
+
     @Override
-    public NamedConfig setName(String name) {
+    public NamespaceConfig setName(String name) {
         this.name = name;
         return this;
     }

@@ -321,14 +321,15 @@ public class Node {
         return clientEndpointConfig != null;
     }
 
-    private static ClassLoader getConfigClassloader(Config config) {
+    static ClassLoader getConfigClassloader(Config config) {
+        // determine a parent classloader: either the legacy
+        // UserCodeDeploymentClassLoader (if enabled), or config.getClassLoader().
         ClassLoader parent = getLegacyUCDClassLoader(config);
         Map<String, NamespaceConfig> staticNsConfig = ConfigAccessor.getNamespaceConfigs(config);
         if (staticNsConfig.isEmpty()) {
             return parent;
         }
-        // todo: create the NamespaceAwareClassLoader and set its parent to either the UserCodeDeploymentClassLoader
-        //  (if enabled), or the config.getClassLoader().
+        // create the NamespaceAwareClassLoader with the determined parent.
         NamespaceServiceImpl namespaceService = new NamespaceServiceImpl(parent);
         staticNsConfig.forEach((nsName, nsConfig) -> {
             namespaceService.addNamespace(nsName, resourceDefinitions(nsConfig));
@@ -348,6 +349,7 @@ public class Node {
                         resourceConfig.getId(),
                         payload,
                         ResourceType.CLASS);
+                resources.add(resourceDefinition);
             } catch (IOException e) {
                 throw new IllegalArgumentException("Could not open stream for resource id " + resourceConfig.getId() +
                         " and URL " + resourceConfig.getUrl(), e);
