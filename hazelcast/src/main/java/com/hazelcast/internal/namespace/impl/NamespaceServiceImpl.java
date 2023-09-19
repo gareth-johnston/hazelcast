@@ -119,7 +119,6 @@ public class NamespaceServiceImpl implements NamespaceService {
                 }
                 inputStream.closeEntry();
                 byte[] classDefinition = baos.toByteArray();
-                // todo: decide key format for the map resource supplier
                 resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
             } while (true);
         } catch (IOException e) {
@@ -130,17 +129,15 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     void handleClass(String className, byte[] classBytes, Map<String, byte[]> resourceMap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        OutputStream os = new DeflaterOutputStream(baos, true);
         try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos);
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(classBytes);) {
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(classBytes)) {
             IOUtil.drainTo(inputStream, compressor);
-            byte[] classDefinition = baos.toByteArray();
-            // todo: decide key format for the map resource supplier
-            resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read class bytes for resource with id "
                     + className, e);
         }
+        byte[] classDefinition = baos.toByteArray();
+        resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
     }
 
     private String extractClassName(JarEntry entry) {
