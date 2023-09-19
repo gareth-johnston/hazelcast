@@ -26,8 +26,6 @@ import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.operation.MapOperation;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
-import com.hazelcast.internal.nio.Connection;
-import com.hazelcast.security.SecurityInterceptorConstants;
 import com.hazelcast.security.permission.ActionConstants;
 import com.hazelcast.security.permission.MapPermission;
 import com.hazelcast.spi.impl.operationservice.Operation;
@@ -83,5 +81,23 @@ public class MapExecuteOnKeyMessageTask
     @Override
     public Object[] getParameters() {
         return new Object[]{parameters.key, parameters.entryProcessor};
+    }
+
+    void onStartNsAwareSection() {
+        if (nodeEngine.getNode().namespacesEnabled) {
+            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(parameters.name);
+            if (mapContainer != null) {
+                NamespaceThreadLocalContext.onStartNsAware(mapContainer.getMapConfig().getNamespace());
+            }
+        }
+    }
+
+    void onCompleteNsAwareSection() {
+        if (nodeEngine.getNode().namespacesEnabled) {
+            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(parameters.name);
+            if (mapContainer != null) {
+                NamespaceThreadLocalContext.onCompleteNsAware(mapContainer.getMapConfig().getNamespace());
+            }
+        }
     }
 }

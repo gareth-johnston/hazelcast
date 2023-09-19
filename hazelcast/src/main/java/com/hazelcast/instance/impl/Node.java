@@ -183,6 +183,8 @@ public class Node {
      */
     public final Address address;
     public final SecurityContext securityContext;
+    public volatile boolean namespacesEnabled;
+
     final ClusterTopologyIntentTracker clusterTopologyIntentTracker;
 
     private final ILogger logger;
@@ -217,6 +219,7 @@ public class Node {
         DynamicConfigurationAwareConfig config = new DynamicConfigurationAwareConfig(staticConfig, this.properties);
         this.hazelcastInstance = hazelcastInstance;
         this.config = config;
+        this.namespacesEnabled = ConfigAccessor.getNamespaceConfigs(config).size() > 0;
         this.configClassLoader = getConfigClassloader(config);
 
         String policy = properties.getString(SHUTDOWNHOOK_POLICY);

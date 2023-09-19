@@ -3243,6 +3243,11 @@ public class Config {
         return Collections.unmodifiableMap(namespaceConfigs);
     }
 
+    void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
+        this.namespaceConfigs.clear();
+        this.namespaceConfigs.putAll(namespaceConfigs);
+    }
+
     /**
      * Gets the TpcConfig. Can't return null.
      *

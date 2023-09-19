@@ -16,10 +16,15 @@
 
 package com.hazelcast.instance.impl;
 
+import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.NamespaceConfig;
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
+import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
+import com.hazelcast.map.EntryProcessor;
+import com.hazelcast.map.IMap;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -95,12 +100,38 @@ public class NamespaceAwareClassLoaderIntegrationTest {
 
     Class<?> tryLoadClass(String namespace, String className) throws Exception {
         if (namespace != null) {
-            NamespaceAwareClassLoader.NAMESPACE_AWARE.set("ns1");
+            NamespaceThreadLocalContext.onStartNsAware(namespace);
         }
         try {
             return nodeClassLoader.loadClass(className);
         } finally {
-            NamespaceAwareClassLoader.NAMESPACE_AWARE.remove();
+            NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+        }
+    }
+
+    @Test
+    public void testThatDoesNotBelongHere() throws Exception {
+        config.addNamespaceConfig(new NamespaceConfig("ns1")
+                .addClass("usercodedeployment.IncrementingEntryProcessor",
+                        new File("src/test/resources/usercodedeployment/IncrementingEntryProcessor.class")));
+        config.getMapConfig("map-ns1").setNamespace("ns1");
+        HazelcastInstance member1 = Hazelcast.newHazelcastInstance(config);
+        HazelcastInstance member2 = Hazelcast.newHazelcastInstance(config);
+        HazelcastInstance client = HazelcastClient.newHazelcastClient();
+        IMap<Integer, Integer> map = client.getMap("map-ns1");
+        // ensure the EntryProcessor can be deserialized on the member side
+        for (int i = 0; i < 100; i++) {
+            map.put(i, 1);
+        }
+        // use a different classloader with same config to instantiate the EntryProcessor
+        NamespaceAwareClassLoader nsClassLoader = (NamespaceAwareClassLoader) Node.getConfigClassloader(config);
+        Class<? extends EntryProcessor> incrEPClass = (Class<? extends EntryProcessor>)
+                nsClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor");
+        EntryProcessor incrEp = incrEPClass.getDeclaredConstructor().newInstance();
+        // invoke executeOnKey from client on all 100 keys
+        for (int i = 0; i < 100; i++) {
+            map.executeOnKey(i, incrEp);
+            System.out.println(map.get(i));
         }
     }
 }

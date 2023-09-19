@@ -67,20 +67,21 @@ public class NamespaceServiceImpl implements NamespaceService {
                 () -> resourceMap, true);
 
         MapResourceClassLoader removed = namespaceToClassLoader.put(nsName, updated);
-        if (removed != null) {
-            // todo: clean up of removed classloader???
-        }
+//        if (removed != null) {
+//            // todo: clean up of removed classloader???
+//        }
     }
 
     @Override
     public boolean removeNamespace(@Nonnull String nsName) {
         MapResourceClassLoader removed = namespaceToClassLoader.remove(nsName);
-        if (removed != null) {
-            // todo: clean up of removed classloader
-            return true;
-        } else {
-            return false;
-        }
+//        if (removed != null) {
+//            // todo: clean up of removed classloader
+//            return true;
+//        } else {
+//            return false;
+//        }
+        return removed != null;
     }
 
     void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
@@ -99,7 +100,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
-             JarInputStream inputStream = new JarInputStream(bais);) {
+             JarInputStream inputStream = new JarInputStream(bais)) {
             JarEntry entry;
             do {
                 entry = inputStream.getNextJarEntry();
@@ -112,7 +113,6 @@ public class NamespaceServiceImpl implements NamespaceService {
                     continue;
                 }
                 baos.reset();
-                OutputStream os = new DeflaterOutputStream(baos, true);
                 try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
                     IOUtil.drainTo(inputStream, compressor);
                 }
