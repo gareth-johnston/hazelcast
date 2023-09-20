@@ -17,6 +17,7 @@
 package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.internal.util.BiTuple;
 import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.jet.impl.util.IOUtil;
 import org.junit.Before;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class NamespaceServiceImplTest {
@@ -38,8 +40,8 @@ public class NamespaceServiceImplTest {
 
     @Test
     public void testLoadClassesFromJar() throws Exception {
-        namespaceService.addNamespace("ns1", singletonJarResourceFromClassPath("ChildParent.jar",
-                "ChildParent.jar"));
+        namespaceService.addNamespace("ns1", singletonJarResourceFromClassPath("usercodedeployment/ChildParent.jar",
+                "usercodedeployment/ChildParent.jar"));
         ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
         Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
         Object o = klass.getDeclaredConstructor().newInstance();
@@ -49,9 +51,9 @@ public class NamespaceServiceImplTest {
 
     @Test
     public void testLoadClassFromClassFile() throws Exception {
-        // todo need a compiled class file in test resources, doesn't look like we have one
-        namespaceService.addNamespace("ns1", singletonJarResourceFromClassPath("ChildParent.jar",
-                "ChildParent.jar"));
+        namespaceService.addNamespace("ns1", classResourcesFromClassPath(
+                BiTuple.of("usercodedeployment.ChildClass", "usercodedeployment/ChildClass.class"),
+                BiTuple.of("usercodedeployment.ParentClass", "usercodedeployment/ParentClass.class")));
         ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
         Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
         Object o = klass.getDeclaredConstructor().newInstance();
@@ -63,5 +65,16 @@ public class NamespaceServiceImplTest {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(path);
         byte[] bytes = IOUtil.readFully(inputStream);
         return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
+    }
+
+    Set<ResourceDefinition> classResourcesFromClassPath(BiTuple<String, String>... idPathTuples) throws IOException {
+        Set<ResourceDefinition> resources = new HashSet<>();
+        for (BiTuple<String, String> idPathTuple : idPathTuples) {
+            try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(idPathTuple.element2)) {
+                byte[] bytes = inputStream.readAllBytes();
+                resources.add(new ResourceDefinitionImpl(idPathTuple.element1, bytes, ResourceType.CLASS));
+            }
+        }
+        return resources;
     }
 }

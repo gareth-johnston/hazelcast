@@ -224,7 +224,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
     public void testWithMultipleMembers_anonymousAndInnerClasses() {
         ClientConfig clientConfig = new ClientConfig();
         ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig = new ClientUserCodeDeploymentConfig();
-        clientUserCodeDeploymentConfig.addJar("EntryProcessorWithAnonymousAndInner.jar");
+        clientUserCodeDeploymentConfig.addJar("usercodedeployment/EntryProcessorWithAnonymousAndInner.jar");
         clientConfig.setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig.setEnabled(true));
 
         Config config = createNodeConfig();
@@ -310,7 +310,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
         }
 
          */
-        clientUserCodeDeploymentConfig.addJar("ChildParent.jar");
+        clientUserCodeDeploymentConfig.addJar("usercodedeployment/ChildParent.jar");
         clientConfig.setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig.setEnabled(true));
 
         factory.newHazelcastInstance(createNodeConfig());

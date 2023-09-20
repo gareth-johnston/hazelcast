@@ -91,7 +91,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        config.addJar("IncrementingEntryProcessor.jar");
+        config.addJar("usercodedeployment/IncrementingEntryProcessor.jar");
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
         List<Map.Entry<String, byte[]>> list = service.getClassDefinitionList();
@@ -114,7 +114,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        config.setJarPaths(Collections.singletonList("IncrementingEntryProcessor.jar"));
+        config.setJarPaths(Collections.singletonList("usercodedeployment/IncrementingEntryProcessor.jar"));
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
         List<Map.Entry<String, byte[]>> list = service.getClassDefinitionList();
@@ -127,7 +127,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource("IncrementingEntryProcessor.jar");
+        URL resource = classLoader.getResource("usercodedeployment/IncrementingEntryProcessor.jar");
         config.addJar(resource.toExternalForm());
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
@@ -161,7 +161,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource("IncrementingEntryProcessor.jar");
+        URL resource = classLoader.getResource("usercodedeployment/IncrementingEntryProcessor.jar");
         File file = new File(resource.toURI());
         config.addJar(file);
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
@@ -184,7 +184,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource("EntryProcessorWithAnonymousAndInner.jar");
+        URL resource = classLoader.getResource("usercodedeployment/EntryProcessorWithAnonymousAndInner.jar");
         File file = new File(resource.toURI());
         config.addJar(file);
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);

@@ -53,9 +53,9 @@ public class MapResourceClassLoaderTest {
     @Before
     public void setup() throws IOException {
         parentClassLoader = this.getClass().getClassLoader();
-        loadClassesFromJar("ChildParent.jar");
-        loadClassesFromJar("IncrementingEntryProcessor.jar");
-        loadClassesFromJar("ShadedClasses.jar");
+        loadClassesFromJar("usercodedeployment/ChildParent.jar");
+        loadClassesFromJar("usercodedeployment/IncrementingEntryProcessor.jar");
+        loadClassesFromJar("usercodedeployment/ShadedClasses.jar");
     }
 
     @Test
