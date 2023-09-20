@@ -19,7 +19,7 @@ package com.hazelcast.internal.namespace.impl;
 import com.hazelcast.config.NamespaceAwareConfig;
 
 /**
- * A thread-local context that supplies namespace name to clasloading operations.
+ * A thread-local context that supplies namespace name to classloading operations.
  * Must be set around user-code serde in client messages.
  * Additionally, should be propagated via member-to-member operations.
  */
