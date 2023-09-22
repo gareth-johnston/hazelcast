@@ -62,9 +62,9 @@ public class NamespaceServiceImplTest {
     }
 
     Set<ResourceDefinition> singletonJarResourceFromClassPath(String id, String path) throws IOException {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(path);
-        byte[] bytes = IOUtil.readFully(inputStream);
-        return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
+        try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(path)) {
+            return Collections.singleton(new ResourceDefinitionImpl(id, inputStream.readAllBytes(), ResourceType.JAR));
+        }
     }
 
     Set<ResourceDefinition> classResourcesFromClassPath(BiTuple<String, String>... idPathTuples) throws IOException {
