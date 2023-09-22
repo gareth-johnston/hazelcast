@@ -16,24 +16,12 @@
 
 package com.hazelcast.jet.impl.deployment;
 
-<<<<<<< Upstream, based on master
-<<<<<<< Upstream, based on master
 import com.hazelcast.jet.config.JobConfig;
-=======
->>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
-=======
-import com.hazelcast.jet.config.JobConfig;
->>>>>>> 6df8853 More JetClassLoader refactoring.
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.logging.ILogger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-<<<<<<< Upstream, based on master
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-=======
->>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -45,15 +33,7 @@ import java.util.List;
 
 import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
 import static com.hazelcast.jet.Util.idToString;
-<<<<<<< Upstream, based on master
-<<<<<<< Upstream, based on master
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
-=======
->>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
-=======
-import static com.hazelcast.jet.impl.JobRepository.classKeyName;
->>>>>>> 6df8853 More JetClassLoader refactoring.
 
 public class JetClassLoader extends MapResourceClassLoader {
 
@@ -79,89 +59,7 @@ public class JetClassLoader extends MapResourceClassLoader {
     }
 
     @Override
-<<<<<<< Upstream, based on master
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-        if (isEmpty(name)) {
-            return null;
-        }
-        try (InputStream classBytesStream = resourceStream(toClassResourceId(name))) {
-            if (classBytesStream == null) {
-                throw new ClassNotFoundException(name + ". Add it using " + JobConfig.class.getSimpleName()
-                                                 + " or start all members with it on classpath");
-            }
-            byte[] classBytes = classBytesStream.readAllBytes();
-            definePackage(name);
-            return defineClass(name, classBytes, 0, classBytes.length);
-        } catch (IOException exception) {
-            throw new ClassNotFoundException("Error reading class data: " + name, exception);
-        }
-    }
-
-    /**
-     * Defines the package if it is not already defined for the given class
-     * name.
-     *
-     * @param className the class name
-     */
-    private void definePackage(String className) {
-        if (isEmpty(className)) {
-            return;
-        }
-        int lastDotIndex = className.lastIndexOf('.');
-        if (lastDotIndex == -1) {
-            return;
-        }
-        String packageName = className.substring(0, lastDotIndex);
-        if (getPackage(packageName) != null) {
-            return;
-        }
-        try {
-            definePackage(packageName, null, null, null, null, null, null, null);
-        } catch (IllegalArgumentException ignored) {
-        }
-    }
-
-    @Override
-    protected URL findResource(String name) {
-        if (checkShutdown(name) || isEmpty(name) || !resourcesSupplier.get().containsKey(classKeyName(name))) {
-            return null;
-        }
-        try {
-            return new URL(JOB_URL_PROTOCOL, null, -1, name, jobResourceURLStreamHandler);
-        } catch (MalformedURLException e) {
-            // this should never happen with custom URLStreamHandler
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected Enumeration<URL> findResources(String name) {
-        return new SingleURLEnumeration(findResource(name));
-    }
-
-    public void shutdown() {
-        isShutdown = true;
-    }
-
-    public boolean isShutdown() {
-        return isShutdown;
-    }
-
-    private InputStream resourceStream(String name) {
-        if (checkShutdown(name)) {
-            return null;
-        }
-        byte[] classData = resourcesSupplier.get().get(classKeyName(name));
-        if (classData == null) {
-            return null;
-        }
-        return new InflaterInputStream(new ByteArrayInputStream(classData));
-    }
-
-    private boolean checkShutdown(String resource) {
-=======
     boolean checkShutdown(String resource) {
->>>>>>> adf4060 Extract non-job-specific parts of JetClassLoader
         if (!isShutdown) {
             return false;
         }
