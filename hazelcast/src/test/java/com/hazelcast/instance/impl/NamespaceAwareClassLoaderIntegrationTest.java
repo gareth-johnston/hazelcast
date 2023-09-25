@@ -51,14 +51,14 @@ public class NamespaceAwareClassLoaderIntegrationTest {
     @Test
     public void whenLoadClassKnownToParent_thenIsLoaded() throws Exception {
         nodeClassLoader = Node.getConfigClassloader(config);
-        Class klass = tryLoadClass("ns1", "com.hazelcast.core.HazelcastInstance");
+        Class<?> klass = tryLoadClass("ns1", "com.hazelcast.core.HazelcastInstance");
         assertSame(HazelcastInstance.class, klass);
     }
 
     @Test
     public void whenLoadClassKnownToParent_thenIsLoadedWithNoNamespaceDefined() throws Exception {
         nodeClassLoader = Node.getConfigClassloader(config);
-        Class klass = tryLoadClass(null, "com.hazelcast.core.HazelcastInstance");
+        Class<?> klass = tryLoadClass(null, "com.hazelcast.core.HazelcastInstance");
         assertSame(HazelcastInstance.class, klass);
     }
 
@@ -127,7 +127,7 @@ public class NamespaceAwareClassLoaderIntegrationTest {
         NamespaceAwareClassLoader nsClassLoader = (NamespaceAwareClassLoader) Node.getConfigClassloader(config);
         Class<? extends EntryProcessor> incrEPClass = (Class<? extends EntryProcessor>)
                 nsClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor");
-        EntryProcessor incrEp = incrEPClass.getDeclaredConstructor().newInstance();
+        EntryProcessor<Integer, Integer, ?> incrEp = incrEPClass.getDeclaredConstructor().newInstance();
         // invoke executeOnKey from client on all 100 keys
         for (int i = 0; i < 100; i++) {
             map.executeOnKey(i, incrEp);
