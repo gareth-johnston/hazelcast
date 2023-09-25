@@ -48,6 +48,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
         }
     }
 
+    /** TODO Do we actually need this method? */
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         return super.findClass(name);
