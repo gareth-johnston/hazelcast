@@ -17,14 +17,20 @@
 package com.hazelcast.jet.config;
 
 import com.hazelcast.internal.util.Preconditions;
+import com.hazelcast.internal.util.StringUtil;
+import com.hazelcast.jet.impl.util.ReflectionUtils;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
@@ -46,16 +52,15 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
      * Creates a resource config with the given properties.
      *
      * @param url           url of the resource
-     * @param id            id of the resource
+     * @param id            id of the resource, if empty/{@code null}, derived from {@code url}
      * @param resourceType  type of the resource
      */
-    public ResourceConfig(@Nonnull URL url, @Nonnull String id, @Nonnull ResourceType resourceType) {
+    public ResourceConfig(@Nonnull URL url, @Nullable String id, @Nonnull ResourceType resourceType) {
         Preconditions.checkNotNull(url, "url");
         Preconditions.checkNotNull(resourceType, "resourceType");
-        Preconditions.checkHasText(id, "id cannot be null or empty");
 
         this.url = url;
-        this.id = id;
+        this.id = StringUtil.isNullOrEmpty(id) ? urlToFileName() : id;
         this.resourceType = resourceType;
     }
 
@@ -65,25 +70,27 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
      *
      * @param clazz the class to deploy
      */
-    ResourceConfig(@Nonnull Class<?> clazz) {
+    private ResourceConfig(@Nonnull Class<?> clazz) {
         Preconditions.checkNotNull(clazz, "clazz");
 
-        String id = toClassResourceId(clazz.getName());
+        this.id = toClassResourceId(clazz.getName());
         ClassLoader cl = clazz.getClassLoader();
         if (cl == null) {
             throw new IllegalArgumentException(clazz.getName() + ".getClassLoader() returned null, cannot" +
                     " access the class resource. You may have added a JDK class that is loaded by the" +
                     " bootstrap classloader. There is no need to add JDK classes to the job configuration.");
         }
-        URL url = cl.getResource(id);
+        this.url = cl.getResource(id);
         if (url == null) {
             throw new IllegalArgumentException("The classloader of " + clazz.getName() + " couldn't resolve" +
                     " the resource URL of " + id);
         }
 
-        this.id = id;
-        this.url = url;
         this.resourceType = ResourceType.CLASS;
+    }
+
+    public static Stream<ResourceConfig> fromClass(@Nonnull Class<?>... classes) {
+        return ReflectionUtils.nestedClassesOf(classes).stream().map(ResourceConfig::new);
     }
 
     /**
@@ -162,5 +169,11 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
         id = in.readString();
         resourceType = ResourceType.getById(in.readShort());
         url = in.readObject();
+    }
+
+    @Nonnull
+    private String urlToFileName() {
+        String filename = new File(url.getPath()).getName();
+        return Preconditions.checkHasText(filename, "URL has no path: " + url);
     }
 }

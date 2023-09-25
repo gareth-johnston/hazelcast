@@ -16,6 +16,8 @@
 
 package com.hazelcast.config;
 
+import static com.hazelcast.internal.util.Preconditions.checkNotNull;
+
 import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.jet.config.ResourceType;
 
@@ -55,6 +57,7 @@ public class NamespaceConfig implements NamedConfig {
         return name;
     }
 
+    @Deprecated
     public NamespaceConfig addClass(@Nonnull String className, @Nonnull File classFile) {
         // TODO:
         // The current addClass(String, File) method is flawed. This style of configuration allows to add a class as resource
@@ -64,27 +67,36 @@ public class NamespaceConfig implements NamedConfig {
         // classes). OTOH I see JobConfig only provides addClass(Class...) API - this allows to reflectively figure out inner
         // classes at configuration time and add the respective ResourceConfigs in our internal data structure. I think the
         // JobConfig approach makes more sense and we should implement that one.
-
         try {
-            // todo: is ResourceConfig an appropriate internal representation of resources until we need
-            //  to actually read them into byte[]'s and feed them to internal namespace classloaders impl?
-            //  If yes, definitely reusing `ResourceConfig` but making its constructor public is not a good option
-            resourceConfigs.put(className,
-                    new ResourceConfig(classFile.toURI().toURL(), className, ResourceType.CLASS));
+            add(classFile.toURI().toURL(), className, ResourceType.JAR);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
         return this;
     }
 
+    public NamespaceConfig addClass(@Nonnull Class<?>... classes) {
+        checkNotNull(classes, "Classes cannot be null");
+        ResourceConfig.fromClass(classes).forEach(cfg -> resourceConfigs.put(cfg.getId(), cfg));
+        return this;
+    }
+
     public NamespaceConfig addJar(@Nonnull URL url) {
-        // TODO
-        throw new UnsupportedOperationException();
+       return add(url, null, ResourceType.JAR);
     }
 
     public NamespaceConfig addJarsInZip(@Nonnull URL url) {
-        // TODO
-        throw new UnsupportedOperationException();
+        return add(url, null, ResourceType.JARS_IN_ZIP);
+    }
+
+    private NamespaceConfig add(@Nonnull URL url, @Nullable String id, @Nonnull ResourceType resourceType) {
+        final ResourceConfig cfg = new ResourceConfig(url, id, resourceType);
+
+        if (resourceConfigs.putIfAbsent(id, cfg) != null) {
+            throw new IllegalArgumentException("Resource with id:" + id + " already exists");
+        } else {
+            return this;
+        }
     }
 
     public NamespaceConfig removeResourceConfig(String id) {
@@ -92,7 +104,10 @@ public class NamespaceConfig implements NamedConfig {
         return this;
     }
 
+    // TODO Should this return a Set?
+    // There's no guarantee that the resourceConfig#values are actually unique
+    // I think it should be a Collection
     Set<ResourceConfig> getResourceConfigs() {
-        return Collections.unmodifiableSet(new HashSet(resourceConfigs.values()));
+        return Collections.unmodifiableSet(new HashSet<>(resourceConfigs.values()));
     }
 }
