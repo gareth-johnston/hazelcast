@@ -29,11 +29,9 @@ import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.test.HazelcastParametrizedRunner;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -69,26 +67,27 @@ public class NamespaceServiceImplTest {
     @Test
     public void testLoadClasses() throws Exception {
         namespaceService.addNamespace("ns1", resources);
-        ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
+        final ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
         Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
         klass = classLoader.loadClass("usercodedeployment.ChildClass");
         klass.getDeclaredConstructor().newInstance();
     }
 
-    private static Set<ResourceDefinition> singletonJarResourceFromClassPath(String id, String path) throws IOException {
-        try (InputStream inputStream = NamespaceServiceImplTest.class.getClassLoader().getResourceAsStream(path)) {
-            return Collections.singleton(new ResourceDefinitionImpl(id, inputStream.readAllBytes(), ResourceType.JAR));
-        }
+    private static Set<ResourceDefinition> singletonJarResourceFromClassPath(final String id, final String path)
+            throws IOException {
+        final byte[] bytes = IOUtils.toByteArray(NamespaceServiceImplTest.class.getClassLoader().getResource(path));
+        return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
     }
 
     @SafeVarargs
-    private static Set<ResourceDefinition> classResourcesFromClassPath(BiTuple<String, String>... idPathTuples) throws IOException {
+    private static Set<ResourceDefinition> classResourcesFromClassPath(final BiTuple<String, String>... idPathTuples)
+            throws IOException {
         return Arrays.stream(idPathTuples).map(idPathTuple -> {
             try {
-                byte[] bytes = IOUtils
+                final byte[] bytes = IOUtils
                         .toByteArray(NamespaceServiceImplTest.class.getClassLoader().getResource(idPathTuple.element2));
                 return new ResourceDefinitionImpl(idPathTuple.element1, bytes, ResourceType.CLASS);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new UncheckedIOException(e);
             }
         }).collect(Collectors.toSet());
