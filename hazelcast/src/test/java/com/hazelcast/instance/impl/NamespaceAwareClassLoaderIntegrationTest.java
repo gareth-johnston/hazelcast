@@ -125,7 +125,8 @@ public class NamespaceAwareClassLoaderIntegrationTest {
         }
         // use a different classloader with same config to instantiate the EntryProcessor
         NamespaceAwareClassLoader nsClassLoader = (NamespaceAwareClassLoader) Node.getConfigClassloader(config);
-        Class<? extends EntryProcessor> incrEPClass = (Class<? extends EntryProcessor>)
+        @SuppressWarnings("unchecked")
+        Class<? extends EntryProcessor<Integer, Integer, ?>> incrEPClass = (Class<? extends EntryProcessor<Integer, Integer, ?>>)
                 nsClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor");
         EntryProcessor<Integer, Integer, ?> incrEp = incrEPClass.getDeclaredConstructor().newInstance();
         // invoke executeOnKey from client on all 100 keys
