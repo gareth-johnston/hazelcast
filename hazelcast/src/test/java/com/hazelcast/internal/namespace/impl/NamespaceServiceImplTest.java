@@ -67,7 +67,8 @@ public class NamespaceServiceImplTest {
         }
     }
 
-    Set<ResourceDefinition> classResourcesFromClassPath(BiTuple<String, String>... idPathTuples) throws IOException {
+    @SafeVarargs
+    private Set<ResourceDefinition> classResourcesFromClassPath(BiTuple<String, String>... idPathTuples) throws IOException {
         Set<ResourceDefinition> resources = new HashSet<>();
         for (BiTuple<String, String> idPathTuple : idPathTuples) {
             try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(idPathTuple.element2)) {
