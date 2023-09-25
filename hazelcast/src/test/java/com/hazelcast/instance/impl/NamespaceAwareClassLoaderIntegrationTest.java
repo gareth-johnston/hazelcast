@@ -34,6 +34,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 /**
  * Test static namespace configuration, resource resolution and classloading end-to-end.
  */
@@ -134,5 +136,13 @@ public class NamespaceAwareClassLoaderIntegrationTest {
             map.executeOnKey(i, incrEp);
             System.out.println(map.get(i));
         }
+    }
+
+    @Test
+    public void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
+        // TODO You *could* load usercodedeployment.EntryProcessorWithAnonymousAndInner.Test from
+        // /src/test/resources/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar, but if the interface to load directly
+        // from a .class file is going away, writing the test to do this is pointless
+        throw new NotImplementedException();
     }
 }
