@@ -68,7 +68,10 @@ public class NamespaceServiceImplTest {
     public void testLoadClasses() throws Exception {
         namespaceService.addNamespace("ns1", resources);
         final ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
+        
         Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
+        klass.getDeclaredConstructor().newInstance();
+        
         klass = classLoader.loadClass("usercodedeployment.ChildClass");
         klass.getDeclaredConstructor().newInstance();
     }
