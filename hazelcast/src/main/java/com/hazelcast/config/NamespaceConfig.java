@@ -57,24 +57,6 @@ public class NamespaceConfig implements NamedConfig {
         return name;
     }
 
-    @Deprecated
-    public NamespaceConfig addClass(@Nonnull String className, @Nonnull File classFile) {
-        // TODO:
-        // The current addClass(String, File) method is flawed. This style of configuration allows to add a class as resource
-        // from an external file (external in the sense that the class is not loaded as part of your app’s classpath). But the
-        // flaw is this: user gives a class name and a .class file but we cannot figure out if there are anonymous or named
-        // inner classes until we actually load that class (so no respective ResourceConfigs can be created for those inner
-        // classes). OTOH I see JobConfig only provides addClass(Class...) API - this allows to reflectively figure out inner
-        // classes at configuration time and add the respective ResourceConfigs in our internal data structure. I think the
-        // JobConfig approach makes more sense and we should implement that one.
-        try {
-            add(classFile.toURI().toURL(), className, ResourceType.JAR);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-        return this;
-    }
-
     public NamespaceConfig addClass(@Nonnull Class<?>... classes) {
         checkNotNull(classes, "Classes cannot be null");
         ResourceConfig.fromClass(classes).forEach(cfg -> resourceConfigs.put(cfg.getId(), cfg));
