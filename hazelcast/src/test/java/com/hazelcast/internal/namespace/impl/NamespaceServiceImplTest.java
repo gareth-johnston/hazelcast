@@ -19,7 +19,6 @@ package com.hazelcast.internal.namespace.impl;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.util.BiTuple;
 import com.hazelcast.jet.config.ResourceType;
-import com.hazelcast.jet.impl.util.IOUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,9 +43,8 @@ public class NamespaceServiceImplTest {
                 "usercodedeployment/ChildParent.jar"));
         ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
         Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
-        Object o = klass.getDeclaredConstructor().newInstance();
         klass = classLoader.loadClass("usercodedeployment.ChildClass");
-        o = klass.getDeclaredConstructor().newInstance();
+        klass.getDeclaredConstructor().newInstance();
     }
 
     @Test
@@ -56,9 +54,8 @@ public class NamespaceServiceImplTest {
                 BiTuple.of("usercodedeployment.ParentClass", "usercodedeployment/ParentClass.class")));
         ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
         Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
-        Object o = klass.getDeclaredConstructor().newInstance();
         klass = classLoader.loadClass("usercodedeployment.ChildClass");
-        o = klass.getDeclaredConstructor().newInstance();
+        klass.getDeclaredConstructor().newInstance();
     }
 
     Set<ResourceDefinition> singletonJarResourceFromClassPath(String id, String path) throws IOException {
