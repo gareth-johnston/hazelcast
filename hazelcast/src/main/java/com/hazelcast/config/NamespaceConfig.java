@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -84,10 +85,7 @@ public class NamespaceConfig implements NamedConfig {
         return this;
     }
 
-    // TODO Should this return a Set?
-    // There's no guarantee that the resourceConfig#values are actually unique
-    // I think it should be a Collection
-    Set<ResourceConfig> getResourceConfigs() {
-        return Collections.unmodifiableSet(new HashSet<>(resourceConfigs.values()));
+    Collection<ResourceConfig> getResourceConfigs() {
+        return Collections.unmodifiableCollection(resourceConfigs.values());
     }
 }

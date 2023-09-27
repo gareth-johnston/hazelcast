@@ -20,8 +20,8 @@ import com.hazelcast.internal.config.ServicesConfig;
 import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.spi.annotation.PrivateApi;
 
+import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Private API for accessing configuration at runtime
@@ -58,7 +58,7 @@ public final class ConfigAccessor {
        config.setNamespaceConfigs(namespaceConfigs);
     }
 
-    public static Set<ResourceConfig> getResourceConfigs(NamespaceConfig nsConfig) {
+    public static Collection<ResourceConfig> getResourceConfigs(NamespaceConfig nsConfig) {
         return nsConfig.getResourceConfigs();
     }
 }
