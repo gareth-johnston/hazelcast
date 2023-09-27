@@ -166,9 +166,11 @@ public class NamespaceAwareClassLoaderIntegrationTest {
 
     @Test
     public void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
-        // TODO You *could* load usercodedeployment.EntryProcessorWithAnonymousAndInner.Test from
-        // /src/test/resources/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar, but if the interface to load directly
-        // from a .class file is going away, writing the test to do this is pointless
-        throw new NotImplementedException();
+        config.addNamespaceConfig(new NamespaceConfig("ns1").addJar(
+                getClass().getResource("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar")));
+        nodeClassLoader = Node.getConfigClassloader(config);
+
+        tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
+        tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
     }
 }
