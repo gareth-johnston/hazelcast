@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.hazelcast.client.HazelcastClient;
@@ -41,19 +43,43 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Test static namespace configuration, resource resolution and classloading end-to-end.
  */
 public class NamespaceAwareClassLoaderIntegrationTest {
-
+    private static MapResourceClassLoader mapResourceClassLoader;
+    
     private Config config;
     private ClassLoader nodeClassLoader;
+
+    @BeforeClass
+    public static void setupClass() throws IOException {
+     // Find & load all .class files in the scope of this test
+        final Path root = Paths.get("src/test/resources");
+
+        try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
+            final Map<String, byte[]> classNameToContent = stream
+                    .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
+                    .collect(Collectors.toMap(path -> root.relativize(path).toString(), path -> {
+                        try {
+                            return Files.readAllBytes(path);
+                        } catch (final IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    }));
+
+            mapResourceClassLoader = new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
+                    () -> classNameToContent, true);
+        }
+    }    
 
     @Before
     public void setup() {
         config = new Config();
-        config.setClassLoader(HazelcastInstance.class.getClassLoader());
+        config.setClassLoader(HazelcastInstance.class.getClassLoader());       
     }
 
     @Test
@@ -72,8 +98,8 @@ public class NamespaceAwareClassLoaderIntegrationTest {
 
     @Test
     public void whenSimpleClassInNs_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(new NamespaceConfig("ns1").addClass(toClass("usercodedeployment.ParentClass",
-                Paths.get("src/test/resources/usercodedeployment/ParentClass.class"))));
+        config.addNamespaceConfig(
+                new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
         nodeClassLoader = Node.getConfigClassloader(config);
 
         tryLoadClass("ns1", "usercodedeployment.ParentClass");
@@ -81,8 +107,8 @@ public class NamespaceAwareClassLoaderIntegrationTest {
 
     @Test
     public void whenSimpleClassInNs_thenIsNotLoadedWithNoNamespaceDefined() throws Exception {
-        config.addNamespaceConfig(new NamespaceConfig("ns1").addClass(toClass("usercodedeployment.ParentClass",
-                Paths.get("src/test/resources/usercodedeployment/ParentClass.class"))));
+        config.addNamespaceConfig(
+                new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
         nodeClassLoader = Node.getConfigClassloader(config);
 
         assertThrows(ClassNotFoundException.class, () -> tryLoadClass(null, "usercodedeployment.ParentClass"));
@@ -90,11 +116,9 @@ public class NamespaceAwareClassLoaderIntegrationTest {
 
     @Test
     public void whenClassWithHierarchyInNs_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(new NamespaceConfig("ns1")
-                .addClass(toClass("usercodedeployment.ParentClass",
-                        Paths.get("src/test/resources/usercodedeployment/ParentClass.class")))
-                .addClass(toClass("usercodedeployment.ChildClass",
-                        Paths.get("src/test/resources/usercodedeployment/ChildClass.class"))));
+        config.addNamespaceConfig(
+                new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass"))
+                        .addClass(mapResourceClassLoader.loadClass("usercodedeployment.ChildClass")));
         nodeClassLoader = Node.getConfigClassloader(config);
 
         Class<?> childClass = tryLoadClass("ns1", "usercodedeployment.ChildClass");
@@ -116,8 +140,8 @@ public class NamespaceAwareClassLoaderIntegrationTest {
 
     @Test
     public void testThatDoesNotBelongHere() throws Exception {
-        config.addNamespaceConfig(new NamespaceConfig("ns1").addClass(toClass("usercodedeployment.IncrementingEntryProcessor",
-                Paths.get("src/test/resources/usercodedeployment/IncrementingEntryProcessor.class"))));
+        config.addNamespaceConfig(new NamespaceConfig("ns1")
+                .addClass(mapResourceClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor")));
         config.getMapConfig("map-ns1").setNamespace("ns1");
         HazelcastInstance member1 = Hazelcast.newHazelcastInstance(config);
         HazelcastInstance member2 = Hazelcast.newHazelcastInstance(config);
@@ -146,16 +170,5 @@ public class NamespaceAwareClassLoaderIntegrationTest {
         // /src/test/resources/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar, but if the interface to load directly
         // from a .class file is going away, writing the test to do this is pointless
         throw new NotImplementedException();
-    }
-
-    /** TODO Implement this in a better way */
-    private Class<?> toClass(String name, final Path path) throws ClassNotFoundException {
-        return new MapResourceClassLoader(getClass().getClassLoader(), () -> {
-            try {
-                return Map.of(name, Files.readAllBytes(path));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }, true).loadClass(name);
     }
 }
