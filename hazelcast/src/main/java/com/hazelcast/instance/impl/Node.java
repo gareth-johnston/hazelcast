@@ -86,7 +86,6 @@ import com.hazelcast.internal.services.GracefulShutdownAwareService;
 import com.hazelcast.internal.usercodedeployment.UserCodeDeploymentClassLoader;
 import com.hazelcast.internal.util.Clock;
 import com.hazelcast.internal.util.FutureUtil;
-import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.logging.LoggingService;
@@ -355,12 +354,10 @@ public class Node {
         ConfigAccessor.getResourceConfigs(nsConfig).forEach(resourceConfig -> {
             try (InputStream is = resourceConfig.getUrl().openStream()) {
                 byte[] payload = is.readAllBytes();
-                // todo implemented nested class reading
-                // todo implement other resource types (JARs, ZIPs etc)
                 ResourceDefinitionImpl resourceDefinition = new ResourceDefinitionImpl(
                         resourceConfig.getId(),
                         payload,
-                        ResourceType.CLASS);
+                        resourceConfig.getResourceType());
                 resources.add(resourceDefinition);
             } catch (IOException e) {
                 throw new IllegalArgumentException("Could not open stream for resource id "
