@@ -19,6 +19,7 @@ package com.hazelcast.map.impl.mapstore;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.partition.PartitioningStrategy;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.map.impl.MapContainer;
@@ -120,7 +121,9 @@ final class BasicMapStoreContext implements MapStoreContext {
         final MapStoreConfig mapStoreConfig = mapConfig.getMapStoreConfig();
         final ClassLoader configClassLoader = nodeEngine.getConfigClassLoader();
         // create store.
+        NamespaceUtil.setupNs(nodeEngine, mapConfig.getNamespace());
         final Object store = createStore(mapName, mapStoreConfig, configClassLoader);
+        NamespaceUtil.cleanupNs(nodeEngine, mapConfig.getNamespace());
         final MapStoreWrapper storeWrapper = new MapStoreWrapper(mapName, store);
         storeWrapper.instrument(nodeEngine);
 
