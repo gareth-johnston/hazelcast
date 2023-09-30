@@ -68,7 +68,8 @@ public final class NamespaceThreadLocalContext {
 
     public static void onCompleteNsAware(String namespace) {
         NamespaceThreadLocalContext tlContext = NS_THREAD_LOCAL.get();
-        if (tlContext == null || !tlContext.namespace.equals(namespace)) {
+        if(tlContext != null) {
+        if (!tlContext.namespace.equals(namespace)) {
             throw new IllegalStateException("Attempted to complete NSTLContext for namespace " + namespace
                     + " but there is an existing context " + tlContext);
         }
@@ -76,7 +77,7 @@ public final class NamespaceThreadLocalContext {
         System.out.println(">> dec " + tlContext);
         if (count == 0) {
             NS_THREAD_LOCAL.remove();
-        }
+        }}
     }
 
     public static String getNamespaceThreadLocalContext() {
