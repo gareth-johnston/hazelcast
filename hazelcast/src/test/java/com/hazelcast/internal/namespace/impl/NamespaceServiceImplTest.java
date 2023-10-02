@@ -16,17 +16,16 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.internal.util.BiTuple;
+import com.hazelcast.jet.config.ResourceType;
+import com.hazelcast.test.HazelcastParametrizedRunner;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-
-import com.hazelcast.internal.namespace.ResourceDefinition;
-import com.hazelcast.internal.util.BiTuple;
-import com.hazelcast.jet.config.ResourceType;
-import com.hazelcast.test.HazelcastParametrizedRunner;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,6 +34,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 
 @RunWith(HazelcastParametrizedRunner.class)
 public class NamespaceServiceImplTest {
@@ -51,7 +53,7 @@ public class NamespaceServiceImplTest {
     public static Iterable<Object[]> parameters() throws IOException {
         return List.of(
                 new Object[] {"JAR",
-                        singletonJarResourceFromClassPath("usercodedeployment/ChildParent.jar",
+                        singletonJarResourceFromBinaries("usercodedeployment/ChildParent.jar",
                                 "usercodedeployment/ChildParent.jar")},
                 new Object[] {"Class",
                         classResourcesFromClassPath(
@@ -76,9 +78,9 @@ public class NamespaceServiceImplTest {
         klass.getDeclaredConstructor().newInstance();
     }
 
-    private static Set<ResourceDefinition> singletonJarResourceFromClassPath(final String id, final String path)
+    private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String id, final String path)
             throws IOException {
-        final byte[] bytes = IOUtils.toByteArray(NamespaceServiceImplTest.class.getClassLoader().getResource(path));
+        final byte[] bytes = IOUtils.toByteArray(urlFromFile(fileRelativeToBinariesFolder(path)));
         return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
     }
 
@@ -88,7 +90,7 @@ public class NamespaceServiceImplTest {
         return Arrays.stream(idPathTuples).map(idPathTuple -> {
             try {
                 final byte[] bytes = IOUtils
-                        .toByteArray(NamespaceServiceImplTest.class.getClassLoader().getResource(idPathTuple.element2));
+                        .toByteArray(urlFromFile(fileRelativeToBinariesFolder(idPathTuple.element2)));
                 return new ResourceDefinitionImpl(idPathTuple.element1, bytes, ResourceType.CLASS);
             } catch (final IOException e) {
                 throw new UncheckedIOException(e);

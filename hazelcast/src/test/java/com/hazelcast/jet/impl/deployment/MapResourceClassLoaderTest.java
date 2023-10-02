@@ -17,6 +17,7 @@
 package com.hazelcast.jet.impl.deployment;
 
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.test.UserCodeUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,8 +98,6 @@ public class MapResourceClassLoaderTest {
         Assert.assertTrue(klass.isInterface());
     }
 
-
-
     private void loadClassesFromJar(String jarPath) throws IOException {
         JarInputStream inputStream = null;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -140,7 +139,7 @@ public class MapResourceClassLoaderTest {
     }
 
     private JarInputStream getJarInputStream(String jarPath) throws IOException {
-        File file = new File(jarPath);
+        File file = UserCodeUtil.fileRelativeToBinariesFolder(jarPath);
         if (file.exists()) {
             return new JarInputStream(new FileInputStream(file));
         }
