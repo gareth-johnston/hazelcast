@@ -27,6 +27,7 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.nio.serialization.HazelcastSerializationException;
 import com.hazelcast.test.HazelcastParallelClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
+import com.hazelcast.test.UserCodeUtil;
 import com.hazelcast.test.annotation.ParallelJVMTest;
 import com.hazelcast.test.annotation.QuickTest;
 import com.hazelcast.internal.util.FilteringClassLoader;
@@ -38,6 +39,7 @@ import usercodedeployment.IncrementingEntryProcessor;
 
 import java.io.FileNotFoundException;
 
+import static com.hazelcast.test.UserCodeUtil.pathRelativeToBinariesFolder;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -111,13 +113,14 @@ public class ClientUserCodeDeploymentExceptionTest extends HazelcastTestSupport 
         factory.newHazelcastInstance(config);
 
         ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig1 = new ClientUserCodeDeploymentConfig()
-                .addJar("usercodedeployment/IncrementingEntryProcessor.jar").setEnabled(true);
+                .addJar(pathRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar")).setEnabled(true);
         ClientConfig clientConfig1 = new ClientConfig()
                 .setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig1);
         factory.newHazelcastClient(clientConfig1);
 
         ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig2 = new ClientUserCodeDeploymentConfig()
-                .addJar("usercodedeployment/IncrementingEntryProcessorConflicting.jar").setEnabled(true);
+                .addJar(pathRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessorConflicting.jar"))
+                .setEnabled(true);
         ClientConfig clientConfig2 = new ClientConfig()
                 .setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig2);
         factory.newHazelcastClient(clientConfig2);

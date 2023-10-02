@@ -30,6 +30,7 @@ import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.test.HazelcastParallelParametersRunnerFactory;
 import com.hazelcast.test.HazelcastParametrizedRunner;
+import com.hazelcast.test.UserCodeUtil;
 import com.hazelcast.test.annotation.ParallelJVMTest;
 import com.hazelcast.test.annotation.QuickTest;
 import org.junit.After;
@@ -89,8 +90,8 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
 
     private Config createNodeConfig() {
         Config config = new Config();
-        FilteringClassLoader filteringCL = new FilteringClassLoader(singletonList("usercodedeployment"), null);
-        config.setClassLoader(filteringCL);
+//        FilteringClassLoader filteringCL = new FilteringClassLoader(singletonList("usercodedeployment"), null);
+//        config.setClassLoader(filteringCL);
         config.getUserCodeDeploymentConfig()
                 .setEnabled(true)
                 .setClassCacheMode(classCacheMode)
@@ -224,7 +225,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
     public void testWithMultipleMembers_anonymousAndInnerClasses() {
         ClientConfig clientConfig = new ClientConfig();
         ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig = new ClientUserCodeDeploymentConfig();
-        clientUserCodeDeploymentConfig.addJar("usercodedeployment/EntryProcessorWithAnonymousAndInner.jar");
+        clientUserCodeDeploymentConfig.addJar(UserCodeUtil.fileRelativeToBinariesFolder("usercodedeployment/EntryProcessorWithAnonymousAndInner.jar"));
         clientConfig.setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig.setEnabled(true));
 
         Config config = createNodeConfig();
@@ -310,7 +311,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
         }
 
          */
-        clientUserCodeDeploymentConfig.addJar("usercodedeployment/ChildParent.jar");
+        clientUserCodeDeploymentConfig.addJar(UserCodeUtil.fileRelativeToBinariesFolder("usercodedeployment/ChildParent.jar"));
         clientConfig.setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig.setEnabled(true));
 
         factory.newHazelcastInstance(createNodeConfig());
