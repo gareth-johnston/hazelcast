@@ -20,8 +20,14 @@ import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.util.Util;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.zip.InflaterInputStream;
@@ -50,6 +56,8 @@ import static com.hazelcast.jet.impl.util.Util.uncheckCall;
  *  todo: consider if we need to override java9+ methods for running on the modulepath use case
  */
 public class MapResourceClassLoader extends JetDelegatingClassLoader {
+
+    private static final String PROTOCOL = "map-resource";
 
     // todo: consider alternative to IMap
     //  take into account potential deadlocks like https://hazelcast.atlassian.net/browse/HZ-3121
@@ -120,6 +128,32 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         isShutdown = true;
     }
 
+    @Nullable
+    @Override
+    public URL getResource(String name) {
+        if (!childFirst) {
+            return super.getResource(name);
+        }
+        URL res = findResource(name);
+        if (res == null) {
+            res = super.getResource(name);
+        }
+        return res;
+    }
+
+    @Override
+    protected URL findResource(String name) {
+        if (checkShutdown(name) || isNullOrEmpty(name) || !resourcesSupplier.get().containsKey(classKeyName(name))) {
+            return null;
+        }
+        try {
+            return new URL(PROTOCOL, null, -1, name, new MapResourceURLStreamHandler());
+        } catch (MalformedURLException e) {
+            // this should never happen with custom URLStreamHandler
+            throw new RuntimeException(e);
+        }
+    }
+
     public boolean isShutdown() {
         return isShutdown;
     }
@@ -167,6 +201,30 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
             definePackage(packageName, null, null, null, null, null, null, null);
         } catch (IllegalArgumentException ignored) {
             // ignore
+        }
+    }
+
+    private final class MapResourceURLStreamHandler extends URLStreamHandler {
+
+        @Override
+        protected URLConnection openConnection(URL u) throws IOException {
+            return new MapResourceURLConnection(u);
+        }
+    }
+
+    private final class MapResourceURLConnection extends URLConnection {
+
+        public MapResourceURLConnection(URL url) {
+            super(url);
+        }
+
+        @Override
+        public void connect() throws IOException {
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return resourceStream(url.getFile());
         }
     }
 }

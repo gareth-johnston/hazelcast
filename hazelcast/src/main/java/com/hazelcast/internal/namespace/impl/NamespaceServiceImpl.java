@@ -125,17 +125,24 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
     }
 
-    void handleClass(String className, byte[] classBytes, Map<String, byte[]> resourceMap) {
+    /**
+     *
+     * @param resourceId the resource ID for the class, ie fully qualified class name converted to path, suffixed with ".class"
+     * @param classBytes the class binary content
+     * @param resourceMap resource map to add resource to
+     * @see com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId
+     */
+    void handleClass(String resourceId, byte[] classBytes, Map<String, byte[]> resourceMap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos);
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(classBytes)) {
             IOUtil.drainTo(inputStream, compressor);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read class bytes for resource with id "
-                    + className, e);
+                    + resourceId, e);
         }
         byte[] classDefinition = baos.toByteArray();
-        resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
+        resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + resourceId, classDefinition);
     }
 
     private String extractClassName(JarEntry entry) {

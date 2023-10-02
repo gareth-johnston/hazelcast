@@ -16,12 +16,15 @@
 
 package com.hazelcast.instance.impl;
 
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.test.HazelcastTestSupport.assertInstanceOf;
+import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,6 +40,7 @@ import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -45,6 +49,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.DeflaterOutputStream;
 
 /**
  * Test static namespace configuration, resource resolution and classloading end-to-end.
@@ -58,14 +63,19 @@ public class NamespaceAwareClassLoaderIntegrationTest {
     @BeforeClass
     public static void setupClass() throws IOException {
      // Find & load all .class files in the scope of this test
-        final Path root = Paths.get("src/test/resources");
+        final Path root = Paths.get("src/test/class");
 
         try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
             final Map<String, byte[]> classNameToContent = stream
                     .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
-                    .collect(Collectors.toMap(path -> root.relativize(path).toString(), path -> {
+                    .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
                         try {
-                            return Files.readAllBytes(path);
+                            byte[] bytes = Files.readAllBytes(path);
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            try (DeflaterOutputStream dos = new DeflaterOutputStream(baos)) {
+                                dos.write(bytes);
+                            }
+                            return baos.toByteArray();
                         } catch (final IOException e) {
                             throw new UncheckedIOException(e);
                         }
@@ -102,7 +112,8 @@ public class NamespaceAwareClassLoaderIntegrationTest {
                 new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
         nodeClassLoader = Node.getConfigClassloader(config);
 
-        tryLoadClass("ns1", "usercodedeployment.ParentClass");
+        Class<?> parentClass = tryLoadClass("ns1", "usercodedeployment.ParentClass");
+        assertInstanceOf(MapResourceClassLoader.class, parentClass.getClassLoader());
     }
 
     @Test
@@ -134,7 +145,9 @@ public class NamespaceAwareClassLoaderIntegrationTest {
         try {
             return nodeClassLoader.loadClass(className);
         } finally {
-            NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+            if (namespace != null) {
+                NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+            }
         }
     }
 
@@ -167,7 +180,7 @@ public class NamespaceAwareClassLoaderIntegrationTest {
     @Test
     public void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
         config.addNamespaceConfig(new NamespaceConfig("ns1").addJar(
-                getClass().getResource("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar")));
+                urlFromFile(fileRelativeToBinariesFolder("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar"))));
         nodeClassLoader = Node.getConfigClassloader(config);
 
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
