@@ -90,7 +90,9 @@ public class JetClassLoader extends MapResourceClassLoader {
 
     @Override
     protected Enumeration<URL> findResources(String name) {
-        return Collections.enumeration(List.of(findResource(name)));
+        URL resourceUrl = findResource(name);
+        return resourceUrl == null ? Collections.emptyEnumeration()
+                : Collections.enumeration(List.of(resourceUrl));
     }
 
     @Override
