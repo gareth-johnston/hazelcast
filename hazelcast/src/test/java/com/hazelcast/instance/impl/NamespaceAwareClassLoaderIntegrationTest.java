@@ -58,12 +58,12 @@ import java.util.zip.DeflaterOutputStream;
  * Test static namespace configuration, resource resolution and classloading end-to-end.
  */
 public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSupport {
-    private static Path classRoot;    
+    private static Path classRoot;
     private static MapResourceClassLoader mapResourceClassLoader;
 
     private Config config;
     private ClassLoader nodeClassLoader;
-    
+
     @BeforeClass
     public static void setUpClass() throws IOException {
         classRoot = Paths.get("src/test/class");
@@ -73,7 +73,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     @Before
     public void setUp() {
         config = new Config();
-        config.setClassLoader(HazelcastInstance.class.getClassLoader());       
+        config.setClassLoader(HazelcastInstance.class.getClassLoader());
     }
 
     /** Find & load all .class files in the scope of this test */
@@ -198,10 +198,9 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
     }
-    
+
     private enum CaseValueProcessor {
-        UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase),
-        LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
+        UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase), LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
 
         private static final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
         private static final Object KEY = Void.TYPE;
@@ -212,11 +211,11 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         private final String mapName = randomMapName();
         private IMap<Object, String> map;
 
-        private CaseValueProcessor(UnaryOperator<String> expectedOperation) {
+        CaseValueProcessor(UnaryOperator<String> expectedOperation) {
             this.expectedOperation = expectedOperation;
 
             try {
-                this.namespace = new NamespaceConfig(toString()).addClass(
+                namespace = new NamespaceConfig(toString()).addClass(
                         generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(toString()))
                                 .loadClass(className));
             } catch (ClassNotFoundException | IOException e) {
@@ -226,7 +225,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
                     () -> Class.forName(className));
         }
-        
+
         private void addNamespaceToConfig(Config config) {
             config.addNamespaceConfig(namespace);
             config.getMapConfig(mapName).setNamespace(toString());
@@ -249,7 +248,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             System.out.println(map.get(KEY));
             assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
         }
-        
+
         @Override
         public String toString() {
             return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
@@ -264,7 +263,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      * <li>Configure the a {@link HazelcastInstance} with isolated {@link IMaps} using those classes
      * <li>Assert that those classes are isolated - even with overlapping names, the correct class is used
      * <ol>
-     * 
+     *
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3301">HZ-3301 - Test cases for Milestone 1 use cases</a>
      */
     @Test
@@ -273,7 +272,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         for (CaseValueProcessor processor : CaseValueProcessor.values()) {
             processor.addNamespaceToConfig(config);
         }
-        
+
         HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
         nodeClassLoader = Node.getConfigClassloader(config);
 
