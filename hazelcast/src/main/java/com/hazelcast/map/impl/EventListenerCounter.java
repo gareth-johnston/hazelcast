@@ -16,6 +16,9 @@
 
 package com.hazelcast.map.impl;
 
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,21 +33,25 @@ public class EventListenerCounter {
 
     private final ConcurrentMap<String, AtomicInteger> counterPerMap
             = new ConcurrentHashMap<>();
+    private static final ILogger logger = Logger.getLogger(EventListenerCounter.class);
 
     public EventListenerCounter() {
     }
 
     public AtomicInteger getOrCreateCounter(String mapName) {
+        logger.warning("XXX: getOrCreateCounter for map= " + mapName);
         return counterPerMap.computeIfAbsent(mapName,
                 s -> new AtomicInteger());
     }
 
     public void removeCounter(String mapName,
                               AtomicInteger counter) {
+        logger.warning("XXX: Removing counter for map= " + mapName);
         counterPerMap.remove(mapName, counter);
     }
 
     public void incCounter(String mapName) {
+        logger.warning("XXX: Incrementing counter for map= " + mapName);
         getOrCreateCounter(mapName).incrementAndGet();
     }
 
@@ -53,7 +60,7 @@ public class EventListenerCounter {
         if (counter != null) {
             int count = counter.decrementAndGet();
 
-            assert count >= 0;
+            assert count >= 0 : "count should not be negative : was " + count + " for map " + mapName;
         }
     }
 }

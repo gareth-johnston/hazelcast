@@ -48,6 +48,8 @@ import com.hazelcast.internal.services.TenantContextAwareService;
 import com.hazelcast.internal.services.TransactionalService;
 import com.hazelcast.internal.services.WanSupportingService;
 import com.hazelcast.internal.util.MutableLong;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.map.LocalMapStats;
 import com.hazelcast.map.impl.event.MapEventPublishingService;
 import com.hazelcast.map.impl.recordstore.RecordStore;
@@ -277,6 +279,8 @@ public class MapService implements ManagedService, ChunkedMigrationAwareService,
             return;
         }
 
+        ILogger logger = Logger.getLogger(MapService.class);
+        logger.warning("XXX: Decrementing counter - service : [" + service + "], serviceName : [" + mapName + "], EventRegistration : [" + registration  + "]. ");
         mapServiceContext.getEventListenerCounter().decCounter(mapName);
     }
 

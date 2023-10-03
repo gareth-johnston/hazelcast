@@ -22,6 +22,8 @@ import com.hazelcast.internal.services.ListenerWrapperEventFilter;
 import com.hazelcast.internal.services.NotifiableEventListener;
 import com.hazelcast.internal.util.ConcurrencyUtil;
 import com.hazelcast.internal.util.ConstructorFunction;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.impl.eventservice.EventFilter;
 
 import javax.annotation.Nonnull;
@@ -115,10 +117,14 @@ public class EventServiceSegment<S> {
             return;
         }
 
+        ILogger logger = Logger.getLogger(EventServiceSegment.class);
         NotifiableEventListener listener = ((NotifiableEventListener) object);
         if (register) {
+
+            logger.warning("XXX: Listener " + listener.getClass() + " registered for topic " + topic + " ." + "serviceName=" + serviceName + " ,service=" + service + " ,registration=" + registration);
             listener.onRegister(service, serviceName, topic, registration);
         } else {
+            logger.warning("XXX: Listener " + listener.getClass() + " deregistered for topic " + topic + " ." + "serviceName=" + serviceName + " ,service=" + service + " ,registration=" + registration);
             listener.onDeregister(service, serviceName, topic, registration);
         }
     }
