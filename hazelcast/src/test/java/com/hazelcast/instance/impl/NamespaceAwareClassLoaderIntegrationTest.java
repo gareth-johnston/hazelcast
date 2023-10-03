@@ -17,18 +17,18 @@
 package com.hazelcast.instance.impl;
 
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static com.hazelcast.test.HazelcastTestSupport.assertInstanceOf;
 import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
 import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
 
 import org.apache.commons.io.FilenameUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.base.CaseFormat;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.NamespaceConfig;
@@ -39,14 +39,18 @@ import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
+import com.hazelcast.test.HazelcastTestSupport;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
@@ -54,17 +58,27 @@ import java.util.zip.DeflaterOutputStream;
 /**
  * Test static namespace configuration, resource resolution and classloading end-to-end.
  */
-public class NamespaceAwareClassLoaderIntegrationTest {
+public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSupport {
+    private static Path classRoot;    
     private static MapResourceClassLoader mapResourceClassLoader;
-    
+
     private Config config;
     private ClassLoader nodeClassLoader;
-
+    
     @BeforeClass
-    public static void setupClass() throws IOException {
-     // Find & load all .class files in the scope of this test
-        final Path root = Paths.get("src/test/class");
+    public static void setUpClass() throws IOException {
+        classRoot = Paths.get("src/test/class");
+        mapResourceClassLoader = generateMapResourceClassLoaderForDirectory(classRoot);
+    }
 
+    @Before
+    public void setUp() {
+        config = new Config();
+        config.setClassLoader(HazelcastInstance.class.getClassLoader());       
+    }
+
+    /** Find & load all .class files in the scope of this test */
+    private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
         try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
             final Map<String, byte[]> classNameToContent = stream
                     .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
@@ -80,16 +94,12 @@ public class NamespaceAwareClassLoaderIntegrationTest {
                             throw new UncheckedIOException(e);
                         }
                     }));
+            
+            classNameToContent.keySet().forEach(System.err::println);
 
-            mapResourceClassLoader = new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
+            return new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
                     () -> classNameToContent, true);
         }
-    }    
-
-    @Before
-    public void setup() {
-        config = new Config();
-        config.setClassLoader(HazelcastInstance.class.getClassLoader());       
     }
 
     @Test
@@ -144,6 +154,9 @@ public class NamespaceAwareClassLoaderIntegrationTest {
         }
         try {
             return nodeClassLoader.loadClass(className);
+        } catch (ClassNotFoundException e) {
+            throw new ClassNotFoundException(
+                    MessageFormat.format("\"{0}\" class not found in \"{1}\" namespace", className, namespace), e);
         } finally {
             if (namespace != null) {
                 NamespaceThreadLocalContext.onCompleteNsAware(namespace);
@@ -156,6 +169,8 @@ public class NamespaceAwareClassLoaderIntegrationTest {
         config.addNamespaceConfig(new NamespaceConfig("ns1")
                 .addClass(mapResourceClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor")));
         config.getMapConfig("map-ns1").setNamespace("ns1");
+        // TODO Should this be using createHazelcastInstanceFactory?
+        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
         HazelcastInstance member1 = Hazelcast.newHazelcastInstance(config);
         HazelcastInstance member2 = Hazelcast.newHazelcastInstance(config);
         HazelcastInstance client = HazelcastClient.newHazelcastClient();
@@ -185,5 +200,79 @@ public class NamespaceAwareClassLoaderIntegrationTest {
 
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
+    }
+    
+    private static enum CaseValueProcessor {
+        UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase),
+        LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
+
+        private final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
+        private static final Object KEY = Void.TYPE;
+        private static final String VALUE = "VaLuE";
+
+        private final UnaryOperator<String> expectedOperation;
+        private IMap<Object, String> map;
+
+        private CaseValueProcessor(UnaryOperator<String> expectedOperation) {
+            this.expectedOperation = expectedOperation;
+        }
+
+        private void assertMutation() {
+            assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
+        }
+
+        private void createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
+                HazelcastInstance hazelcastInstance) throws Exception {
+            // Create a map
+            String mapName = randomMapName();
+
+            map = hazelcastInstance.getMap(mapName);
+            map.put(KEY, VALUE);
+
+            // Add the class to the namespace
+            Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
+                    () -> Class.forName(className));
+
+            hazelcastInstance.getConfig().addNamespaceConfig(new NamespaceConfig(toString()).addClass(
+                    generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(toString()))
+                            .loadClass(className)));
+
+            hazelcastInstance.getConfig().getMapConfig(mapName).setNamespace(toString());
+
+            // Execute the EntryProcessor
+            Class<? extends EntryProcessor<Object, String, String>> clazz = (Class<? extends EntryProcessor<Object, String, String>>) instance
+                    .tryLoadClass(toString(), className);
+            map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
+
+            assertMutation();
+        }
+        
+        @Override
+        public String toString() {
+            return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
+        }
+    }
+
+    /**
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3301">HZ-3301 - Test cases for Milestone 1 use cases</a>
+     */
+    @Test
+    public void testMilestone1() throws Exception {
+        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
+        nodeClassLoader = Node.getConfigClassloader(config);
+
+        // "I can statically configure a namespace with a java class that gets resolved at runtime"
+        // "I can run a customer entry processor and configure an IMap in that namespace"
+        // "to execute that entry processor on that IMap"
+        // "I can configure N > 1 namespaces with simple Java class resources of same name and different behavior"
+        for (CaseValueProcessor processor : CaseValueProcessor.values()) {
+            processor.createExecuteAssertOnMap(this, hazelcastInstance);
+        }
+
+        // "IMaps configured in the respective namespaces will correctly load and execute the respective EntryProcessor defined
+        // in their namespace, without class name clashes."
+        for (CaseValueProcessor processor : CaseValueProcessor.values()) {
+            processor.assertMutation();
+        }
     }
 }

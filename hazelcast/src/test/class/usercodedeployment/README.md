@@ -8,5 +8,11 @@ Contents:
 - `IncrementingEntryProcessor.jar`: contains `IncrementingEntryProcessor` class.
 - `ChildParent.jar`: contains `ChildClass` and `ParentClass` as described above.
 - `EntryProcessorWithAnonymousAndInner.jar`: contains class `EntryProcessorWithAnonymousAndInner`, to exercise loading classes with anonymous and named inner classes.
+- `LowerCaseValueEntryProcessor`, `UpperCaseValueEntryProcessor`: `EntryProcessor` who adjust the case of the value, with deliberately overlapping class names.
 
 Note: unless package is explicitly specified, all classes described above reside in package `usercodedeployment`.
+
+To generate a new `.class` from from an existing `.java` file, run something like:
+```
+javac --release 11 YourJavaClass.java -cp "~/.m2/repository/com/hazelcast/hazelcast/5.3.2/hazelcast-5.3.2.jar"
+```
