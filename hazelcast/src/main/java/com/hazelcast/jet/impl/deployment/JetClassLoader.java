@@ -22,11 +22,8 @@ import com.hazelcast.logging.ILogger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLStreamHandler;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -42,7 +39,6 @@ public class JetClassLoader extends MapResourceClassLoader {
     private final long jobId;
     private final String jobName;
     private final ILogger logger;
-    private final URLFactory urlFactory;
 
     public JetClassLoader(
             @Nonnull ILogger logger,
@@ -55,7 +51,6 @@ public class JetClassLoader extends MapResourceClassLoader {
         this.jobName = jobName;
         this.jobId = jobId;
         this.logger = logger;
-        this.urlFactory = resource -> new URL(JOB_URL_PROTOCOL, null, -1, resource, new JobResourceURLStreamHandler());
     }
 
     @Override
@@ -81,7 +76,7 @@ public class JetClassLoader extends MapResourceClassLoader {
             return null;
         }
         try {
-            return urlFactory.create(name);
+            return new URL(JOB_URL_PROTOCOL, null, -1, name, new MapResourceURLStreamHandler());
         } catch (MalformedURLException e) {
             // this should never happen with custom URLStreamHandler
             throw new RuntimeException(e);
@@ -99,30 +94,6 @@ public class JetClassLoader extends MapResourceClassLoader {
     ClassNotFoundException newClassNotFoundException(String name) {
         return new ClassNotFoundException(name + ". Add it using " + JobConfig.class.getSimpleName()
                 + " or start all members with it on classpath");
-    }
-
-    private final class JobResourceURLStreamHandler extends URLStreamHandler {
-
-        @Override
-        protected URLConnection openConnection(URL url) {
-            return new JobResourceURLConnection(url);
-        }
-    }
-
-    private final class JobResourceURLConnection extends URLConnection {
-
-        private JobResourceURLConnection(URL url) {
-            super(url);
-        }
-
-        @Override
-        public void connect() {
-        }
-
-        @Override
-        public InputStream getInputStream() {
-            return resourceStream(url.getFile());
-        }
     }
 
     @Override

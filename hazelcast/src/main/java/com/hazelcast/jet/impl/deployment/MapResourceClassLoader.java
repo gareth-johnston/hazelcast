@@ -204,7 +204,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         }
     }
 
-    private final class MapResourceURLStreamHandler extends URLStreamHandler {
+    protected final class MapResourceURLStreamHandler extends URLStreamHandler {
 
         @Override
         protected URLConnection openConnection(URL u) throws IOException {
