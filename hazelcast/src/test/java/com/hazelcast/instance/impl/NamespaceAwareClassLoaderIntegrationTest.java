@@ -93,8 +93,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                             throw new UncheckedIOException(e);
                         }
                     }));
-            
-            classNameToContent.keySet().forEach(System.err::println);
 
             return new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
                     () -> classNameToContent, true);
@@ -201,42 +199,43 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
     }
     
-    private static enum CaseValueProcessor {
+    private enum CaseValueProcessor {
         UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase),
         LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
 
-        private final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
+        private static final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
         private static final Object KEY = Void.TYPE;
         private static final String VALUE = "VaLuE";
 
         private final UnaryOperator<String> expectedOperation;
+        private final NamespaceConfig namespace;
+        private final String mapName = randomMapName();
         private IMap<Object, String> map;
 
         private CaseValueProcessor(UnaryOperator<String> expectedOperation) {
             this.expectedOperation = expectedOperation;
-        }
 
-        private void assertMutation() {
-            assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
+            try {
+                this.namespace = new NamespaceConfig(toString()).addClass(
+                        generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(toString()))
+                                .loadClass(className));
+            } catch (ClassNotFoundException | IOException e) {
+                throw new ExceptionInInitializerError(e);
+            }
+
+            Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
+                    () -> Class.forName(className));
+        }
+        
+        private void addNamespaceToConfig(Config config) {
+            config.addNamespaceConfig(namespace);
+            config.getMapConfig(mapName).setNamespace(toString());
         }
 
         private void createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
                 HazelcastInstance hazelcastInstance) throws Exception {
-            // Create a map
-            String mapName = randomMapName();
-
             map = hazelcastInstance.getMap(mapName);
             map.put(KEY, VALUE);
-
-            // Add the class to the namespace
-            Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
-                    () -> Class.forName(className));
-
-            hazelcastInstance.getConfig().addNamespaceConfig(new NamespaceConfig(toString()).addClass(
-                    generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(toString()))
-                            .loadClass(className)));
-
-            hazelcastInstance.getConfig().getMapConfig(mapName).setNamespace(toString());
 
             // Execute the EntryProcessor
             Class<? extends EntryProcessor<Object, String, String>> clazz = (Class<? extends EntryProcessor<Object, String, String>>) instance
@@ -244,6 +243,11 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
 
             assertMutation();
+        }
+
+        private void assertMutation() {
+            System.out.println(map.get(KEY));
+            assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
         }
         
         @Override
@@ -253,14 +257,26 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     }
 
     /**
+     * Asserts a basic user workflow:
+     * <ol>
+     * <li>Add classes to the {@link NamespaceConfig}
+     * <li>Assert that those classes aren't accessible by default
+     * <li>Configure the a {@link HazelcastInstance} with isolated {@link IMaps} using those classes
+     * <li>Assert that those classes are isolated - even with overlapping names, the correct class is used
+     * <ol>
+     * 
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3301">HZ-3301 - Test cases for Milestone 1 use cases</a>
      */
     @Test
     public void testMilestone1() throws Exception {
+        // "I can statically configure a namespace with a java class that gets resolved at runtime"
+        for (CaseValueProcessor processor : CaseValueProcessor.values()) {
+            processor.addNamespaceToConfig(config);
+        }
+        
         HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
         nodeClassLoader = Node.getConfigClassloader(config);
 
-        // "I can statically configure a namespace with a java class that gets resolved at runtime"
         // "I can run a customer entry processor and configure an IMap in that namespace"
         // "to execute that entry processor on that IMap"
         // "I can configure N > 1 namespaces with simple Java class resources of same name and different behavior"
