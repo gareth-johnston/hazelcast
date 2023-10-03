@@ -29,6 +29,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.zip.InflaterInputStream;
 
@@ -45,8 +46,6 @@ import static com.hazelcast.jet.impl.util.Util.uncheckCall;
  *     <li>Choice of whether it looks up classes and resources in child-first order (so this ClassLoader's resources are
  *     first search, then, if not found, the parent ClassLoader is queries). If not child-first, then the common parent-first
  *     hierarchical ClassLoader model is followed.</li>
- *     <li>TODO: NOT HAPPENING CURRENTLY:
- *      A mechanism to create resource URLs that can be resolved to streams by this {@code ClassLoader}'s resources.</li>
  * </ul>
  * todo: specify resource MAP key & value format. Currently following JetClassLoader conventions:
  *  <ul>
@@ -57,7 +56,7 @@ import static com.hazelcast.jet.impl.util.Util.uncheckCall;
  */
 public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
-    private static final String PROTOCOL = "map-resource";
+    static final String PROTOCOL = "map-resource";
 
     // todo: consider alternative to IMap
     //  take into account potential deadlocks like https://hazelcast.atlassian.net/browse/HZ-3121
@@ -130,7 +129,8 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
     @Nullable
     @Override
-    public URL getResource(String name) {
+    public URL getResource(@Nonnull String name) {
+        Objects.requireNonNull(name);
         if (!childFirst) {
             return super.getResource(name);
         }

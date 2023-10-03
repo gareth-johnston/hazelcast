@@ -18,7 +18,6 @@ package com.hazelcast.jet.impl.deployment;
 
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.test.UserCodeUtil;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,6 +42,11 @@ import static com.hazelcast.internal.nio.IOUtil.closeResource;
 import static com.hazelcast.internal.util.EmptyStatement.ignore;
 import static com.hazelcast.jet.impl.JobRepository.CLASS_STORAGE_KEY_NAME_PREFIX;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class MapResourceClassLoaderTest {
     private static final Pattern CLASS_PATTERN = Pattern.compile("(.*)\\.class$");
@@ -87,7 +91,7 @@ public class MapResourceClassLoaderTest {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
         // com.hazelcast.core.HazelcastInstance loaded from ShadedClasses.jar is a concrete class with a main method
         Class<?> klass = classLoader.loadClass("com.hazelcast.core.HazelcastInstance");
-        Assert.assertFalse(klass.isInterface());
+        assertFalse(klass.isInterface());
     }
 
     @Test
@@ -95,7 +99,51 @@ public class MapResourceClassLoaderTest {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
         // expect to load com.hazelcast.core.HazelcastInstance interface from the codebase
         Class<?> klass = classLoader.loadClass("com.hazelcast.core.HazelcastInstance");
-        Assert.assertTrue(klass.isInterface());
+        assertTrue(klass.isInterface());
+    }
+
+    @Test
+    public void getResource_whenResolvableFromChild() {
+        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        URL url = classLoader.getResource("usercodedeployment/ParentClass.class");
+        assertEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
+        assertEquals(toClassResourceId("usercodedeployment.ParentClass"), url.getFile());
+    }
+
+    @Test
+    public void getResource_whenResolvableFromParent() {
+        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        URL url = classLoader.getResource("com/hazelcast/core/HazelcastInstance.class");
+        assertNotNull(url);
+    }
+
+    @Test
+    public void getResource_whenResolvableFromChild_andNotChildFirst() {
+        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
+        URL url = classLoader.getResource("usercodedeployment/ParentClass.class");
+        assertEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
+        assertEquals(toClassResourceId("usercodedeployment.ParentClass"), url.getFile());
+    }
+
+    @Test
+    public void findResource_whenNull() {
+        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        URL url = classLoader.findResource(null);
+        assertNull(url);
+    }
+
+    @Test
+    public void findResource_whenEmpty() {
+        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        URL url = classLoader.findResource("");
+        assertNull(url);
+    }
+
+    @Test
+    public void findResource_whenResolvableFromParent() {
+        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        URL url = classLoader.findResource("com/hazelcast/core/HazelcastInstance.class");
+        assertNotNull(url);
     }
 
     private void loadClassesFromJar(String jarPath) throws IOException {
@@ -121,7 +169,6 @@ public class MapResourceClassLoaderTest {
                 }
                 inputStream.closeEntry();
                 byte[] classDefinition = baos.toByteArray();
-                // todo: decide key format for the map resource supplier
                 classBytes.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
             } while (true);
         } finally {
