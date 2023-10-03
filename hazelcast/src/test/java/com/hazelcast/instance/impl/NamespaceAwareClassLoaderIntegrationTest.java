@@ -199,18 +199,24 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
     }
 
+    /**
+     * References to {@link EntryProcessor}s - not on the classpath - that modify the case of a {@link String} value in a map
+     */
     private enum CaseValueProcessor {
         UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase), LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
 
+        /** Use the same class name to assert isolation */
         private static final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
         private static final Object KEY = Void.TYPE;
         private static final String VALUE = "VaLuE";
 
+        /** The operation we expect the {@link EntryProcessor} to perform - for validation purposes */
         private final UnaryOperator<String> expectedOperation;
         private final NamespaceConfig namespace;
         private final String mapName = randomMapName();
         private IMap<Object, String> map;
 
+        /** @param expectedOperation {@link #expectedOperation} */
         CaseValueProcessor(UnaryOperator<String> expectedOperation) {
             this.expectedOperation = expectedOperation;
 
@@ -233,6 +239,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         private void createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
                 HazelcastInstance hazelcastInstance) throws Exception {
+            // Create a map
             map = hazelcastInstance.getMap(mapName);
             map.put(KEY, VALUE);
 
@@ -241,11 +248,10 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                     .tryLoadClass(toString(), className);
             map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
 
-            assertMutation();
+            assertEntryUpdated();
         }
 
-        private void assertMutation() {
-            System.out.println(map.get(KEY));
+        private void assertEntryUpdated() {
             assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
         }
 
@@ -286,7 +292,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         // "IMaps configured in the respective namespaces will correctly load and execute the respective EntryProcessor defined
         // in their namespace, without class name clashes."
         for (CaseValueProcessor processor : CaseValueProcessor.values()) {
-            processor.assertMutation();
+            processor.assertEntryUpdated();
         }
     }
 }
