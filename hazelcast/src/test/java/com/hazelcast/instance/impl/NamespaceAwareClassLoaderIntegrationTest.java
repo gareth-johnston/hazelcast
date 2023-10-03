@@ -27,6 +27,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import com.google.common.base.CaseFormat;
 import com.hazelcast.client.HazelcastClient;
@@ -39,7 +41,10 @@ import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
+import com.hazelcast.test.HazelcastParallelClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
+import com.hazelcast.test.annotation.ParallelJVMTest;
+import com.hazelcast.test.annotation.QuickTest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -54,6 +59,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
 
+// TODO Does this need @RunWith / @Category?
 /**
  * Test static namespace configuration, resource resolution and classloading end-to-end.
  */
