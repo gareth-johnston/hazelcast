@@ -25,7 +25,6 @@ import com.hazelcast.config.AttributeConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.UserCodeDeploymentConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.internal.util.FilteringClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.test.HazelcastParallelParametersRunnerFactory;
@@ -56,7 +55,6 @@ import java.util.UUID;
 
 import static com.hazelcast.query.Predicates.equal;
 import static com.hazelcast.test.SplitBrainTestSupport.blockCommunicationBetween;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(HazelcastParametrizedRunner.class)

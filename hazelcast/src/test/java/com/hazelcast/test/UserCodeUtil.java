@@ -6,6 +6,10 @@ import java.net.URL;
 
 import static com.hazelcast.internal.util.ExceptionUtil.sneakyThrow;
 
+/**
+ * Utility methods to facilitate referencing files from {@code src/test/class} which are not part of the classpath at
+ * test execution time.
+ */
 public class UserCodeUtil {
 
     public static final String CLASS_DIRECTORY = "src/test/class";
