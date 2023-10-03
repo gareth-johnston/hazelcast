@@ -18,20 +18,17 @@ public class UserCodeUtil {
     private UserCodeUtil() {
     }
 
-    /**
-     * @param path
-     * @return a File for the given path, relative to src/test/class
-     */
+    /** @return a File for the given path, relative to src/test/class */
     public static File fileRelativeToBinariesFolder(String path) {
         return new File(CLASS_DIRECTORY_FILE, path);
     }
 
     /**
-     * @param path
+     * TODO What's the application of this?
      * @return a File for the given path, relative to src/test/class
      */
     public static String pathRelativeToBinariesFolder(String path) {
-        return new File(CLASS_DIRECTORY_FILE, path).toString();
+        return fileRelativeToBinariesFolder(path).toString();
     }
 
     public static URL urlFromFile(File f) {
