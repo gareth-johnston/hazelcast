@@ -839,6 +839,10 @@
             <artifactId>maven-resolver-provider</artifactId>
             <version>3.9.5</version>
             <scope>test</scope>
-        </dependency>
+        </dependency><dependency>
+    <groupId>org.apache.derby</groupId>
+    <artifactId>derby</artifactId>
+    <version>10.16.1.1</version>
+</dependency>
 	</dependencies>
 </project>

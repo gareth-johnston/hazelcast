@@ -47,6 +47,7 @@ import com.hazelcast.test.annotation.QuickTest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -305,5 +306,42 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         for (CaseValueProcessor processor : CaseValueProcessor.values()) {
             processor.assertEntryUpdated();
         }
+    }
+
+    /**
+     * Asserts a basic user workflow:
+     * <ol>
+     * <li>TODO
+     * <ol>
+     *
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3357">HZ-3357 - Test case for Milestone 1 dependencies use cases</a>
+     */
+    @Test
+    public void testMilestone2() throws Exception {
+        // "As a Java developer, I can define a MapLoader with JDBC driver dependency in a namespace and IMap configured with
+        // that namespace will correctly instantiate and use my MapLoader."
+
+        String mapName = randomMapName();
+        String className = "usercodedeployment.DerbyUpperCaseStringMapLoader";
+
+        Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
+                () -> Class.forName(className));
+
+        NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
+                .addJar(new URL("https://repo1.maven.org/maven2/org/apache/derby/derby/10.16.1.1/derby-10.16.1.1.jar"));
+
+        config.addNamespaceConfig(namespace);
+        config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
+                .setClassName(className);
+
+        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
+        nodeClassLoader = Node.getConfigClassloader(config);
+
+        String input = "value";
+        assertEquals(input.toUpperCase(), hazelcastInstance.getMap(mapName).get(input));
+
+        // Isolation against Hazelcast member classpath: even when Hazelcast member classpath includes a clashing version of my
+        // JDBC driver, my preferred JDBC driver version that is configured in namespace resources is used by my MapLoader.
+        // TODO - Maybe use an old version of H2 to prove the point?
     }
 }
