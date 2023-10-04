@@ -21,6 +21,7 @@ import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
 import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
 import org.apache.commons.io.FilenameUtils;
@@ -340,7 +341,9 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         nodeClassLoader = Node.getConfigClassloader(config);
 
         String input = "value";
-        assertEquals(input.toUpperCase(), hazelcastInstance.getMap(mapName).get(input));
+        String mapped = hazelcastInstance.<String, String> getMap(mapName).get(input);
+        assertNotNull("Was the MapStore executed?", mapped);
+        assertEquals(input.toUpperCase(), mapped);
     }
 
     /**
@@ -376,6 +379,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         String namespaceH2Version = hazelcastInstance.<String, String> getMap(mapName).get(getClass().getSimpleName());
 
+        assertNotNull("Was the MapStore executed?", namespaceH2Version);
         assertEquals("Unexpected version of H2 found in namespace", "2.0.202", namespaceH2Version);
         assertNotEquals("Namespaces dependencies do not appear to be isolated", org.h2.engine.Constants.VERSION,
                 namespaceH2Version);
