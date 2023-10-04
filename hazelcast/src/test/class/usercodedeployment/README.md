@@ -13,6 +13,12 @@ Contents:
 Note: unless package is explicitly specified, all classes described above reside in package `usercodedeployment`.
 
 To generate a new `.class` from from an existing `.java` file, run something like:
-```
-javac --release 11 YourJavaClass.java -cp "~/.m2/repository/com/hazelcast/hazelcast/5.3.2/hazelcast-5.3.2.jar"
+
+```shell
+GROUP_ID=com.hazelcast
+ARTIFACT_ID=hazelcast
+VERSION=5.3.2
+
+mvn dependency:get -DgroupId=$GROUP_ID -DartifactId=$ARTIFACT_ID -Dversion=$VERSION --quiet;
+javac --release 11 YourJavaClass.java -cp "$HOME/.m2/repository/${GROUP_ID//.//}/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.jar";
 ```
