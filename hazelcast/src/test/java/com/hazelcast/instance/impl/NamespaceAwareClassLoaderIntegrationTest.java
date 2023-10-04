@@ -20,6 +20,7 @@ import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
 import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 
 import org.apache.commons.io.FilenameUtils;
@@ -42,7 +43,7 @@ import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
-import com.hazelcast.test.annotation.QuickTest;
+import com.hazelcast.test.annotation.SlowTest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -60,7 +61,7 @@ import java.util.zip.DeflaterOutputStream;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
 @RunWith(HazelcastSerialClassRunner.class)
-@Category(QuickTest.class)
+@Category(SlowTest.class)
 public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSupport {
     private static Path classRoot;
     private static MapResourceClassLoader mapResourceClassLoader;
@@ -314,10 +315,11 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      * <li>TODO
      * <ol>
      *
-     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3357">HZ-3357 - Test case for Milestone 1 dependencies use cases</a>
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3357">HZ-3357 - Test case for Milestone 1 dependencies use
+     *      cases</a>
      */
     @Test
-    public void testMilestone2() throws Exception {
+    public void testMilestone1Dependencies() throws Exception {
         // "As a Java developer, I can define a MapLoader with JDBC driver dependency in a namespace and IMap configured with
         // that namespace will correctly instantiate and use my MapLoader."
 
@@ -339,9 +341,43 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         String input = "value";
         assertEquals(input.toUpperCase(), hazelcastInstance.getMap(mapName).get(input));
+    }
 
-        // Isolation against Hazelcast member classpath: even when Hazelcast member classpath includes a clashing version of my
-        // JDBC driver, my preferred JDBC driver version that is configured in namespace resources is used by my MapLoader.
-        // TODO - Maybe use an old version of H2 to prove the point?
+    /**
+     * Asserts a basic user workflow:
+     * <ol>
+     * <li>TODO
+     * <ol>
+     *
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3357">HZ-3357 - Test case for Milestone 1 dependencies use
+     *      cases</a>
+     */
+    @Test
+    public void testMilestone1DependenciesIsolation() throws Exception {
+        // "Isolation against Hazelcast member classpath: even when Hazelcast member classpath includes a clashing version of my
+        // JDBC driver, my preferred JDBC driver version that is configured in namespace resources is used by my MapLoader."
+
+        String mapName = randomMapName();
+        String className = "usercodedeployment.H2BuildVersionMapLoader";
+
+        Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
+                () -> Class.forName(className));
+
+        // Deliberately use an older version
+        NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
+                .addJar(new URL("https://repo1.maven.org/maven2/com/h2database/h2/2.0.202/h2-2.0.202.jar"));
+
+        config.addNamespaceConfig(namespace);
+        config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
+                .setClassName(className);
+
+        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
+        nodeClassLoader = Node.getConfigClassloader(config);
+
+        String namespaceH2Version = hazelcastInstance.<String, String> getMap(mapName).get(getClass().getSimpleName());
+
+        assertEquals("Unexpected version of H2 found in namespace", "2.0.202", namespaceH2Version);
+        assertNotEquals("Namespaces dependencies do not appear to be isolated", org.h2.engine.Constants.VERSION,
+                namespaceH2Version);
     }
 }
