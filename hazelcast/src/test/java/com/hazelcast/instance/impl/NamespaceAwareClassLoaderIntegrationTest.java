@@ -313,7 +313,10 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     /**
      * Asserts a basic user workflow:
      * <ol>
-     * <li>TODO
+     * <li>Creates a {@link NamespaceConfig} referencing a {@link MapLoader} {@code .class} and it's database dependency - which
+     * *aren't* on the classpath
+     * <li>Create a map, configuring the {@link NamespaceConfig} and {@link MapLoader}
+     * <li>Assert the {@link MapLoader} has loaded data via the database dependency via some dummy call
      * <ol>
      *
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3357">HZ-3357 - Test case for Milestone 1 dependencies use
@@ -349,7 +352,10 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     /**
      * Asserts a basic user workflow:
      * <ol>
-     * <li>TODO
+     * <li>Creates a {@link NamespaceConfig} referencing a {@link MapLoader} {@code .class} and it's database dependency - which
+     * is a *different* one than on classpath
+     * <li>Create a map, configuring the {@link NamespaceConfig} and {@link MapLoader}
+     * <li>Assert the {@link MapLoader} has used the {@link NamespaceConfig} database dependency version
      * <ol>
      *
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3357">HZ-3357 - Test case for Milestone 1 dependencies use
