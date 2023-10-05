@@ -37,7 +37,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.DeflaterOutputStream;
 
-import static com.hazelcast.jet.impl.JobRepository.CLASS_STORAGE_KEY_NAME_PREFIX;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 public class NamespaceServiceImpl implements NamespaceService {
