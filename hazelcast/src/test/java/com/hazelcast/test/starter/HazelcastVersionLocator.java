@@ -16,34 +16,13 @@
 
 package com.hazelcast.test.starter;
 
-import static com.hazelcast.internal.util.Preconditions.checkState;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
-import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
-import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.repository.LocalRepositoryManager;
-import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
-import org.h2.util.StringUtils;
 
 import com.hazelcast.internal.cluster.Versions;
-import com.hazelcast.internal.util.OsHelper;
-import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.version.Version;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
