@@ -17,6 +17,7 @@
 package com.hazelcast.jet.impl.deployment;
 
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -169,7 +170,7 @@ public class MapResourceClassLoaderTest {
                 }
                 inputStream.closeEntry();
                 byte[] classDefinition = baos.toByteArray();
-                classBytes.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
+                classBytes.put(JobRepository.classKeyName(toClassResourceId(className)), classDefinition);
             } while (true);
         } finally {
             closeResource(inputStream);

@@ -19,6 +19,7 @@ package com.hazelcast.internal.namespace.impl;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nonnull;
@@ -117,7 +118,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                 }
                 inputStream.closeEntry();
                 byte[] classDefinition = baos.toByteArray();
-                resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + toClassResourceId(className), classDefinition);
+                resourceMap.put(JobRepository.classKeyName(toClassResourceId(className)), classDefinition);
             } while (true);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id "
@@ -142,7 +143,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                     + resourceId, e);
         }
         byte[] classDefinition = baos.toByteArray();
-        resourceMap.put(CLASS_STORAGE_KEY_NAME_PREFIX + resourceId, classDefinition);
+        resourceMap.put(JobRepository.classKeyName(resourceId), classDefinition);
     }
 
     private String extractClassName(JarEntry entry) {
