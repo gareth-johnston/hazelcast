@@ -20,5 +20,5 @@ ARTIFACT_ID=hazelcast
 VERSION=5.3.2
 
 mvn dependency:get -DgroupId=$GROUP_ID -DartifactId=$ARTIFACT_ID -Dversion=$VERSION --quiet;
-javac --release 11 YourJavaClass.java -cp "$HOME/.m2/repository/${GROUP_ID//.//}/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.jar";
+javac --release 11 *.java -cp "$HOME/.m2/repository/${GROUP_ID//.//}/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.jar";
 ```
