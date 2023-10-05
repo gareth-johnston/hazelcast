@@ -23,11 +23,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.assertj.core.api.Assertions;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,11 +49,11 @@ import com.hazelcast.map.MapLoader;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.annotation.SlowTest;
+import com.hazelcast.test.starter.MavenInterface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,8 +70,7 @@ import java.util.zip.DeflaterOutputStream;
 public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSupport {
     private static Path classRoot;
     private static MapResourceClassLoader mapResourceClassLoader;
-    private static String H2_202_VERSION;
-    private static URL H2_202_JAR_URL;
+    private static Artifact H2_202_ARTIFACT;
 
     private Config config;
     private ClassLoader nodeClassLoader;
@@ -80,8 +79,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     public static void setUpClass() throws IOException {
         classRoot = Paths.get("src/test/class");
         mapResourceClassLoader = generateMapResourceClassLoaderForDirectory(classRoot);
-        H2_202_VERSION = "2.0.202";
-        H2_202_JAR_URL = new URL("https://repo1.maven.org/maven2/com/h2database/h2/2.0.202/h2-2.0.202.jar");
+        H2_202_ARTIFACT = new DefaultArtifact("com.h2database", "h2", null, "2.0.202");
     }
 
     @Before
@@ -234,23 +232,24 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         Pair<String, String>[] classes = new Pair[] {driverManager, dataSource};
 
-        NamespaceConfig namespace = new NamespaceConfig("ns1").addJar(H2_202_JAR_URL);
+        NamespaceConfig namespace = new NamespaceConfig("ns1")
+                .addJar(MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL());
         config.addNamespaceConfig(namespace);
 
         for (Pair<String, String> clazz : classes) {
             namespace.addClass(mapResourceClassLoader.loadClass(clazz.getLeft()));
             config.getMapConfig(clazz.getRight()).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
-                    .setClassName(clazz.getKey());
+                    .setClassName(clazz.getLeft());
         }
 
         HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
         nodeClassLoader = Node.getConfigClassloader(config);
 
-        assertEquals("Fixture setup of JDBC with explicit driver declaration", H2_202_VERSION,
+        assertEquals("Fixture setup of JDBC with explicit driver declaration", H2_202_ARTIFACT.getVersion(),
                 executeMapLoader(hazelcastInstance, dataSource.getRight()));
 
-        assertEquals("JDBC generally is working, but Driver Manager isn't - suggests Service Loader issue", H2_202_VERSION,
-                executeMapLoader(hazelcastInstance, driverManager.getRight()));
+        assertEquals("JDBC generally is working, but Driver Manager isn't - suggests Service Loader issue",
+                H2_202_ARTIFACT.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
     }
 
     private String executeMapLoader(HazelcastInstance hazelcastInstance, String mapName) {
@@ -378,7 +377,8 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 () -> Class.forName(className));
 
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
-                .addJar(new URL("https://repo1.maven.org/maven2/org/apache/derby/derby/10.16.1.1/derby-10.16.1.1.jar"));
+                .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derby", null, "10.16.1.1"))
+                        .toUri().toURL());
 
         config.addNamespaceConfig(namespace);
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
@@ -417,7 +417,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         // Deliberately use an older version
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
-                .addJar(H2_202_JAR_URL);
+                .addJar(MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL());
 
         config.addNamespaceConfig(namespace);
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
@@ -429,7 +429,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         String namespaceH2Version = executeMapLoader(hazelcastInstance, mapName);
 
         assertNotNull("Was the MapStore executed?", namespaceH2Version);
-        assertEquals("Unexpected version of H2 found in namespace", H2_202_VERSION, namespaceH2Version);
+        assertEquals("Unexpected version of H2 found in namespace", H2_202_ARTIFACT.getVersion(), namespaceH2Version);
         assertNotEquals("Namespaces dependencies do not appear to be isolated", org.h2.engine.Constants.VERSION,
                 namespaceH2Version);
     }
