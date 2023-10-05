@@ -31,30 +31,23 @@ public class HazelcastVersionLocator {
     private static final String GROUP_ID = "com.hazelcast";
 
     public enum Artifact {
-        OS_JAR(false, false, "hazelcast", "OS"),
-        OS_TEST_JAR(false, true, "hazelcast", "OS tests"),
-        SQL_JAR(false, false, "hazelcast-sql", "SQL"),
-        EE_JAR(true, false, "hazelcast-enterprise", "EE");
+        OS_JAR(false, false, "hazelcast"),
+        OS_TEST_JAR(false, true, "hazelcast"),
+        SQL_JAR(false, false, "hazelcast-sql"),
+        EE_JAR(true, false, "hazelcast-enterprise");
 
         private final boolean enterprise;
         private final boolean test;
         private final String artifactId;
-        private final String label;
 
-        Artifact(final boolean enterprise, final boolean test, final String artifactId, final String label) {
+        Artifact(final boolean enterprise, final boolean test, final String artifactId) {
             this.enterprise = enterprise;
             this.test = test;
             this.artifactId = artifactId;
-            this.label = label;
         }
 
         private org.eclipse.aether.artifact.Artifact toAetherArtifact(final String version) {
             return new DefaultArtifact(GROUP_ID, artifactId, test ? "tests" : null, null, version);
-        }
-
-        @Override
-        public String toString() {
-            return label;
         }
     }
 
