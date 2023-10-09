@@ -107,22 +107,22 @@ public class NamespaceServiceImpl implements NamespaceService {
                     break;
                 }
 
+                // todo completely inefficient, doing pattern matching twice currently
+                String entryName = extractClassName(entry);
+                boolean isClass = false;
+                Matcher matcher = CLASS_PATTERN.matcher(entry.getName().replace('/', '.'));
+                if (matcher.matches()) {
+                    isClass = true;
+                }
                 baos.reset();
                 try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
                     IOUtil.drainTo(inputStream, compressor);
                 }
                 inputStream.closeEntry();
-                byte[] contents = baos.toByteArray();
-
-                final String key;
-                String className = extractClassName(entry);
-                if (className == null) {
-                    key = JobRepository.fileKeyName(entry.getName());
-                } else {
-                    key = JobRepository.classKeyName(toClassResourceId(className));
-                }
-
-                resourceMap.put(key, contents);
+                byte[] payload = baos.toByteArray();
+                resourceMap.put(isClass
+                        ? JobRepository.classKeyName(toClassResourceId(entryName))
+                        : JobRepository.fileKeyName(entryName), payload);
             } while (true);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id "
@@ -156,6 +156,6 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (matcher.matches()) {
             return matcher.group(1);
         }
-        return null;
+        return entry.getName();
     }
 }
