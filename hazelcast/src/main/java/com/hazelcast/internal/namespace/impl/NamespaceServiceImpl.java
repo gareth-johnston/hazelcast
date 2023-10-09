@@ -107,17 +107,22 @@ public class NamespaceServiceImpl implements NamespaceService {
                     break;
                 }
 
-                String className = extractClassName(entry);
-                if (className == null) {
-                    continue;
-                }
                 baos.reset();
                 try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
                     IOUtil.drainTo(inputStream, compressor);
                 }
                 inputStream.closeEntry();
-                byte[] classDefinition = baos.toByteArray();
-                resourceMap.put(JobRepository.classKeyName(toClassResourceId(className)), classDefinition);
+                byte[] contents = baos.toByteArray();
+
+                final String key;
+                String className = extractClassName(entry);
+                if (className == null) {
+                    key = JobRepository.fileKeyName(entry.getName());
+                } else {
+                    key = JobRepository.classKeyName(toClassResourceId(className));
+                }
+
+                resourceMap.put(key, contents);
             } while (true);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id "
