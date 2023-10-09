@@ -16,6 +16,15 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import com.hazelcast.internal.util.ExceptionUtil;
+
+import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.net.URL;
+import java.util.Enumeration;
+
 /**
  * A ClassLoader that's aware of the configured namespaces and their resources.
  * The classloading scheme does not follow the recommended {@link ClassLoader} parent delegation model: instead, this
@@ -24,11 +33,24 @@ package com.hazelcast.internal.namespace.impl;
  * @see com.hazelcast.config.NamespaceConfig
  */
 public class NamespaceAwareClassLoader extends ClassLoader {
+    private static final MethodHandle findResourceMethodHandle;
+    private static final MethodHandle findResourceMethodHandles;
 
     private final NamespaceServiceImpl namespaceService;
 
     static {
-        ClassLoader.registerAsParallelCapable();
+        try {
+            ClassLoader.registerAsParallelCapable();
+
+            Lookup privateLookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
+
+            findResourceMethodHandle = privateLookup
+                    .unreflect(ClassLoader.class.getDeclaredMethod("findResource", String.class));
+            findResourceMethodHandles = privateLookup
+                    .unreflect(ClassLoader.class.getDeclaredMethod("findResources", String.class));
+        } catch (ReflectiveOperationException e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
     public NamespaceAwareClassLoader(ClassLoader parent, NamespaceServiceImpl namespaceService) {
@@ -54,6 +76,24 @@ public class NamespaceAwareClassLoader extends ClassLoader {
         return super.findClass(name);
     }
 
+    @Override
+    protected URL findResource(String name) {
+        try {
+            return (URL) findResourceMethodHandle.invoke(pickClassLoader(), name);
+        } catch (Throwable t) {
+            throw ExceptionUtil.sneakyThrow(t);
+        }
+    }
+
+    @Override
+    protected Enumeration<URL> findResources(String name) throws IOException {
+        try {
+            return (Enumeration<URL>) findResourceMethodHandles.invoke(pickClassLoader(), name);
+        } catch (Throwable t) {
+            throw ExceptionUtil.sneakyThrow(t);
+        }
+    }
+
     ClassLoader pickClassLoader() {
         String namespace = NamespaceThreadLocalContext.getNamespaceThreadLocalContext();
         if (namespace == null) {
@@ -62,5 +102,10 @@ public class NamespaceAwareClassLoader extends ClassLoader {
             ClassLoader candidate = namespaceService.namespaceToClassLoader.get(namespace);
             return candidate == null ? getParent() : candidate;
         }
+    }
+
+    @Override
+    public Enumeration<URL> getResources(String name) throws IOException {
+        return pickClassLoader().getResources(name);
     }
 }
