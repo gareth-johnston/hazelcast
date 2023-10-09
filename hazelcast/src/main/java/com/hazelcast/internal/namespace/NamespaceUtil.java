@@ -67,4 +67,18 @@ public class NamespaceUtil {
             NamespaceThreadLocalContext.onCompleteNsAware(namespace);
         }
     }
+
+    public static void setupNs(@Nullable String namespace) {
+        if (namespace == null) {
+            return;
+        }
+        NamespaceThreadLocalContext.onStartNsAware(namespace);
+    }
+
+    public static void cleanupNs(@Nullable String namespace) {
+        if (namespace == null) {
+            return;
+        }
+        NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+    }
 }
