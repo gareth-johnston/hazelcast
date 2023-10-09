@@ -28,6 +28,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -35,6 +37,7 @@ import java.util.zip.InflaterInputStream;
 
 import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.jet.impl.JobRepository.fileKeyName;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 import static com.hazelcast.jet.impl.util.Util.uncheckCall;
 
@@ -143,15 +146,31 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
     @Override
     protected URL findResource(String name) {
-        if (checkShutdown(name) || isNullOrEmpty(name) || !resourcesSupplier.get().containsKey(classKeyName(name))) {
+        if (checkShutdown(name) || isNullOrEmpty(name)) {
             return null;
         }
+        String resourceKey = classKeyName(name);
+        if (!resourcesSupplier.get().containsKey(resourceKey)) {
+            resourceKey = fileKeyName(name);
+            if (!resourcesSupplier.get().containsKey(resourceKey)) {
+                return null;
+            }
+        }
+
         try {
             return new URL(PROTOCOL, null, -1, name, new MapResourceURLStreamHandler());
         } catch (MalformedURLException e) {
             // this should never happen with custom URLStreamHandler
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected Enumeration<URL> findResources(String name) throws IOException {
+        URL foundResource = findResource(name);
+        return foundResource == null
+                ? Collections.emptyEnumeration()
+                : Collections.enumeration(Collections.singleton(foundResource));
     }
 
     public boolean isShutdown() {
@@ -170,7 +189,10 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         }
         byte[] classData = resourcesSupplier.get().get(classKeyName(name));
         if (classData == null) {
-            return null;
+            classData = resourcesSupplier.get().get(fileKeyName(name));
+            if (classData == null) {
+                return null;
+            }
         }
         return new InflaterInputStream(new ByteArrayInputStream(classData));
     }
