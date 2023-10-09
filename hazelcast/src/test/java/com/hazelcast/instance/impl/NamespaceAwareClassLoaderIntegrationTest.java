@@ -376,8 +376,9 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
                 () -> Class.forName(className));
 
+        // Add the latest Derby version that supports Java 11 (newer versions require Java 17)
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
-                .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derby", null, "10.16.1.1"))
+                .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derby", null, "10.15.2.0"))
                         .toUri().toURL());
 
         config.addNamespaceConfig(namespace);
