@@ -16,25 +16,6 @@
 
 package com.hazelcast.instance.impl;
 
-import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
-import static com.hazelcast.test.UserCodeUtil.urlFromFile;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-
 import com.google.common.base.CaseFormat;
 import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.config.Config;
@@ -50,19 +31,43 @@ import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.annotation.SlowTest;
 import com.hazelcast.test.starter.MavenInterface;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Driver;
 import java.text.MessageFormat;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
+
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+import static com.hazelcast.test.UserCodeUtil.urlFromFile;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
 @RunWith(HazelcastSerialClassRunner.class)
@@ -87,6 +92,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         config = new Config();
         config.setClassLoader(HazelcastInstance.class.getClassLoader());
     }
+
 
     /** Find & load all .class files in the scope of this test */
     private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
@@ -219,6 +225,47 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
     }
 
+    private void printURLsOf(ClassLoader classLoader) throws IOException {
+        Enumeration<URL> urls = classLoader.getResources("META-INF/services/java.sql.Driver");
+        for (Iterator<URL> it = urls.asIterator(); it.hasNext(); ) {
+            URL u = it.next();
+            System.out.println(u);
+        }
+    }
+
+    @Test
+    public void testServiceLoader_whenMultipleServicesOnClasspath() throws Exception {
+        URL driverUrl = MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL();
+        System.out.println("Driver URL is " + driverUrl);
+        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {driverUrl});
+        config.addNamespaceConfig(new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL()));
+        nodeClassLoader = Node.getConfigClassloader(config);
+        NamespaceThreadLocalContext.onStartNsAware("ns1");
+        try {
+            System.out.println("URLClassLoader resource URLs");
+            printURLsOf(urlClassLoader);
+            System.out.println("---------------");
+            System.out.println("NSAwareClassLoader resource URLs");
+            printURLsOf(nodeClassLoader);
+            System.out.println("---------------");
+            System.out.println("URLClassLoader Driver Classes");
+            ServiceLoader<Driver> loader = ServiceLoader.load(Driver.class, urlClassLoader);
+            for (Iterator<Driver> it = loader.iterator(); it.hasNext(); ) {
+                Driver d = it.next();
+                System.out.println(d.getClass().getName() + " / " + d.getClass().getClassLoader());
+            }
+            System.out.println("--------------");
+            System.out.println("NSAwareClassLoader Driver Classes");
+            loader = ServiceLoader.load(Driver.class, nodeClassLoader);
+            for (Iterator<Driver> it = loader.iterator(); it.hasNext(); ) {
+                Driver d = it.next();
+                System.out.println(d.getClass().getName() + " / " + d.getClass().getClassLoader());
+            }
+        } finally {
+            NamespaceThreadLocalContext.onCompleteNsAware("ns1");
+        }
+    }
+
     /**
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3390">HZ-3390 - Support ServiceLoader in
      *      NamespaceAwareClassLoader</a>
@@ -323,7 +370,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      * <ol>
      * <li>Add classes to the {@link NamespaceConfig}
      * <li>Assert that those classes aren't accessible by default
-     * <li>Configure the a {@link HazelcastInstance} with isolated {@link IMaps} using those classes
+     * <li>Configure the a {@link HazelcastInstance} with isolated {@link IMap}s using those classes
      * <li>Assert that those classes are isolated - even with overlapping names, the correct class is used
      * <ol>
      *
@@ -379,7 +426,10 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         // Add the latest Derby version that supports Java 11 (newer versions require Java 17)
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
                 .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derby", null, "10.15.2.0"))
-                        .toUri().toURL());
+                        .toUri().toURL())
+                .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derbyshared", null, "10.15.2.0"))
+                        .toUri().toURL())
+                ;
 
         config.addNamespaceConfig(namespace);
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
