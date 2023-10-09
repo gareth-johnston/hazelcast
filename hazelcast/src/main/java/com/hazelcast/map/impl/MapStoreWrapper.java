@@ -19,6 +19,7 @@ package com.hazelcast.map.impl;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.diagnostics.Diagnostics;
 import com.hazelcast.internal.diagnostics.StoreLatencyPlugin;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.EntryLoader;
 import com.hazelcast.map.MapLoader;
 import com.hazelcast.map.MapLoaderLifecycleSupport;
@@ -51,7 +52,9 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     private final Object impl;
 
-    public MapStoreWrapper(String mapName, Object impl) {
+    private final String namespace;
+
+    public MapStoreWrapper(String mapName, Object impl, String namespace) {
         this.mapName = mapName;
         this.impl = impl;
         MapLoader loader = null;
@@ -68,6 +71,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
         }
         this.mapLoader = loader;
         this.mapStore = store;
+        this.namespace = namespace;
     }
 
     public MapStore getMapStore() {
@@ -76,15 +80,25 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     @Override
     public void destroy() {
-        if (impl instanceof MapLoaderLifecycleSupport) {
-            ((MapLoaderLifecycleSupport) impl).destroy();
+        NamespaceUtil.setupNs(namespace);
+        try {
+            if (impl instanceof MapLoaderLifecycleSupport) {
+                ((MapLoaderLifecycleSupport) impl).destroy();
+            }
+        } finally {
+            NamespaceUtil.cleanupNs(namespace);
         }
     }
 
     @Override
     public void init(HazelcastInstance hazelcastInstance, Properties properties, String mapName) {
-        if (impl instanceof MapLoaderLifecycleSupport) {
-            ((MapLoaderLifecycleSupport) impl).init(hazelcastInstance, properties, mapName);
+        NamespaceUtil.setupNs(namespace);
+        try {
+            if (impl instanceof MapLoaderLifecycleSupport) {
+                ((MapLoaderLifecycleSupport) impl).init(hazelcastInstance, properties, mapName);
+            }
+        } finally {
+            NamespaceUtil.cleanupNs(namespace);
         }
     }
 
@@ -117,21 +131,36 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     @Override
     public void delete(Object key) {
-        if (isMapStore()) {
-            mapStore.delete(key);
+        NamespaceUtil.setupNs(namespace);
+        try {
+            if (isMapStore()) {
+                mapStore.delete(key);
+            }
+        } finally {
+            NamespaceUtil.cleanupNs(namespace);
         }
     }
 
     public void store(Object key, Object value) {
         if (isMapStore()) {
-            mapStore.store(key, value);
+            NamespaceUtil.setupNs(namespace);
+            try {
+                mapStore.store(key, value);
+            } finally {
+                NamespaceUtil.cleanupNs(namespace);
+            }
         }
     }
 
     @Override
     public void storeAll(Map map) {
         if (isMapStore()) {
-            mapStore.storeAll(map);
+            NamespaceUtil.setupNs(namespace);
+            try {
+                mapStore.storeAll(map);
+            } finally {
+                NamespaceUtil.cleanupNs(namespace);
+            }
         }
     }
 
@@ -141,7 +170,12 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
             return;
         }
         if (isMapStore()) {
-            mapStore.deleteAll(keys);
+            NamespaceUtil.setupNs(namespace);
+            try {
+                mapStore.deleteAll(keys);
+            } finally {
+                NamespaceUtil.cleanupNs(namespace);
+            }
         }
     }
 
@@ -153,7 +187,12 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
     @Override
     public Iterable<Object> loadAllKeys() {
         if (isMapLoader()) {
-            return (Iterable<Object>) mapLoader.loadAllKeys();
+            NamespaceUtil.setupNs(namespace);
+            try {
+                return (Iterable<Object>) mapLoader.loadAllKeys();
+            } finally {
+                NamespaceUtil.cleanupNs(namespace);
+            }
         }
         return null;
     }
@@ -161,7 +200,12 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
     @Override
     public Object load(Object key) {
         if (isMapLoader()) {
-            return mapLoader.load(key);
+            NamespaceUtil.setupNs(namespace);
+            try {
+                return mapLoader.load(key);
+            } finally {
+                NamespaceUtil.cleanupNs(namespace);
+            }
         }
         return null;
     }
@@ -172,7 +216,12 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
             return Collections.EMPTY_MAP;
         }
         if (isMapLoader()) {
-            return mapLoader.loadAll(keys);
+            NamespaceUtil.setupNs(namespace);
+            try {
+                return mapLoader.loadAll(keys);
+            } finally {
+                NamespaceUtil.cleanupNs(namespace);
+            }
         }
         return null;
     }
