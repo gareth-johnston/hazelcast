@@ -93,7 +93,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         config.setClassLoader(HazelcastInstance.class.getClassLoader());
     }
 
-
     /** Find & load all .class files in the scope of this test */
     private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
         try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
@@ -227,7 +226,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
     private void printURLsOf(ClassLoader classLoader) throws IOException {
         Enumeration<URL> urls = classLoader.getResources("META-INF/services/java.sql.Driver");
-        for (Iterator<URL> it = urls.asIterator(); it.hasNext(); ) {
+        for (Iterator<URL> it = urls.asIterator(); it.hasNext();) {
             URL u = it.next();
             System.out.println(u);
         }
@@ -238,7 +237,8 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         URL driverUrl = MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL();
         System.out.println("Driver URL is " + driverUrl);
         URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {driverUrl});
-        config.addNamespaceConfig(new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL()));
+        config.addNamespaceConfig(
+                new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL()));
         nodeClassLoader = Node.getConfigClassloader(config);
         NamespaceThreadLocalContext.onStartNsAware("ns1");
         try {
@@ -250,15 +250,13 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             System.out.println("---------------");
             System.out.println("URLClassLoader Driver Classes");
             ServiceLoader<Driver> loader = ServiceLoader.load(Driver.class, urlClassLoader);
-            for (Iterator<Driver> it = loader.iterator(); it.hasNext(); ) {
-                Driver d = it.next();
+            for (Driver d : loader) {
                 System.out.println(d.getClass().getName() + " / " + d.getClass().getClassLoader());
             }
             System.out.println("--------------");
             System.out.println("NSAwareClassLoader Driver Classes");
             loader = ServiceLoader.load(Driver.class, nodeClassLoader);
-            for (Iterator<Driver> it = loader.iterator(); it.hasNext(); ) {
-                Driver d = it.next();
+            for (Driver d : loader) {
                 System.out.println(d.getClass().getName() + " / " + d.getClass().getClassLoader());
             }
         } finally {
@@ -428,8 +426,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derby", null, "10.15.2.0"))
                         .toUri().toURL())
                 .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derbyshared", null, "10.15.2.0"))
-                        .toUri().toURL())
-                ;
+                        .toUri().toURL());
 
         config.addNamespaceConfig(namespace);
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
