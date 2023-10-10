@@ -838,12 +838,14 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         return this;
     }
 
+    /** @since 5.4 */
     @Nonnull
     @Override
     public String getNamespace() {
         return namespace;
     }
 
+    /** @since 5.4 */
     public MapConfig setNamespace(String namespace) {
         this.namespace = namespace;
         return this;
