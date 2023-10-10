@@ -83,6 +83,7 @@ public class MapExecuteOnKeyMessageTask
         return new Object[]{parameters.key, parameters.entryProcessor};
     }
 
+    @Override
     void onStartNsAwareSection() {
         if (nodeEngine.getNode().namespacesEnabled) {
             MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(parameters.name);
@@ -92,6 +93,7 @@ public class MapExecuteOnKeyMessageTask
         }
     }
 
+    @Override
     void onCompleteNsAwareSection() {
         if (nodeEngine.getNode().namespacesEnabled) {
             MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(parameters.name);
