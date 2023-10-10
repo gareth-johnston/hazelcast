@@ -466,8 +466,8 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         // Deliberately use an older version
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
                 .addJar(MavenInterface.locateArtifact(H2_202_ARTIFACT).toUri().toURL());
-
         config.addNamespaceConfig(namespace);
+
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
                 .setClassName(className);
 
