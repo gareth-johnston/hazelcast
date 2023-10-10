@@ -20,6 +20,8 @@ import com.hazelcast.internal.usercodedeployment.impl.ClassSource;
 import com.hazelcast.internal.util.ConcurrentReferenceHashMap;
 import com.hazelcast.internal.util.ExceptionUtil;
 
+import javax.annotation.Nullable;
+
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.net.URL;
@@ -31,6 +33,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.hazelcast.internal.util.EmptyStatement.ignore;
 import static com.hazelcast.internal.util.Preconditions.isNotNull;
@@ -56,6 +60,8 @@ public final class ClassLoaderUtil {
 
     private static final ClassLoader NULL_FALLBACK_CLASSLOADER = new URLClassLoader(new URL[0],
             ClassLoaderUtil.class.getClassLoader());
+
+    private static final Pattern CLASS_PATTERN = Pattern.compile("(.*)\\.class$");
 
     static {
         try {
@@ -452,4 +458,9 @@ public final class ClassLoaderUtil {
         }
     }
 
+    @Nullable
+    public static String extractClassName(String filePath) {
+        Matcher matcher = CLASS_PATTERN.matcher(filePath.replace('/', '.'));
+        return matcher.matches() ? matcher.group(1) : null;
+    }
 }

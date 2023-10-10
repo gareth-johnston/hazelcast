@@ -20,6 +20,7 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
@@ -46,8 +47,6 @@ import java.util.regex.Pattern;
 import java.util.zip.DeflaterOutputStream;
 
 public class NamespaceServiceImpl implements NamespaceService {
-    // TODO This exists in three places in the codebase - why?
-    private static final Pattern CLASS_PATTERN = Pattern.compile("(.*)\\.class$");
 
     final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
 
@@ -111,21 +110,15 @@ public class NamespaceServiceImpl implements NamespaceService {
                     break;
                 }
 
-                // todo completely inefficient, doing pattern matching twice currently
-                String entryName = extractClassName(entry);
-                boolean isClass = false;
-                Matcher matcher = CLASS_PATTERN.matcher(entry.getName().replace('/', '.'));
-                if (matcher.matches()) {
-                    isClass = true;
-                }
+                String className = ClassLoaderUtil.extractClassName(entry.getName());
+
                 baos.reset();
                 try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
                     IOUtil.drainTo(inputStream, compressor);
                 }
                 inputStream.closeEntry();
                 byte[] payload = baos.toByteArray();
-                resourceMap.put(isClass ? JobRepository.classKeyName(toClassResourceId(entryName))
-                        : JobRepository.fileKeyName(entryName), payload);
+                resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName()): JobRepository.classKeyName(toClassResourceId(className)), payload);
             } while (true);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
@@ -149,15 +142,6 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
         byte[] classDefinition = baos.toByteArray();
         resourceMap.put(JobRepository.classKeyName(resourceId), classDefinition);
-    }
-
-    static String extractClassName(JarEntry entry) {
-        String entryName = entry.getName();
-        Matcher matcher = CLASS_PATTERN.matcher(entryName.replace('/', '.'));
-        if (matcher.matches()) {
-            return matcher.group(1);
-        }
-        return entry.getName();
     }
 
     private void initializeClassLoader(String nsName, MapResourceClassLoader classLoader) {

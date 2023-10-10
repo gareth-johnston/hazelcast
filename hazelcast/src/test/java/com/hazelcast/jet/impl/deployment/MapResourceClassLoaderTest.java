@@ -16,6 +16,7 @@
 
 package com.hazelcast.jet.impl.deployment;
 
+import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
@@ -28,15 +29,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.DeflaterOutputStream;
 
 import static com.hazelcast.internal.nio.IOUtil.closeResource;
@@ -50,8 +48,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class MapResourceClassLoaderTest {
-    private static final Pattern CLASS_PATTERN = Pattern.compile("(.*)\\.class$");
-
     private Map<String, byte[]> classBytes = new HashMap<>();
     private MapResourceClassLoader classLoader;
     private ClassLoader parentClassLoader;
@@ -161,12 +157,11 @@ public class MapResourceClassLoaderTest {
                     break;
                 }
 
-                String className = extractClassName(entry);
+                String className = ClassLoaderUtil.extractClassName(entry.getName());
                 if (className == null) {
                     continue;
                 }
                 baos.reset();
-                OutputStream os = new DeflaterOutputStream(baos, true);
                 try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
                     IOUtil.drainTo(inputStream, compressor);
                 }
@@ -177,15 +172,6 @@ public class MapResourceClassLoaderTest {
         } finally {
             closeResource(inputStream);
         }
-    }
-
-    private String extractClassName(JarEntry entry) {
-        String entryName = entry.getName();
-        Matcher matcher = CLASS_PATTERN.matcher(entryName.replace('/', '.'));
-        if (matcher.matches()) {
-            return matcher.group(1);
-        }
-        return null;
     }
 
     private JarInputStream getJarInputStream(String jarPath) throws IOException {

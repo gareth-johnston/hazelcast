@@ -20,6 +20,7 @@ import com.hazelcast.client.config.ClientUserCodeDeploymentConfig;
 import com.hazelcast.client.impl.clientside.HazelcastClientInstanceImpl;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.ClientDeployClassesCodec;
+import com.hazelcast.internal.nio.ClassLoaderUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,8 +44,6 @@ import static com.hazelcast.internal.nio.IOUtil.closeResource;
 import static com.hazelcast.internal.util.EmptyStatement.ignore;
 
 public class ClientUserCodeDeploymentService {
-
-    private static final Pattern CLASS_PATTERN = Pattern.compile("(.*)\\.class$");
     private final ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig;
     private final ClassLoader configClassLoader;
     //List<Map.Entry> is used instead of Map to comply with generated code of client protocol
@@ -101,7 +100,7 @@ public class ClientUserCodeDeploymentService {
                     break;
                 }
 
-                String className = extractClassName(entry);
+                String className = ClassLoaderUtil.extractClassName(entry.getName());
                 if (className == null) {
                     continue;
                 }
@@ -144,15 +143,6 @@ public class ClientUserCodeDeploymentService {
             os.write(v);
         }
         return os.toByteArray();
-    }
-
-    private String extractClassName(JarEntry entry) {
-        String entryName = entry.getName();
-        Matcher matcher = CLASS_PATTERN.matcher(entryName.replace('/', '.'));
-        if (matcher.matches()) {
-            return matcher.group(1);
-        }
-        return null;
     }
 
     public void deploy(HazelcastClientInstanceImpl client) throws ExecutionException, InterruptedException {
