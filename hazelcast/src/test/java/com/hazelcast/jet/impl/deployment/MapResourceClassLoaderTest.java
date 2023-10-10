@@ -41,10 +41,10 @@ import java.util.zip.DeflaterOutputStream;
 
 import static com.hazelcast.internal.nio.IOUtil.closeResource;
 import static com.hazelcast.internal.util.EmptyStatement.ignore;
-import static com.hazelcast.jet.impl.JobRepository.CLASS_STORAGE_KEY_NAME_PREFIX;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -114,8 +114,9 @@ public class MapResourceClassLoaderTest {
     @Test
     public void getResource_whenResolvableFromParent() {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
-        URL url = classLoader.getResource("com/hazelcast/core/HazelcastInstance.class");
+        URL url = classLoader.getResource("com/hazelcast/map/IMap.class");
         assertNotNull(url);
+        assertNotEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
     }
 
     @Test
@@ -141,10 +142,11 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void findResource_whenResolvableFromParent() {
+    public void findResource_whenResolvableFromParent() throws IOException {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
-        URL url = classLoader.findResource("com/hazelcast/core/HazelcastInstance.class");
-        assertNotNull(url);
+        URL url = classLoader.findResource("com/hazelcast/map/IMap.class");
+        // findResource is meant to only search in this classloader's resources, not the parent
+        assertNull(url);
     }
 
     private void loadClassesFromJar(String jarPath) throws IOException {
