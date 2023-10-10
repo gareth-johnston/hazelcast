@@ -128,6 +128,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static com.hazelcast.cluster.memberselector.MemberSelectors.DATA_MEMBER_SELECTOR;
 import static com.hazelcast.config.ConfigAccessor.getActiveMemberNetworkConfig;
@@ -349,29 +350,24 @@ public class Node {
     }
 
     // todo move all namespace & resource reading out of this class
-    static Set<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
-        Set<ResourceDefinition> resources = new HashSet<>();
-        ConfigAccessor.getResourceConfigs(nsConfig).forEach(resourceConfig -> {
+    static Collection<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
+        return ConfigAccessor.getResourceConfigs(nsConfig).stream().map(resourceConfig -> {
             try (InputStream is = resourceConfig.getUrl().openStream()) {
                 byte[] payload = is.readAllBytes();
-                ResourceDefinitionImpl resourceDefinition = new ResourceDefinitionImpl(
+                return new ResourceDefinitionImpl(
                         resourceConfig.getId(),
                         payload,
                         resourceConfig.getResourceType());
-                resources.add(resourceDefinition);
             } catch (IOException e) {
                 throw new IllegalArgumentException("Could not open stream for resource id "
                         + resourceConfig.getId() + " and URL " + resourceConfig.getUrl(), e);
             }
-        });
-        return resources;
+        }).collect(Collectors.toSet());
     }
 
     /**
      * If legacy user code deployment feature is enabled, then constructs a classloader to facilitate
      * legacy UCD, otherwise returns the config's classloader.
-     * @param config
-     * @return
      */
     private static ClassLoader getLegacyUCDClassLoader(Config config) {
         UserCodeDeploymentConfig userCodeDeploymentConfig = config.getUserCodeDeploymentConfig();

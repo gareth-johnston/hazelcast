@@ -17,12 +17,13 @@
 package com.hazelcast.internal.namespace;
 
 import javax.annotation.Nonnull;
-import java.util.Set;
+
+import java.util.Collection;
 
 public interface NamespaceService {
 
     void addNamespace(@Nonnull String nsName,
-                      @Nonnull Set<ResourceDefinition> resources);
+                      @Nonnull Collection<ResourceDefinition> resources);
 
     /**
      *

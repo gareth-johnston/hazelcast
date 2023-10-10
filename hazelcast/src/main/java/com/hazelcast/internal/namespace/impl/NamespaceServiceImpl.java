@@ -33,17 +33,15 @@ import java.io.IOException;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.DeflaterOutputStream;
 
 public class NamespaceServiceImpl implements NamespaceService {
@@ -57,7 +55,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public void addNamespace(@Nonnull String nsName, @Nonnull Set<ResourceDefinition> resources) {
+    public void addNamespace(@Nonnull String nsName, @Nonnull Collection<ResourceDefinition> resources) {
         Objects.requireNonNull(nsName, "namespace name cannot be null");
         Objects.requireNonNull(resources, "resources cannot be null");
 
