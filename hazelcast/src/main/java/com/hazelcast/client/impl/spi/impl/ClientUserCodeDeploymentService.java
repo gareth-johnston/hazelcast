@@ -16,6 +16,9 @@
 
 package com.hazelcast.client.impl.spi.impl;
 
+import static com.hazelcast.internal.nio.IOUtil.closeResource;
+import static com.hazelcast.internal.util.EmptyStatement.ignore;
+
 import com.hazelcast.client.config.ClientUserCodeDeploymentConfig;
 import com.hazelcast.client.impl.clientside.HazelcastClientInstanceImpl;
 import com.hazelcast.client.impl.protocol.ClientMessage;
@@ -37,11 +40,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static com.hazelcast.internal.nio.IOUtil.closeResource;
-import static com.hazelcast.internal.util.EmptyStatement.ignore;
 
 public class ClientUserCodeDeploymentService {
     private final ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig;

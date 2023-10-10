@@ -33,7 +33,7 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
         this.payload = payload;
         this.type = type;
     }
-    
+
     public ResourceDefinitionImpl(ResourceConfig resourceConfig) {
         try (InputStream is = resourceConfig.getUrl().openStream()) {
             id = resourceConfig.getId();

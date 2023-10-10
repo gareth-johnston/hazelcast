@@ -3230,7 +3230,7 @@ public class Config {
     /**
      * Adds the specified {@code namespaceConfig}, replacing any existing {@link NamespaceConfig} with the same
      * {@link NamespaceConfig#name}
-     * 
+     *
      * @since 5.4
      */
     public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {

@@ -16,11 +16,17 @@
 
 package com.hazelcast.jet.impl.deployment;
 
-import com.hazelcast.internal.nio.IOUtil;
+import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.jet.impl.JobRepository.fileKeyName;
+import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
+import static com.hazelcast.jet.impl.util.Util.uncheckCall;
+
 import com.hazelcast.jet.impl.util.Util;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,12 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.zip.InflaterInputStream;
-
-import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
-import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static com.hazelcast.jet.impl.JobRepository.fileKeyName;
-import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
-import static com.hazelcast.jet.impl.util.Util.uncheckCall;
 
 /**
  * Abstract class loader that can be customized with:
@@ -227,7 +227,6 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     }
 
     protected final class MapResourceURLStreamHandler extends URLStreamHandler {
-
         @Override
         protected URLConnection openConnection(URL u) throws IOException {
             return new MapResourceURLConnection(u);
@@ -235,8 +234,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     }
 
     private final class MapResourceURLConnection extends URLConnection {
-
-        public MapResourceURLConnection(URL url) {
+        MapResourceURLConnection(URL url) {
             super(url);
         }
 

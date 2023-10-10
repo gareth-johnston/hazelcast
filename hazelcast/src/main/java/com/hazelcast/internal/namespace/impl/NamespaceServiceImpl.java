@@ -120,7 +120,8 @@ public class NamespaceServiceImpl implements NamespaceService {
                 }
                 inputStream.closeEntry();
                 byte[] payload = baos.toByteArray();
-                resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName()): JobRepository.classKeyName(toClassResourceId(className)), payload);
+                resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName())
+                        : JobRepository.classKeyName(toClassResourceId(className)), payload);
             } while (true);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);

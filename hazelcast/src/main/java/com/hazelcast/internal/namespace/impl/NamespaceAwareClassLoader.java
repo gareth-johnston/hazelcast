@@ -33,8 +33,8 @@ import java.util.Enumeration;
  * @see com.hazelcast.config.NamespaceConfig
  */
 public class NamespaceAwareClassLoader extends ClassLoader {
-    private static final MethodHandle findResourceMethodHandle;
-    private static final MethodHandle findResourceMethodHandles;
+    private static final MethodHandle FIND_RESOURCE_METHOD_HANDLE;
+    private static final MethodHandle FIND_RESOURCES_METHOD_HANDLE;
 
     private final NamespaceServiceImpl namespaceService;
 
@@ -44,9 +44,9 @@ public class NamespaceAwareClassLoader extends ClassLoader {
 
             Lookup privateLookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
 
-            findResourceMethodHandle = privateLookup
+            FIND_RESOURCE_METHOD_HANDLE = privateLookup
                     .unreflect(ClassLoader.class.getDeclaredMethod("findResource", String.class));
-            findResourceMethodHandles = privateLookup
+            FIND_RESOURCES_METHOD_HANDLE = privateLookup
                     .unreflect(ClassLoader.class.getDeclaredMethod("findResources", String.class));
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
@@ -79,7 +79,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     @Override
     protected URL findResource(String name) {
         try {
-            return (URL) findResourceMethodHandle.invoke(pickClassLoader(), name);
+            return (URL) FIND_RESOURCE_METHOD_HANDLE.invoke(pickClassLoader(), name);
         } catch (Throwable t) {
             throw ExceptionUtil.sneakyThrow(t);
         }
@@ -88,7 +88,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     @Override
     protected Enumeration<URL> findResources(String name) throws IOException {
         try {
-            return (Enumeration<URL>) findResourceMethodHandles.invoke(pickClassLoader(), name);
+            return (Enumeration<URL>) FIND_RESOURCES_METHOD_HANDLE.invoke(pickClassLoader(), name);
         } catch (Throwable t) {
             throw ExceptionUtil.sneakyThrow(t);
         }
