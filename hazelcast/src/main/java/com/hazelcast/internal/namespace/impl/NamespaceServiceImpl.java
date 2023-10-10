@@ -16,6 +16,8 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
+
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.nio.IOUtil;
@@ -23,6 +25,7 @@ import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nonnull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,13 +45,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.DeflaterOutputStream;
 
-import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
-
 public class NamespaceServiceImpl implements NamespaceService {
+    // TODO This exists in three places in the codebase - why?
     private static final Pattern CLASS_PATTERN = Pattern.compile("(.*)\\.class$");
 
-    final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader
-            = new ConcurrentHashMap<>();
+    final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
 
     private final ClassLoader configClassLoader;
 
@@ -57,8 +58,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public void addNamespace(@Nonnull String nsName,
-                             @Nonnull Set<ResourceDefinition> resources) {
+    public void addNamespace(@Nonnull String nsName, @Nonnull Set<ResourceDefinition> resources) {
         Objects.requireNonNull(nsName, "namespace name cannot be null");
         Objects.requireNonNull(resources, "resources cannot be null");
 
@@ -67,8 +67,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             handleResource(r, resourceMap);
         }
 
-        MapResourceClassLoader updated = new MapResourceClassLoader(configClassLoader,
-                () -> resourceMap, true);
+        MapResourceClassLoader updated = new MapResourceClassLoader(configClassLoader, () -> resourceMap, true);
 
         MapResourceClassLoader removed = namespaceToClassLoader.put(nsName, updated);
         if (removed != null) {
@@ -104,7 +103,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     public static void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
-             JarInputStream inputStream = new JarInputStream(bais)) {
+                JarInputStream inputStream = new JarInputStream(bais)) {
             JarEntry entry;
             do {
                 entry = inputStream.getNextJarEntry();
@@ -125,13 +124,11 @@ public class NamespaceServiceImpl implements NamespaceService {
                 }
                 inputStream.closeEntry();
                 byte[] payload = baos.toByteArray();
-                resourceMap.put(isClass
-                        ? JobRepository.classKeyName(toClassResourceId(entryName))
+                resourceMap.put(isClass ? JobRepository.classKeyName(toClassResourceId(entryName))
                         : JobRepository.fileKeyName(entryName), payload);
             } while (true);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id "
-                    + id, e);
+            throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
         }
     }
 
@@ -148,8 +145,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(classBytes)) {
             IOUtil.drainTo(inputStream, compressor);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to read class bytes for resource with id "
-                    + resourceId, e);
+            throw new IllegalArgumentException("Failed to read class bytes for resource with id " + resourceId, e);
         }
         byte[] classDefinition = baos.toByteArray();
         resourceMap.put(JobRepository.classKeyName(resourceId), classDefinition);
