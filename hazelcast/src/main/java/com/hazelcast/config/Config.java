@@ -3227,7 +3227,10 @@ public class Config {
         return new DataConnectionConfigReadOnly(getDataConnectionConfig("default"));
     }
 
-    // dynamic config semantics: add-or-replace namespace config
+    /**
+     * Adds the specified {@code namespaceConfig}, replacing any existing {@link NamespaceConfig} with the same
+     * {@link NamespaceConfig#name}
+     */
     public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {
         namespaceConfigs.put(namespaceConfig.getName(), namespaceConfig);
         return this;
