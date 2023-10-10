@@ -3247,6 +3247,7 @@ public class Config {
     /** @since 5.4 */
     public Map<String, NamespaceConfig> getNamespaceConfigs() {
         // TODO probably immutable deep copy?
+        // Jack - I don't think so, com.hazelcast.config.Config.getPNCounterConfigs() doesn't do that.
         return Collections.unmodifiableMap(namespaceConfigs);
     }
 
