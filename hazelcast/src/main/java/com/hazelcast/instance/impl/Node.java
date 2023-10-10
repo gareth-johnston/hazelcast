@@ -342,27 +342,8 @@ public class Node {
             return parent;
         }
         // create the NamespaceAwareClassLoader with the determined parent.
-        NamespaceServiceImpl namespaceService = new NamespaceServiceImpl(parent);
-        staticNsConfig.forEach((nsName, nsConfig) -> {
-            namespaceService.addNamespace(nsName, resourceDefinitions(nsConfig));
-        });
+        NamespaceServiceImpl namespaceService = new NamespaceServiceImpl(parent, staticNsConfig);
         return new NamespaceAwareClassLoader(parent, namespaceService);
-    }
-
-    // todo move all namespace & resource reading out of this class
-    static Collection<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
-        return ConfigAccessor.getResourceConfigs(nsConfig).stream().map(resourceConfig -> {
-            try (InputStream is = resourceConfig.getUrl().openStream()) {
-                byte[] payload = is.readAllBytes();
-                return new ResourceDefinitionImpl(
-                        resourceConfig.getId(),
-                        payload,
-                        resourceConfig.getResourceType());
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Could not open stream for resource id "
-                        + resourceConfig.getId() + " and URL " + resourceConfig.getUrl(), e);
-            }
-        }).collect(Collectors.toSet());
     }
 
     /**

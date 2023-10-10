@@ -18,6 +18,8 @@ package com.hazelcast.internal.namespace.impl;
 
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
+import com.hazelcast.config.ConfigAccessor;
+import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
@@ -42,6 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.stream.Collectors;
 import java.util.zip.DeflaterOutputStream;
 
 public class NamespaceServiceImpl implements NamespaceService {
@@ -50,8 +53,9 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     private final ClassLoader configClassLoader;
 
-    public NamespaceServiceImpl(ClassLoader configClassLoader) {
+    public NamespaceServiceImpl(ClassLoader configClassLoader, Map<String, NamespaceConfig> nsConfigs) {
         this.configClassLoader = configClassLoader;
+        nsConfigs.forEach((nsName, nsConfig) -> addNamespace(nsName, resourceDefinitions(nsConfig)));
     }
 
     @Override
@@ -183,5 +187,10 @@ public class NamespaceServiceImpl implements NamespaceService {
                 }
             }
         }
+    }
+
+    private static Collection<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
+        return ConfigAccessor.getResourceConfigs(nsConfig).stream().map(ResourceDefinitionImpl::new)
+                .collect(Collectors.toSet());
     }
 }

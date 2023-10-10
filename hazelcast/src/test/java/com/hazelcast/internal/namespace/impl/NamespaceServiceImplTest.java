@@ -63,7 +63,7 @@ public class NamespaceServiceImplTest {
 
     @Before
     public void setup() {
-        namespaceService = new NamespaceServiceImpl(NamespaceServiceImplTest.class.getClassLoader());
+        namespaceService = new NamespaceServiceImpl(NamespaceServiceImplTest.class.getClassLoader(), Collections.emptyMap());
     }
 
     @Test

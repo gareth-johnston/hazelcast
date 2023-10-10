@@ -17,18 +17,33 @@
 package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.jet.config.ResourceType;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public class ResourceDefinitionImpl implements ResourceDefinition {
     private final String id;
     private final byte[] payload;
     private final ResourceType type;
 
-
     public ResourceDefinitionImpl(String id, byte[] payload, ResourceType type) {
         this.id = id;
         this.payload = payload;
         this.type = type;
+    }
+    
+    public ResourceDefinitionImpl(ResourceConfig resourceConfig) {
+        try (InputStream is = resourceConfig.getUrl().openStream()) {
+            id = resourceConfig.getId();
+            payload = is.readAllBytes();
+            type = resourceConfig.getResourceType();
+        } catch (IOException e) {
+            throw new IllegalArgumentException(
+                    "Could not open stream for resource id " + resourceConfig.getId() + " and URL " + resourceConfig.getUrl(),
+                    e);
+        }
     }
 
     @Override
