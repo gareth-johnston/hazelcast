@@ -80,26 +80,20 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     @Override
     public void destroy() {
-        NamespaceUtil.setupNs(namespace);
-        try {
+        NamespaceUtil.runWithNamespace(namespace, () -> {
             if (impl instanceof MapLoaderLifecycleSupport) {
                 ((MapLoaderLifecycleSupport) impl).destroy();
             }
-        } finally {
-            NamespaceUtil.cleanupNs(namespace);
-        }
+        });
     }
 
     @Override
     public void init(HazelcastInstance hazelcastInstance, Properties properties, String mapName) {
-        NamespaceUtil.setupNs(namespace);
-        try {
+        NamespaceUtil.runWithNamespace(namespace, () -> {
             if (impl instanceof MapLoaderLifecycleSupport) {
                 ((MapLoaderLifecycleSupport) impl).init(hazelcastInstance, properties, mapName);
             }
-        } finally {
-            NamespaceUtil.cleanupNs(namespace);
-        }
+        });
     }
 
     private boolean isMapStore() {
@@ -131,36 +125,27 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     @Override
     public void delete(Object key) {
-        NamespaceUtil.setupNs(namespace);
-        try {
+        NamespaceUtil.runWithNamespace(namespace, () -> {
             if (isMapStore()) {
                 mapStore.delete(key);
             }
-        } finally {
-            NamespaceUtil.cleanupNs(namespace);
-        }
+        });
     }
 
     public void store(Object key, Object value) {
         if (isMapStore()) {
-            NamespaceUtil.setupNs(namespace);
-            try {
+            NamespaceUtil.runWithNamespace(namespace, () -> {
                 mapStore.store(key, value);
-            } finally {
-                NamespaceUtil.cleanupNs(namespace);
-            }
+            });
         }
     }
 
     @Override
     public void storeAll(Map map) {
         if (isMapStore()) {
-            NamespaceUtil.setupNs(namespace);
-            try {
+            NamespaceUtil.runWithNamespace(namespace, () -> {
                 mapStore.storeAll(map);
-            } finally {
-                NamespaceUtil.cleanupNs(namespace);
-            }
+            });
         }
     }
 
@@ -170,12 +155,9 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
             return;
         }
         if (isMapStore()) {
-            NamespaceUtil.setupNs(namespace);
-            try {
+            NamespaceUtil.runWithNamespace(namespace, () -> {
                 mapStore.deleteAll(keys);
-            } finally {
-                NamespaceUtil.cleanupNs(namespace);
-            }
+            });
         }
     }
 
@@ -187,12 +169,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
     @Override
     public Iterable<Object> loadAllKeys() {
         if (isMapLoader()) {
-            NamespaceUtil.setupNs(namespace);
-            try {
-                return (Iterable<Object>) mapLoader.loadAllKeys();
-            } finally {
-                NamespaceUtil.cleanupNs(namespace);
-            }
+            return NamespaceUtil.callWithNamespace(namespace, () -> (Iterable<Object>) mapLoader.loadAllKeys());
         }
         return null;
     }
@@ -200,12 +177,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
     @Override
     public Object load(Object key) {
         if (isMapLoader()) {
-            NamespaceUtil.setupNs(namespace);
-            try {
-                return mapLoader.load(key);
-            } finally {
-                NamespaceUtil.cleanupNs(namespace);
-            }
+            return NamespaceUtil.callWithNamespace(namespace, () -> mapLoader.load(key));
         }
         return null;
     }
@@ -216,12 +188,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
             return Collections.EMPTY_MAP;
         }
         if (isMapLoader()) {
-            NamespaceUtil.setupNs(namespace);
-            try {
-                return mapLoader.loadAll(keys);
-            } finally {
-                NamespaceUtil.cleanupNs(namespace);
-            }
+            return NamespaceUtil.callWithNamespace(namespace, () -> mapLoader.loadAll(keys));
         }
         return null;
     }

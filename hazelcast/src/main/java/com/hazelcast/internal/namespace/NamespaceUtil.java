@@ -18,11 +18,13 @@ package com.hazelcast.internal.namespace;
 
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
+import com.hazelcast.internal.util.ExceptionUtil;
 import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.concurrent.Callable;
 
 /**
  * Utility to simplify setup/cleanup of namespace aware classloading
@@ -80,5 +82,27 @@ public class NamespaceUtil {
             return;
         }
         NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+    }
+
+    public static void runWithNamespace(@Nullable String namespace, Runnable runnable) {
+        setupNs(namespace);
+        try {
+            runnable.run();
+        } finally {
+            cleanupNs(namespace);
+        }
+    }
+
+     public static <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable) {
+        setupNs(namespace);
+        try {
+            try {
+                return callable.call();
+            } catch (Exception e) {
+                throw ExceptionUtil.sneakyThrow(e);
+            }
+        } finally {
+            cleanupNs(namespace);
+        }
     }
 }
