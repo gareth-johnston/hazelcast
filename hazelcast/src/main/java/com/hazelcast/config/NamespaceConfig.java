@@ -72,7 +72,7 @@ public class NamespaceConfig implements NamedConfig {
         final ResourceConfig cfg = new ResourceConfig(url, id, resourceType);
 
         if (resourceConfigs.putIfAbsent(cfg.getId(), cfg) != null) {
-            throw new IllegalArgumentException("Resource with id:" + cfg.getId() + " already exists");
+            throw new IllegalArgumentException("Resource with id: " + cfg.getId() + " already exists");
         } else {
             return this;
         }
