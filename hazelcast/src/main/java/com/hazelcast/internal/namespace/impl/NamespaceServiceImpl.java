@@ -26,8 +26,13 @@ import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -66,21 +71,21 @@ public class NamespaceServiceImpl implements NamespaceService {
                 () -> resourceMap, true);
 
         MapResourceClassLoader removed = namespaceToClassLoader.put(nsName, updated);
-//        if (removed != null) {
-//            // todo: clean up of removed classloader???
-//        }
+        if (removed != null) {
+            cleanUpClassLoader(nsName, removed);
+        }
+        initializeClassLoader(nsName, updated);
     }
 
     @Override
     public boolean removeNamespace(@Nonnull String nsName) {
         MapResourceClassLoader removed = namespaceToClassLoader.remove(nsName);
-//        if (removed != null) {
-//            // todo: clean up of removed classloader
-//            return true;
-//        } else {
-//            return false;
-//        }
-        return removed != null;
+        if (removed != null) {
+            cleanUpClassLoader(nsName, removed);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
@@ -96,7 +101,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
     }
 
-    void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
+    public static void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
              JarInputStream inputStream = new JarInputStream(bais)) {
@@ -150,12 +155,55 @@ public class NamespaceServiceImpl implements NamespaceService {
         resourceMap.put(JobRepository.classKeyName(resourceId), classDefinition);
     }
 
-    private String extractClassName(JarEntry entry) {
+    static String extractClassName(JarEntry entry) {
         String entryName = entry.getName();
         Matcher matcher = CLASS_PATTERN.matcher(entryName.replace('/', '.'));
         if (matcher.matches()) {
             return matcher.group(1);
         }
         return entry.getName();
+    }
+
+    private void initializeClassLoader(String nsName, MapResourceClassLoader classLoader) {
+        initializeJdbcDrivers(nsName, classLoader);
+    }
+
+    private void cleanUpClassLoader(String nsName, MapResourceClassLoader removedClassLoader) {
+        cleanupJdbcDrivers(nsName, removedClassLoader);
+    }
+
+    private static void initializeJdbcDrivers(String nsName, MapResourceClassLoader classLoader) {
+        ServiceLoader<? extends Driver> driverLoader = ServiceLoader.load(Driver.class, classLoader);
+        for (Driver d : driverLoader) {
+            // todo proper logging
+            if (d.getClass().getClassLoader() != classLoader) {
+                continue;
+            }
+            System.out.println("Registering driver " + d.getClass() + " from classloader for namespace " + nsName);
+            try {
+                DriverManager.registerDriver(d);
+            } catch (SQLException e) {
+                // todo proper logger needed here
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void cleanupJdbcDrivers(String nsName, MapResourceClassLoader removedClassLoader) {
+        // cleanup any JDBC drivers that were registered from that classloader
+        Enumeration<Driver> registeredDrivers = DriverManager.getDrivers();
+        while (registeredDrivers.hasMoreElements()) {
+            Driver d = registeredDrivers.nextElement();
+            if (d.getClass().getClassLoader() == removedClassLoader) {
+                try {
+                    // todo proper logger needed here
+                    System.out.println("Deregistering " + d.getClass() + " from removed classloader for namespace " + nsName);
+                    DriverManager.deregisterDriver(d);
+                } catch (SQLException e) {
+                    // todo proper logger needed here
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
