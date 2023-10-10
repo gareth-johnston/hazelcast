@@ -3230,23 +3230,28 @@ public class Config {
     /**
      * Adds the specified {@code namespaceConfig}, replacing any existing {@link NamespaceConfig} with the same
      * {@link NamespaceConfig#name}
+     * 
+     * @since 5.4
      */
     public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {
         namespaceConfigs.put(namespaceConfig.getName(), namespaceConfig);
         return this;
     }
 
+    /** @since 5.4 */
     public Config removeNamespaceConfig(String namespaceName) {
         namespaceConfigs.remove(namespaceName);
         return this;
     }
 
-    Map<String, NamespaceConfig> getNamespaceConfigs() {
+    /** @since 5.4 */
+    public Map<String, NamespaceConfig> getNamespaceConfigs() {
         // TODO probably immutable deep copy?
         return Collections.unmodifiableMap(namespaceConfigs);
     }
 
-    void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
+    /** @since 5.4 */
+    public void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
         this.namespaceConfigs.clear();
         this.namespaceConfigs.putAll(namespaceConfigs);
     }
