@@ -46,7 +46,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.Assert.assertDoesNotThrow;
 
 public class MapResourceClassLoaderTest {
     private Map<String, byte[]> classBytes = new HashMap<>();
