@@ -96,7 +96,6 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
         config.addJar(pathRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar"));
-        System.out.println(pathRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar"));
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
         List<Map.Entry<String, byte[]>> list = service.getClassDefinitionList();

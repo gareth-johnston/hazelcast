@@ -39,10 +39,7 @@ public class UserCodeUtil {
         return new File(CLASS_DIRECTORY_FILE, path);
     }
 
-    /**
-     * TODO What's the application of this?
-     * @return a File for the given path, relative to src/test/class
-     */
+    /** @see #fileRelativeToBinariesFolder(String) */
     public static String pathRelativeToBinariesFolder(String path) {
         return fileRelativeToBinariesFolder(path).toString();
     }
