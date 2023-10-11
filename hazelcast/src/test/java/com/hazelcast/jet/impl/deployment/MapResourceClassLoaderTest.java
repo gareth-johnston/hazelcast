@@ -46,6 +46,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class MapResourceClassLoaderTest {
     private Map<String, byte[]> classBytes = new HashMap<>();
@@ -63,24 +64,23 @@ public class MapResourceClassLoaderTest {
     @Test
     public void findClass_whenClassFromMap() throws Exception {
         classLoader = new MapResourceClassLoader(null, () -> classBytes, false);
-        Class<?> klass = classLoader.findClass("usercodedeployment.ParentClass");
-        Object o = klass.getDeclaredConstructor().newInstance();
-        klass = classLoader.findClass("usercodedeployment.ChildClass");
-        o = klass.getDeclaredConstructor().newInstance();
+        assertDoesNotThrow(
+                () -> classLoader.findClass("usercodedeployment.ParentClass").getDeclaredConstructor().newInstance());
+        assertDoesNotThrow(() -> classLoader.findClass("usercodedeployment.ChildClass").getDeclaredConstructor().newInstance());
     }
 
     @Test
     public void findClass_whenClassFromMapReferencesClassFromParent() throws Exception {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
         // IncrementingEntryProcessor implements EntryProcessor
-        Class<?> klass = classLoader.findClass("usercodedeployment.IncrementingEntryProcessor");
-        Object o = klass.getDeclaredConstructor().newInstance();
+        assertDoesNotThrow(() -> classLoader.findClass("usercodedeployment.IncrementingEntryProcessor").getDeclaredConstructor()
+                .newInstance());
     }
 
     @Test
     public void loadClass_whenClassFromParentClassLoader() throws Exception {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
-        Class<?> klass = classLoader.loadClass("com.hazelcast.map.EntryProcessor");
+        assertDoesNotThrow(() -> classLoader.loadClass("com.hazelcast.map.EntryProcessor"));
     }
 
     @Test
