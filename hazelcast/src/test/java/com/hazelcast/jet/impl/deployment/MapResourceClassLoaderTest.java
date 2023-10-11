@@ -16,12 +16,24 @@
 
 package com.hazelcast.jet.impl.deployment;
 
+import static com.hazelcast.internal.nio.IOUtil.closeResource;
+import static com.hazelcast.internal.util.EmptyStatement.ignore;
+import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -36,17 +48,6 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.zip.DeflaterOutputStream;
-
-import static com.hazelcast.internal.nio.IOUtil.closeResource;
-import static com.hazelcast.internal.util.EmptyStatement.ignore;
-import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertDoesNotThrow;
 
 public class MapResourceClassLoaderTest {
     private Map<String, byte[]> classBytes = new HashMap<>();
