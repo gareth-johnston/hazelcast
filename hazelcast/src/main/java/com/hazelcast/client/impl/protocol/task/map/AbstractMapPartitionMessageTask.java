@@ -22,6 +22,7 @@ import com.hazelcast.instance.impl.Node;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
+import com.hazelcast.internal.nio.Connection;
 
 abstract class AbstractMapPartitionMessageTask<P> extends AbstractPartitionMessageTask<P> {
 
