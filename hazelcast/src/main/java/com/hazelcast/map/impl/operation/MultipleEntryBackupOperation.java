@@ -53,6 +53,7 @@ public class MultipleEntryBackupOperation extends AbstractMultipleEntryBackupOpe
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
+        // todo NS processing
         backupProcessor = in.readObject();
         int size = in.readInt();
         keys = createLinkedHashSet(size);
@@ -65,6 +66,7 @@ public class MultipleEntryBackupOperation extends AbstractMultipleEntryBackupOpe
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {
         super.writeInternal(out);
+        // todo no need to NS process, correct?
         out.writeObject(backupProcessor);
         out.writeInt(keys.size());
         for (Data key : keys) {

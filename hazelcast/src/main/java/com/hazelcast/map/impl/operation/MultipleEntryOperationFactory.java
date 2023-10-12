@@ -68,6 +68,7 @@ public class MultipleEntryOperationFactory extends AbstractMapOperationFactory {
             Data key = IOUtil.readData(in);
             keys.add(key);
         }
+        // todo NS processing (and all other Factory operations)
         this.entryProcessor = in.readObject();
     }
 

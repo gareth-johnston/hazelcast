@@ -31,7 +31,7 @@ import java.io.Serializable;
  * <p>
  * Serialized instances of this interface are used in client-member
  * communication, so changing an implementation's binary format will render it
- * incompatible with its previous versions.
+ * incompatible with its previous versions. TODO: Update for new UCD
  */
 @BinaryInterface
 public interface MapInterceptor extends Serializable {

@@ -282,6 +282,7 @@ public class PartitionWideEntryOperation extends MapOperation
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
+        // todo NS processing
         entryProcessor = in.readObject();
     }
 

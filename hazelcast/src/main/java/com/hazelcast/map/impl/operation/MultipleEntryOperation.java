@@ -143,6 +143,7 @@ public class MultipleEntryOperation extends MapOperation
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
+        // todo NS processing
         entryProcessor = in.readObject();
         int size = in.readInt();
         keys = createHashSet(size);

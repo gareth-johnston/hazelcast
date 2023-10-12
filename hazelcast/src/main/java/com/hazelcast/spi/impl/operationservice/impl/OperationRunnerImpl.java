@@ -31,6 +31,7 @@ import com.hazelcast.internal.metrics.MetricDescriptor;
 import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.hazelcast.internal.metrics.Probe;
 import com.hazelcast.internal.metrics.StaticMetricsProvider;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.nio.Packet;
 import com.hazelcast.internal.partition.InternalPartition;
 import com.hazelcast.internal.partition.PartitionReplica;
@@ -479,7 +480,20 @@ public class OperationRunnerImpl extends OperationRunner implements StaticMetric
         UUID callerUuid = connection.getRemoteUuid();
         Operation op = null;
         try {
+            // todo handle NS aware here? or cleanup if abandoned
+            //  option #1 - implement handling within #toObject (which leads on to Operation#readInternal)
+            //              but then nodeEngine implementation would need to be passed on along the way
+            //  option #2 - handle UCD reading post "object creation" (i.e. call method after #setNodeEngine)
+            //              not as clean as separating deser process; have to expose additional "read" method
+            //                  in Operation; difficult to maintain input stream consistency
+            //  option #3 - similar to the NS classloader handling, set a ThreadLocal variable for the current
+            //              NodeEngine for us to use to complete NS-aware UCD loading
+            //  option #4 - use header flag from TDD
+            //  trialling #3; Vassilis suggests ThreadLocal (#3), least intrusive, less deser overhead
+            //              init on contraction of operation threads
+            NodeEngineThreadLocalContext.declareNodeEngine(nodeEngine);
             Object object = nodeEngine.toObject(packet);
+            NodeEngineThreadLocalContext.rescindNodeEngine(nodeEngine);
             op = (Operation) object;
             op.setNodeEngine(nodeEngine);
             setCallerAddress(op, caller);

@@ -22,6 +22,8 @@ import com.hazelcast.core.HazelcastException;
 import com.hazelcast.core.ManagedContext;
 import com.hazelcast.core.Offloadable;
 import com.hazelcast.core.ReadOnly;
+import com.hazelcast.internal.namespace.NamespaceUtil;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.internal.util.Clock;
@@ -29,7 +31,9 @@ import com.hazelcast.internal.util.ThreadUtil;
 import com.hazelcast.internal.util.UuidUtil;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.impl.ExecutorStats;
+import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapDataSerializerHook;
+import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.operation.steps.EntryOpSteps;
 import com.hazelcast.map.impl.operation.steps.engine.State;
 import com.hazelcast.map.impl.operation.steps.engine.Step;
@@ -38,6 +42,7 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.spi.exception.RetryableHazelcastException;
 import com.hazelcast.spi.exception.WrongTargetException;
+import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.executionservice.impl.StatsAwareRunnable;
 import com.hazelcast.spi.impl.operationservice.BackupAwareOperation;
 import com.hazelcast.spi.impl.operationservice.BlockingOperation;
@@ -379,8 +384,28 @@ public class EntryOperation extends LockAwareOperation
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
+
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        if (engine == null) {
+            throw new IllegalStateException("NodeEngine context is not available!");
+        }
+
+        MapService mapService = engine.getService(MapService.SERVICE_NAME);
+        MapContainer mapContainer = mapService.getMapServiceContext().getMapContainer(name);
+        NamespaceUtil.setupNs(engine, mapContainer);
         entryProcessor = in.readObject();
+        NamespaceUtil.cleanupNs(engine, mapContainer);
     }
+
+    // TODO: Cleanup
+//    @Override
+//    protected void readInternalNamespaced(NodeEngine nodeEngine, ObjectDataInput in) throws IOException {
+//        MapService mapService = nodeEngine.getService(MapService.SERVICE_NAME);
+//        MapContainer mapContainer = mapService.getMapServiceContext().getMapContainer(name);
+//        NamespaceUtil.setupNs(nodeEngine, mapContainer);
+//        entryProcessor = in.readObject();
+//        NamespaceUtil.cleanupNs(nodeEngine, mapContainer);
+//    }
 
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {

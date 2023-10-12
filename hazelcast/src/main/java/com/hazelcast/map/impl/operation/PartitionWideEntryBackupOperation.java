@@ -104,6 +104,7 @@ public class PartitionWideEntryBackupOperation extends AbstractMultipleEntryBack
     protected void readInternal(ObjectDataInput in) throws
             IOException {
         super.readInternal(in);
+        // todo NS processing
         backupProcessor = in.readObject();
     }
 
