@@ -112,13 +112,13 @@ public class ClientUserCodeDeploymentExceptionTest extends HazelcastTestSupport 
         factory.newHazelcastInstance(config);
 
         ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig1 = new ClientUserCodeDeploymentConfig()
-                .addJar(fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar").toFile()).setEnabled(true);
+                .addJar(fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar")).setEnabled(true);
         ClientConfig clientConfig1 = new ClientConfig()
                 .setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig1);
         factory.newHazelcastClient(clientConfig1);
 
         ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig2 = new ClientUserCodeDeploymentConfig()
-                .addJar(fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessorConflicting.jar").toFile())
+                .addJar(fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessorConflicting.jar"))
                 .setEnabled(true);
         ClientConfig clientConfig2 = new ClientConfig()
                 .setUserCodeDeploymentConfig(clientUserCodeDeploymentConfig2);
