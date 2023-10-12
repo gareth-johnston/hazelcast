@@ -80,7 +80,7 @@ public class NamespaceServiceImplTest {
 
     private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String id, final String path)
             throws IOException {
-        final byte[] bytes = IOUtils.toByteArray(urlFromFile(fileRelativeToBinariesFolder(path)));
+        final byte[] bytes = IOUtils.toByteArray(fileRelativeToBinariesFolder(path));
         return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
     }
 
@@ -89,8 +89,7 @@ public class NamespaceServiceImplTest {
             throws IOException {
         return Arrays.stream(idPathTuples).map(idPathTuple -> {
             try {
-                final byte[] bytes = IOUtils
-                        .toByteArray(urlFromFile(fileRelativeToBinariesFolder(idPathTuple.element2)));
+                final byte[] bytes = IOUtils.toByteArray(fileRelativeToBinariesFolder(idPathTuple.element2));
                 return new ResourceDefinitionImpl(idPathTuple.element1, bytes, ResourceType.CLASS);
             } catch (final IOException e) {
                 throw new UncheckedIOException(e);
