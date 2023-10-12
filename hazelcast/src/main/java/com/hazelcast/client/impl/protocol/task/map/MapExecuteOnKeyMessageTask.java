@@ -19,10 +19,8 @@ package com.hazelcast.client.impl.protocol.task.map;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.MapExecuteOnKeyCodec;
 import com.hazelcast.instance.impl.Node;
-import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.map.EntryProcessor;
-import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.operation.MapOperation;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
@@ -81,25 +79,5 @@ public class MapExecuteOnKeyMessageTask
     @Override
     public Object[] getParameters() {
         return new Object[]{parameters.key, parameters.entryProcessor};
-    }
-
-    @Override
-    void onStartNsAwareSection() {
-        if (nodeEngine.getNode().namespacesEnabled) {
-            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(parameters.name);
-            if (mapContainer != null) {
-                NamespaceThreadLocalContext.onStartNsAware(mapContainer.getMapConfig().getNamespace());
-            }
-        }
-    }
-
-    @Override
-    void onCompleteNsAwareSection() {
-        if (nodeEngine.getNode().namespacesEnabled) {
-            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(parameters.name);
-            if (mapContainer != null) {
-                NamespaceThreadLocalContext.onCompleteNsAware(mapContainer.getMapConfig().getNamespace());
-            }
-        }
     }
 }

@@ -19,7 +19,9 @@ package com.hazelcast.client.impl.protocol.task.map;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.task.AbstractPartitionMessageTask;
 import com.hazelcast.instance.impl.Node;
+import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.nio.Connection;
+import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
@@ -39,8 +41,7 @@ abstract class AbstractMapPartitionMessageTask<P> extends AbstractPartitionMessa
 
     protected MapServiceContext getMapServiceContext() {
         MapService mapService = getService(MapService.SERVICE_NAME);
-        MapServiceContext mapServiceContext = mapService.getMapServiceContext();
-        return mapServiceContext;
+        return mapService.getMapServiceContext();
     }
 
     @Override
@@ -54,10 +55,20 @@ abstract class AbstractMapPartitionMessageTask<P> extends AbstractPartitionMessa
     }
 
     void onStartNsAwareSection() {
-        // todo
+        if (nodeEngine.getNode().namespacesEnabled) {
+            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(getDistributedObjectName());
+            if (mapContainer != null) {
+                NamespaceThreadLocalContext.onStartNsAware(mapContainer.getMapConfig().getNamespace());
+            }
+        }
     }
 
     void onCompleteNsAwareSection() {
-        // todo
+        if (nodeEngine.getNode().namespacesEnabled) {
+            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(getDistributedObjectName());
+            if (mapContainer != null) {
+                NamespaceThreadLocalContext.onCompleteNsAware(mapContainer.getMapConfig().getNamespace());
+            }
+        }
     }
 }
