@@ -27,11 +27,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
 
@@ -47,14 +54,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
 
-public class MapResourceClassLoaderTest {
+class MapResourceClassLoaderTest {
     private Map<String, byte[]> classBytes = new HashMap<>();
     private MapResourceClassLoader classLoader;
     private ClassLoader parentClassLoader;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         parentClassLoader = this.getClass().getClassLoader();
         loadClassesFromJar("usercodedeployment/ChildParent.jar");
@@ -63,7 +71,7 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void findClass_whenClassFromMap() throws Exception {
+    void findClass_whenClassFromMap() throws Exception {
         classLoader = new MapResourceClassLoader(null, () -> classBytes, false);
         assertDoesNotThrow(
                 () -> classLoader.findClass("usercodedeployment.ParentClass").getDeclaredConstructor().newInstance());
@@ -71,7 +79,7 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void findClass_whenClassFromMapReferencesClassFromParent() throws Exception {
+    void findClass_whenClassFromMapReferencesClassFromParent() throws Exception {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
         // IncrementingEntryProcessor implements EntryProcessor
         assertDoesNotThrow(() -> classLoader.findClass("usercodedeployment.IncrementingEntryProcessor").getDeclaredConstructor()
@@ -79,13 +87,13 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void loadClass_whenClassFromParentClassLoader() throws Exception {
+    void loadClass_whenClassFromParentClassLoader() throws Exception {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
         assertDoesNotThrow(() -> classLoader.loadClass("com.hazelcast.map.EntryProcessor"));
     }
 
     @Test
-    public void loadClassChildFirst_whenClassFromChild_shadesClassFromParent() throws Exception {
+    void loadClassChildFirst_whenClassFromChild_shadesClassFromParent() throws Exception {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
         // com.hazelcast.core.HazelcastInstance loaded from ShadedClasses.jar is a concrete class with a main method
         Class<?> klass = classLoader.loadClass("com.hazelcast.core.HazelcastInstance");
@@ -93,7 +101,7 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void loadClassParentFirst_whenClassFromChild_shadesClassFromParent() throws Exception {
+    void loadClassParentFirst_whenClassFromChild_shadesClassFromParent() throws Exception {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
         // expect to load com.hazelcast.core.HazelcastInstance interface from the codebase
         Class<?> klass = classLoader.loadClass("com.hazelcast.core.HazelcastInstance");
@@ -101,7 +109,7 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void getResource_whenResolvableFromChild() {
+    void getResource_whenResolvableFromChild() {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
         URL url = classLoader.getResource("usercodedeployment/ParentClass.class");
         assertEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
@@ -109,7 +117,7 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void getResource_whenResolvableFromParent() {
+    void getResource_whenResolvableFromParent() {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
         URL url = classLoader.getResource("com/hazelcast/map/IMap.class");
         assertNotNull(url);
@@ -117,32 +125,25 @@ public class MapResourceClassLoaderTest {
     }
 
     @Test
-    public void getResource_whenResolvableFromChild_andNotChildFirst() {
+    void getResource_whenResolvableFromChild_andNotChildFirst() {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
         URL url = classLoader.getResource("usercodedeployment/ParentClass.class");
         assertEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
         assertEquals(toClassResourceId("usercodedeployment.ParentClass"), url.getFile());
     }
 
-    @Test
-    public void findResource_whenNull() {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
-        URL url = classLoader.findResource(null);
-        assertNull(url);
+    static Stream<Arguments> findResource_negativeCases() {
+        return Stream.of(Arguments.of(Named.of("Empty String", StringUtil.EMPTY_STRING)),
+                Arguments.of(Named.of("findResource is meant to only search in this classloader's resources, not the parent",
+                        "com/hazelcast/map/IMap.class")));
     }
 
-    @Test
-    public void findResource_whenEmpty() {
+    @ParameterizedTest
+    @NullSource
+    @MethodSource("findResource_negativeCases")
+    void findResource_negativeCases(String name) {
         classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
-        URL url = classLoader.findResource("");
-        assertNull(url);
-    }
-
-    @Test
-    public void findResource_whenResolvableFromParent() throws IOException {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
-        URL url = classLoader.findResource("com/hazelcast/map/IMap.class");
-        // findResource is meant to only search in this classloader's resources, not the parent
+        URL url = classLoader.findResource(name);
         assertNull(url);
     }
 
