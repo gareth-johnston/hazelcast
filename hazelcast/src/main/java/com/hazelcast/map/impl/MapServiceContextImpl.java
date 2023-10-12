@@ -147,7 +147,6 @@ class MapServiceContextImpl implements MapServiceContext {
     private final ContextMutexFactory contextMutexFactory = new ContextMutexFactory();
     private final ConcurrentMap<String, MapContainer> mapContainers = new ConcurrentHashMap<>();
     private final ExecutorStats offloadedExecutorStats = new ExecutorStats();
-    private final EventListenerCounter eventListenerCounter = new EventListenerCounter();
     private final AtomicReference<PartitionIdSet> cachedOwnedPartitions = new AtomicReference<>();
 
     /**
@@ -443,11 +442,14 @@ class MapServiceContextImpl implements MapServiceContext {
         nodeEngine.getEventService().deregisterAllLocalListeners(SERVICE_NAME, mapName);
 
         MapContainer mapContainer = mapContainers.get(mapName);
+        if (mapContainer != null) {
+            logger.warning("### thread : [" + Thread.currentThread().getName() + "] - destroyMap - mapContainerHash: " + mapContainer.hashCode());
+        }
         if (mapContainer == null) {
-//            // Lite members create their own LocalMapStatsImpl whenever a new IMap is created,
-//            // which can happen without a MapContainer, so we need to clean them up - since cleanup
-//            // is just a simple map entry removal, we can call it without any Lite member checks
-//            localMapStatsProvider.destroyLocalMapStatsImpl(mapName);
+            // Lite members create their own LocalMapStatsImpl whenever a new IMap is created,
+            // which can happen without a MapContainer, so we need to clean them up - since cleanup
+            // is just a simple map entry removal, we can call it without any Lite member checks
+            localMapStatsProvider.destroyLocalMapStatsImpl(mapName);
             return;
         }
 
@@ -463,8 +465,6 @@ class MapServiceContextImpl implements MapServiceContext {
         // Statistics are destroyed after container to prevent their leak.
         destroyPartitionsAndMapContainer(mapContainer);
         localMapStatsProvider.destroyLocalMapStatsImpl(mapContainer.getName());
-        getEventListenerCounter()
-                .removeCounter(mapName, mapContainer.getInvalidationListenerCounter());
     }
 
     /**
@@ -933,8 +933,4 @@ class MapServiceContextImpl implements MapServiceContext {
         return partitioningStrategyFactory;
     }
 
-    @Override
-    public EventListenerCounter getEventListenerCounter() {
-        return eventListenerCounter;
-    }
 }

@@ -119,6 +119,7 @@ public class QueryCacheMapLoaderTest extends HazelcastTestSupport {
                 .setEnabled(true)
                 .setImplementation(mapLoader);
 
+
         QueryCacheConfig cacheConfig = new QueryCacheConfig(cacheName);
         mapConfig.addQueryCacheConfig(cacheConfig);
         return config;
@@ -176,6 +177,8 @@ public class QueryCacheMapLoaderTest extends HazelcastTestSupport {
 
             return super.load(key);
         }
+
+
 
         @Override
         public Map<Integer, Integer> loadAll(Collection<Integer> keys) {

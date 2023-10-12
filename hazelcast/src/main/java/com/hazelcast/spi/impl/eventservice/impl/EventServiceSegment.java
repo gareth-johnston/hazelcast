@@ -117,14 +117,10 @@ public class EventServiceSegment<S> {
             return;
         }
 
-        ILogger logger = Logger.getLogger(EventServiceSegment.class);
         NotifiableEventListener listener = ((NotifiableEventListener) object);
         if (register) {
-
-            logger.warning("XXX: Listener " + listener.getClass() + " registered for topic " + topic + " ." + "serviceName=" + serviceName + " ,service=" + service + " ,registration=" + registration);
             listener.onRegister(service, serviceName, topic, registration);
         } else {
-            logger.warning("XXX: Listener " + listener.getClass() + " deregistered for topic " + topic + " ." + "serviceName=" + serviceName + " ,service=" + service + " ,registration=" + registration);
             listener.onDeregister(service, serviceName, topic, registration);
         }
     }

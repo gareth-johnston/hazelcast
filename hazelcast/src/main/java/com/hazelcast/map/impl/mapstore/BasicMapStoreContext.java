@@ -153,6 +153,7 @@ final class BasicMapStoreContext implements MapStoreContext {
     }
 
     private static void callLifecycleSupportInit(MapStoreContext mapStoreContext) {
+        System.out.println("callLifecycleSupportInit");
         final MapStoreWrapper mapStoreWrapper = mapStoreContext.getMapStoreWrapper();
         final MapServiceContext mapServiceContext = mapStoreContext.getMapServiceContext();
         final NodeEngine nodeEngine = mapServiceContext.getNodeEngine();
