@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
-import static com.hazelcast.test.UserCodeUtil.pathRelativeToBinariesFolder;
 import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -95,7 +94,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        config.addJar(pathRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar"));
+        config.addJar(fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar").toFile());
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
         List<Map.Entry<String, byte[]>> list = service.getClassDefinitionList();
@@ -119,7 +118,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
         config.setJarPaths(Collections.singletonList(
-                pathRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar")));
+                fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar").toAbsolutePath().toString()));
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
         List<Map.Entry<String, byte[]>> list = service.getClassDefinitionList();
@@ -166,8 +165,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        File file = UserCodeUtil.fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar");
-        config.addJar(file);
+        config.addJar(UserCodeUtil.fileRelativeToBinariesFolder("usercodedeployment/IncrementingEntryProcessor.jar").toFile());
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
         List<Map.Entry<String, byte[]>> list = service.getClassDefinitionList();
@@ -188,8 +186,7 @@ public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
         ClientUserCodeDeploymentConfig config = new ClientUserCodeDeploymentConfig();
         config.setEnabled(true);
         ClassLoader classLoader = getClass().getClassLoader();
-        File file = UserCodeUtil.fileRelativeToBinariesFolder("usercodedeployment/EntryProcessorWithAnonymousAndInner.jar");
-        config.addJar(file);
+        config.addJar(UserCodeUtil.fileRelativeToBinariesFolder("usercodedeployment/EntryProcessorWithAnonymousAndInner.jar").toFile());
         ClientUserCodeDeploymentService service = new ClientUserCodeDeploymentService(config, classLoader);
         service.start();
         List<Map.Entry<String, byte[]>> list = service.getClassDefinitionList();

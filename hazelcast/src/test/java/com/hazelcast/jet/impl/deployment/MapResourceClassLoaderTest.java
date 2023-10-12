@@ -42,7 +42,6 @@ import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;

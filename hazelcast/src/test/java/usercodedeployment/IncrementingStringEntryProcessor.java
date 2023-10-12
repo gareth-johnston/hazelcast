@@ -19,7 +19,6 @@ package usercodedeployment;
 import com.hazelcast.map.EntryProcessor;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This test class is intentionally in its own package
@@ -27,6 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * from the {@code com.hazelcast.*} package.
  */
 public class IncrementingStringEntryProcessor implements EntryProcessor<String, Integer, Integer> {
+    private static final long serialVersionUID = 1L;
+
     @Override
     public Integer process(Map.Entry<String, Integer> entry) {
         int result = entry.getValue() + 1;
