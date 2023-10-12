@@ -17,6 +17,8 @@
 package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.config.NamespaceAwareConfig;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
 /**
  * A thread-local context that supplies namespace name to classloading operations.
@@ -24,8 +26,9 @@ import com.hazelcast.config.NamespaceAwareConfig;
  * Additionally, should be propagated via member-to-member operations.
  */
 public final class NamespaceThreadLocalContext {
-
+    private static final ILogger LOGGER = Logger.getLogger(NamespaceThreadLocalContext.class);
     private static final ThreadLocal<NamespaceThreadLocalContext> NS_THREAD_LOCAL = new ThreadLocal<>();
+    
     private final String namespace;
     private int counter = 1;
 
@@ -54,7 +57,7 @@ public final class NamespaceThreadLocalContext {
         if (tlContext == null) {
             tlContext = new NamespaceThreadLocalContext(namespace);
             NS_THREAD_LOCAL.set(tlContext);
-            System.out.println(">> start " + tlContext);
+            LOGGER.finest(">> start " + tlContext);
         } else {
             if (!tlContext.namespace.equals(namespace)) {
                 // doesn't look like a valid state...
@@ -62,7 +65,7 @@ public final class NamespaceThreadLocalContext {
                     + " but there is an existing context " + tlContext);
             }
             tlContext.incCounter();
-            System.out.println(">> inc " + tlContext);
+            LOGGER.finest(">> inc " + tlContext);
         }
     }
 
@@ -74,7 +77,7 @@ public final class NamespaceThreadLocalContext {
                         + " but there is an existing context " + tlContext);
             }
             int count = tlContext.decCounter();
-            System.out.println(">> dec " + tlContext);
+            LOGGER.finest(">> dec " + tlContext);
             if (count == 0) {
                 NS_THREAD_LOCAL.remove();
             }

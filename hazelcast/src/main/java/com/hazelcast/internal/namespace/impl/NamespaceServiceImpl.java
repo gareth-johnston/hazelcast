@@ -18,6 +18,8 @@ package com.hazelcast.internal.namespace.impl;
 
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
+import org.jline.utils.Log;
+
 import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.internal.namespace.NamespaceService;
@@ -26,6 +28,8 @@ import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
 import javax.annotation.Nonnull;
 
@@ -48,7 +52,8 @@ import java.util.stream.Collectors;
 import java.util.zip.DeflaterOutputStream;
 
 public class NamespaceServiceImpl implements NamespaceService {
-
+    private static final ILogger LOGGER = Logger.getLogger(NamespaceServiceImpl.class);
+    
     final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
 
     private final ClassLoader configClassLoader;
@@ -157,35 +162,44 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     private static void initializeJdbcDrivers(String nsName, MapResourceClassLoader classLoader) {
         ServiceLoader<? extends Driver> driverLoader = ServiceLoader.load(Driver.class, classLoader);
+
+        LOGGER.finest("Initializing driverLoader=" + driverLoader + ", in namespace " + nsName);
+
         for (Driver d : driverLoader) {
-            // todo proper logging
-            if (d.getClass().getClassLoader() != classLoader) {
-                continue;
-            }
-            System.out.println("Registering driver " + d.getClass() + " from classloader for namespace " + nsName);
-            try {
-                DriverManager.registerDriver(d);
-            } catch (SQLException e) {
-                // todo proper logger needed here
-                e.printStackTrace();
+            if (d.getClass().getClassLoader() == classLoader) {
+                LOGGER.finest("Registering driver " + d.getClass() + " from classloader for namespace " + nsName);
+
+                try {
+                    DriverManager.registerDriver(d);
+                } catch (SQLException e) {
+                    Log.error("Failed to register driver " + d + " in namespace " + nsName, e);
+                }
+            } else {
+                LOGGER.finest("Skipping " + d.getClass() + " because it's classloader (" + d.getClass().getClassLoader()
+                        + ") differs from classloader (" + classLoader + ")");
             }
         }
     }
 
+    /** cleanup any JDBC drivers that were registered from that classloader */
     private static void cleanupJdbcDrivers(String nsName, MapResourceClassLoader removedClassLoader) {
-        // cleanup any JDBC drivers that were registered from that classloader
         Enumeration<Driver> registeredDrivers = DriverManager.getDrivers();
+
+        LOGGER.finest("Cleaning up registeredDrivers=" + registeredDrivers + ", in namespace " + nsName);
+
         while (registeredDrivers.hasMoreElements()) {
             Driver d = registeredDrivers.nextElement();
+
             if (d.getClass().getClassLoader() == removedClassLoader) {
                 try {
-                    // todo proper logger needed here
-                    System.out.println("Deregistering " + d.getClass() + " from removed classloader for namespace " + nsName);
+                    LOGGER.finest("Deregistering " + d.getClass() + " from removed classloader for namespace " + nsName);
                     DriverManager.deregisterDriver(d);
                 } catch (SQLException e) {
-                    // todo proper logger needed here
-                    e.printStackTrace();
+                    Log.error("Failed to deregister driver " + d + " in namespace " + nsName, e);
                 }
+            } else {
+                LOGGER.finest("Skipping " + d.getClass() + " because it's classloader (" + d.getClass().getClassLoader()
+                        + ") differs from removedClassLoader (" + removedClassLoader + ")");
             }
         }
     }
