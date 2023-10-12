@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -116,13 +117,16 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         if (isNullOrEmpty(name)) {
             return null;
         }
-        InputStream classBytesStream = resourceStream(toClassResourceId(name));
-        if (classBytesStream == null) {
-            throw newClassNotFoundException(name);
+        try (InputStream classBytesStream = resourceStream(toClassResourceId(name))) {
+            if (classBytesStream == null) {
+                throw newClassNotFoundException(name);
+            }
+            byte[] classBytes = uncheckCall(classBytesStream::readAllBytes);
+            definePackage(name);
+            return defineClass(name, classBytes, 0, classBytes.length);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        byte[] classBytes = uncheckCall(() -> IOUtil.toByteArray(classBytesStream));
-        definePackage(name);
-        return defineClass(name, classBytes, 0, classBytes.length);
     }
 
     @Override

@@ -42,13 +42,14 @@ import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -176,14 +177,13 @@ class MapResourceClassLoaderTest {
     }
 
     private JarInputStream getJarInputStream(String jarPath) throws IOException {
-        File file = UserCodeUtil.fileRelativeToBinariesFolder(jarPath);
-        if (file.exists()) {
-            return new JarInputStream(new FileInputStream(file));
+        Path file = UserCodeUtil.fileRelativeToBinariesFolder(jarPath);
+        if (Files.exists(file)) {
+            return new JarInputStream(Files.newInputStream(file));
         }
 
         try {
-            URL url = new URL(jarPath);
-            return new JarInputStream(url.openStream());
+            return new JarInputStream(new URL(jarPath).openStream());
         } catch (MalformedURLException e) {
             ignore(e);
         }

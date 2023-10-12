@@ -16,27 +16,27 @@
 
 package com.hazelcast.internal.namespace.impl;
 
-import com.hazelcast.internal.namespace.ResourceDefinition;
-import com.hazelcast.internal.util.BiTuple;
-import com.hazelcast.jet.config.ResourceType;
-import com.hazelcast.test.HazelcastParametrizedRunner;
-import org.apache.commons.io.IOUtils;
+import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.internal.util.BiTuple;
+import com.hazelcast.jet.config.ResourceType;
+import com.hazelcast.test.HazelcastParametrizedRunner;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
-import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 
 @RunWith(HazelcastParametrizedRunner.class)
 public class NamespaceServiceImplTest {
@@ -80,7 +80,7 @@ public class NamespaceServiceImplTest {
 
     private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String id, final String path)
             throws IOException {
-        final byte[] bytes = IOUtils.toByteArray(fileRelativeToBinariesFolder(path));
+        final byte[] bytes = Files.readAllBytes(fileRelativeToBinariesFolder(path));
         return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
     }
 
@@ -89,7 +89,7 @@ public class NamespaceServiceImplTest {
             throws IOException {
         return Arrays.stream(idPathTuples).map(idPathTuple -> {
             try {
-                final byte[] bytes = IOUtils.toByteArray(fileRelativeToBinariesFolder(idPathTuple.element2));
+                final byte[] bytes = Files.readAllBytes(fileRelativeToBinariesFolder(idPathTuple.element2));
                 return new ResourceDefinitionImpl(idPathTuple.element1, bytes, ResourceType.CLASS);
             } catch (final IOException e) {
                 throw new UncheckedIOException(e);
