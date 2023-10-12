@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NamespaceConfig implements NamedConfig {
@@ -84,6 +85,6 @@ public class NamespaceConfig implements NamedConfig {
     }
 
     Collection<ResourceConfig> getResourceConfigs() {
-        return Collections.unmodifiableCollection(resourceConfigs.values());
+        return Set.copyOf(resourceConfigs.values());
     }
 }
