@@ -21,6 +21,7 @@ import static com.hazelcast.internal.util.Preconditions.checkState;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.repository.LocalRepository;
@@ -48,10 +49,8 @@ public class MavenInterface {
 
     static {
         try {
-            final DefaultLocalRepositoryProvider repositoryProvider = new DefaultLocalRepositoryProvider();
-
-            repositoryProvider
-                    .setLocalRepositoryManagerFactories(Collections.singletonList(new SimpleLocalRepositoryManagerFactory()));
+            final DefaultLocalRepositoryProvider repositoryProvider = new DefaultLocalRepositoryProvider(
+                    Collections.singleton(new SimpleLocalRepositoryManagerFactory(new DefaultLocalPathComposer())));
 
             // You can query this dynamically with the command:
             // mvn help:evaluate -Dexpression=settings.localRepository --quiet --batch-mode -DforceStdout
