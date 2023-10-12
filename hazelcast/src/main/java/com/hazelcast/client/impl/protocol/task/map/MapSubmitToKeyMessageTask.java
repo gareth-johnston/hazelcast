@@ -33,7 +33,7 @@ import java.security.Permission;
 
 
 public class MapSubmitToKeyMessageTask
-        extends AbstractMapPartitionMessageTask<MapSubmitToKeyCodec.RequestParameters> {
+        extends AbstractNsAwareMapPartitionMessageTask<MapSubmitToKeyCodec.RequestParameters> {
 
     public MapSubmitToKeyMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
         super(clientMessage, node, connection);

@@ -19,14 +19,10 @@ package com.hazelcast.client.impl.protocol.task.map;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.task.AbstractPartitionMessageTask;
 import com.hazelcast.instance.impl.Node;
-import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.nio.Connection;
-import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
-
-import java.util.concurrent.CompletableFuture;
 
 abstract class AbstractMapPartitionMessageTask<P> extends AbstractPartitionMessageTask<P> {
 
@@ -42,33 +38,5 @@ abstract class AbstractMapPartitionMessageTask<P> extends AbstractPartitionMessa
     protected MapServiceContext getMapServiceContext() {
         MapService mapService = getService(MapService.SERVICE_NAME);
         return mapService.getMapServiceContext();
-    }
-
-    @Override
-    protected CompletableFuture<Object> processInternal() {
-        onStartNsAwareSection();
-        try {
-            return super.processInternal();
-        } finally {
-            onCompleteNsAwareSection();
-        }
-    }
-
-    void onStartNsAwareSection() {
-        if (nodeEngine.getNode().namespacesEnabled) {
-            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(getDistributedObjectName());
-            if (mapContainer != null) {
-                NamespaceThreadLocalContext.onStartNsAware(mapContainer.getMapConfig().getNamespace());
-            }
-        }
-    }
-
-    void onCompleteNsAwareSection() {
-        if (nodeEngine.getNode().namespacesEnabled) {
-            MapContainer mapContainer = getMapServiceContext().getExistingMapContainer(getDistributedObjectName());
-            if (mapContainer != null) {
-                NamespaceThreadLocalContext.onCompleteNsAware(mapContainer.getMapConfig().getNamespace());
-            }
-        }
     }
 }

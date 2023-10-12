@@ -32,7 +32,7 @@ import com.hazelcast.spi.impl.operationservice.Operation;
 import java.security.Permission;
 
 public class MapExecuteOnKeyMessageTask
-        extends AbstractMapPartitionMessageTask<MapExecuteOnKeyCodec.RequestParameters> {
+        extends AbstractNsAwareMapPartitionMessageTask<MapExecuteOnKeyCodec.RequestParameters> {
 
     public MapExecuteOnKeyMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
         super(clientMessage, node, connection);

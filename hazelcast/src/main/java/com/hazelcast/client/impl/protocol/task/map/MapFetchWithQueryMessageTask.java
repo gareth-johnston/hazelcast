@@ -51,7 +51,7 @@ import static com.hazelcast.internal.iteration.IterationPointer.encodePointers;
  * @see com.hazelcast.map.impl.proxy.MapProxyImpl#iterator(int, int, Projection, Predicate)
  * @since 3.9
  */
-public class MapFetchWithQueryMessageTask extends AbstractMapPartitionMessageTask<MapFetchWithQueryCodec.RequestParameters> {
+public class MapFetchWithQueryMessageTask extends AbstractNsAwareMapPartitionMessageTask<MapFetchWithQueryCodec.RequestParameters> {
     public MapFetchWithQueryMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
         super(clientMessage, node, connection);
     }

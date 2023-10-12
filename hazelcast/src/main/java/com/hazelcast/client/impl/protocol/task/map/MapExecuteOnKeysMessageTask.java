@@ -20,7 +20,9 @@ import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.MapExecuteOnKeysCodec;
 import com.hazelcast.client.impl.protocol.task.AbstractMultiPartitionMessageTask;
 import com.hazelcast.instance.impl.Node;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.EntryProcessor;
+import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapEntries;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.internal.nio.Connection;
@@ -48,7 +50,13 @@ public class MapExecuteOnKeysMessageTask
 
     @Override
     protected OperationFactory createOperationFactory() {
+        // Special case handling for Namespaces as this task does not inherit AbstractNsAwareMapPartitionMessageTask,
+        //  and we want to avoid creating even more layers of abstraction
+        MapService mapService = getService(MapService.SERVICE_NAME);
+        MapContainer mapContainer = mapService.getMapServiceContext().getExistingMapContainer(getDistributedObjectName());
+        NamespaceUtil.setupNs(nodeEngine, mapContainer);
         EntryProcessor processor = serializationService.toObject(parameters.entryProcessor);
+        NamespaceUtil.cleanupNs(nodeEngine, mapContainer);
         MapOperationProvider operationProvider = getMapOperationProvider(parameters.name);
         return operationProvider.createMultipleEntryOperationFactory(parameters.name,
                 new HashSet<Data>(parameters.keys), processor);
