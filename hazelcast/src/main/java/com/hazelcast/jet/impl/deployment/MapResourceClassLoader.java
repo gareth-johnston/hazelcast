@@ -18,9 +18,12 @@ package com.hazelcast.jet.impl.deployment;
 
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.util.Util;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,10 +60,11 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
  *  todo: consider if we need to override java9+ methods for running on the modulepath use case
  */
 public class MapResourceClassLoader extends JetDelegatingClassLoader {
+    private final ILogger logger = Logger.getLogger(getClass());
 
     public static final String DEBUG_OUTPUT_PROPERTY = "hazelcast.classloading.debug";
 
-    private static final Boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
+    private static final boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
 
     static final String PROTOCOL = "map-resource";
 
@@ -100,7 +104,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
                 }
             } catch (ClassNotFoundException ignored) {
                 if (DEBUG_OUTPUT) {
-                    System.out.println(ignored.getMessage());
+                    logger.finest(ignored);
                 }
             }
             if (klass == null && getParent() != null) {
