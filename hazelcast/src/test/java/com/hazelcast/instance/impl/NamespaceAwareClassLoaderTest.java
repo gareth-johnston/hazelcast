@@ -16,6 +16,21 @@
 
 package com.hazelcast.instance.impl;
 
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+import static com.hazelcast.test.UserCodeUtil.urlFromFile;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.hazelcast.config.Config;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
@@ -25,37 +40,21 @@ import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.test.starter.MavenInterface;
-import org.apache.commons.io.FilenameUtils;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Driver;
 import java.text.MessageFormat;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
-import static com.hazelcast.test.UserCodeUtil.urlFromFile;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
 public class NamespaceAwareClassLoaderTest {
@@ -133,14 +132,6 @@ public class NamespaceAwareClassLoaderTest {
 
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
-    }
-
-    private static void printURLsOf(ClassLoader classLoader)  {
-        Enumeration<URL> urls = Util.uncheckCall(() -> classLoader.getResources("META-INF/services/java.sql.Driver"));
-        for (Iterator<URL> it = urls.asIterator(); it.hasNext();) {
-            URL u = it.next();
-            System.out.println(u);
-        }
     }
 
     private static int countSqlDriversOf(ClassLoader classLoader)  {
