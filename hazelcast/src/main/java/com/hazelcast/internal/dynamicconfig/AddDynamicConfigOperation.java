@@ -16,29 +16,37 @@
 
 package com.hazelcast.internal.dynamicconfig;
 
-import com.hazelcast.internal.config.ConfigDataSerializerHook;
 import com.hazelcast.internal.cluster.ClusterService;
 import com.hazelcast.internal.cluster.impl.ClusterTopologyChangedException;
+import com.hazelcast.internal.config.ConfigDataSerializerHook;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.Versioned;
 import com.hazelcast.spi.impl.operationservice.ExceptionAction;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 
+import static com.hazelcast.internal.cluster.Versions.V5_4;
 import static java.lang.String.format;
 
-public class AddDynamicConfigOperation extends AbstractDynamicConfigOperation {
+// RU_COMPAT_5_3 "implements Versioned" can be removed in 5.5
+public class AddDynamicConfigOperation extends AbstractDynamicConfigOperation implements Versioned {
 
     private IdentifiedDataSerializable config;
     private int memberListVersion;
+    // User Code Deployment
+    private String namespace;
 
     public AddDynamicConfigOperation() {
 
     }
 
-    public AddDynamicConfigOperation(IdentifiedDataSerializable config, int memberListVersion) {
+    public AddDynamicConfigOperation(IdentifiedDataSerializable config, int memberListVersion, @Nullable String namespace) {
         this.config = config;
+        this.namespace = namespace;
         this.memberListVersion = memberListVersion;
     }
 
@@ -59,14 +67,32 @@ public class AddDynamicConfigOperation extends AbstractDynamicConfigOperation {
 
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {
-        out.writeObject(config);
-        out.writeInt(memberListVersion);
+        // RU_COMPAT_5_3
+        if (out.getVersion().isGreaterOrEqual(V5_4)) {
+            // We need namespace first for config deser
+            out.writeString(namespace);
+            out.writeInt(memberListVersion);
+            out.writeObject(config);
+        } else {
+            out.writeObject(config);
+            out.writeInt(memberListVersion);
+            out.writeString(namespace);
+        }
     }
 
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
-        config = in.readObject();
-        memberListVersion = in.readInt();
+        // RU_COMPAT_5_3
+        if (in.getVersion().isGreaterOrEqual(V5_4)) {
+            // We need namespace first for config deser
+            namespace = in.readString();
+            memberListVersion = in.readInt();
+            config = NamespaceUtil.callWithNamespace(namespace, in::readObject);
+        } else {
+            config = in.readObject();
+            memberListVersion = in.readInt();
+            namespace = null;
+        }
     }
 
     @Override

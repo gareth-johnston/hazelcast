@@ -169,6 +169,8 @@ public class MapStoreConfigHolder {
         config.setWriteBatchSize(writeBatchSize);
         config.setWriteCoalescing(writeCoalescing);
         config.setWriteDelaySeconds(writeDelaySeconds);
+        // TODO Make sure Namespace is handled under all conditions;
+        //      currently accounted for in AddDynamicConfigOperation
         Object implementation = serializationService.toObject(this.implementation);
         if (implementation != null) {
             config.setImplementation(implementation);
