@@ -330,13 +330,7 @@ public class JobRepository {
         if (map.containsKey(resourceName)) {
             return;
         }
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
-            IOUtil.drainTo(in, compressor);
-        }
-
-        map.put(classKeyName(resourceName), baos.toByteArray());
+        map.put(classKeyName(resourceName), IOUtil.compress(in.readAllBytes()));
     }
 
     /**

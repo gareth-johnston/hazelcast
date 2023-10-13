@@ -23,6 +23,7 @@ import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
+import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
@@ -35,6 +36,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -42,7 +44,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
@@ -59,7 +60,6 @@ import java.util.ServiceLoader;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.DeflaterOutputStream;
 
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
@@ -82,9 +82,15 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
     @BeforeClass
     public static void setUpClass() throws IOException {
+        System.setProperty(MapResourceClassLoader.DEBUG_OUTPUT_PROPERTY, "true");
         classRoot = Paths.get("src/test/class");
         mapResourceClassLoader = generateMapResourceClassLoaderForDirectory(classRoot);
         h2V202Artifact = new DefaultArtifact("com.h2database", "h2", null, "2.0.202");
+    }
+
+    @AfterClass
+    public static void cleanUpClass() {
+        System.clearProperty(MapResourceClassLoader.DEBUG_OUTPUT_PROPERTY);
     }
 
     @Before
@@ -100,12 +106,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                     .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
                     .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
                         try {
-                            byte[] bytes = Files.readAllBytes(path);
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            try (DeflaterOutputStream dos = new DeflaterOutputStream(baos)) {
-                                dos.write(bytes);
-                            }
-                            return baos.toByteArray();
+                            return IOUtil.compress(Files.readAllBytes(path));
                         } catch (final IOException e) {
                             throw new UncheckedIOException(e);
                         }

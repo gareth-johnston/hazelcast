@@ -16,21 +16,14 @@
 
 package com.hazelcast.jet.impl.deployment;
 
-import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
-import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static com.hazelcast.jet.impl.JobRepository.fileKeyName;
-import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
-import static com.hazelcast.jet.impl.util.Util.uncheckCall;
-
+import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.util.Util;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -41,6 +34,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.zip.InflaterInputStream;
+
+import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.jet.impl.JobRepository.fileKeyName;
+import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 /**
  * Abstract class loader that can be customized with:
@@ -59,6 +57,10 @@ import java.util.zip.InflaterInputStream;
  *  todo: consider if we need to override java9+ methods for running on the modulepath use case
  */
 public class MapResourceClassLoader extends JetDelegatingClassLoader {
+
+    public static final String DEBUG_OUTPUT_PROPERTY = "hazelcast.classloading.debug";
+
+    private static final Boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
 
     static final String PROTOCOL = "map-resource";
 
@@ -97,7 +99,9 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
                     klass = findClass(name);
                 }
             } catch (ClassNotFoundException ignored) {
-                // ignore
+                if (DEBUG_OUTPUT) {
+                    System.out.println(ignored.getMessage());
+                }
             }
             if (klass == null && getParent() != null) {
                 klass = getParent().loadClass(name);
@@ -117,16 +121,12 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         if (isNullOrEmpty(name)) {
             return null;
         }
-        try (InputStream classBytesStream = resourceStream(toClassResourceId(name))) {
-            if (classBytesStream == null) {
-                throw newClassNotFoundException(name);
-            }
-            byte[] classBytes = uncheckCall(classBytesStream::readAllBytes);
-            definePackage(name);
-            return defineClass(name, classBytes, 0, classBytes.length);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        byte[] classBytes = resourceBytes(toClassResourceId(name));
+        if (classBytes == null) {
+            throw newClassNotFoundException(name);
         }
+        definePackage(name);
+        return defineClass(name, classBytes, 0, classBytes.length);
     }
 
     @Override
@@ -187,10 +187,32 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         return isShutdown;
     }
 
+    @Nullable
     InputStream resourceStream(String name) {
         if (checkShutdown(name)) {
             return null;
         }
+        byte[] classData = getBytes(name);
+        if (classData == null) {
+            return null;
+        }
+        return new InflaterInputStream(new ByteArrayInputStream(classData));
+    }
+
+    @Nullable
+    byte[] resourceBytes(String name) {
+        if (checkShutdown(name)) {
+            return null;
+        }
+        byte[] classData = getBytes(name);
+        if (classData == null) {
+            return null;
+        }
+        return IOUtil.decompress(classData);
+    }
+
+    @Nullable
+    private byte[] getBytes(String name) {
         byte[] classData = resourcesSupplier.get().get(classKeyName(name));
         if (classData == null) {
             classData = resourcesSupplier.get().get(fileKeyName(name));
@@ -198,10 +220,15 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
                 return null;
             }
         }
-        return new InflaterInputStream(new ByteArrayInputStream(classData));
+        return classData;
     }
 
     ClassNotFoundException newClassNotFoundException(String name) {
+        if (DEBUG_OUTPUT){
+            String message = "For name " + name + " no resource could be identified. List of resources:\n"
+                    + resourcesSupplier.get().keySet();
+            return new ClassNotFoundException(message);
+        }
         return new ClassNotFoundException(name);
     }
 

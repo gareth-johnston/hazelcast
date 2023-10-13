@@ -405,7 +405,6 @@ public final class IOUtil {
         int len = Math.max(input.length / 10, 10);
 
         Deflater compressor = new Deflater();
-        compressor.setLevel(Deflater.BEST_SPEED);
         compressor.setInput(input);
         compressor.finish();
         ByteArrayOutputStream bos = new ByteArrayOutputStream(len);

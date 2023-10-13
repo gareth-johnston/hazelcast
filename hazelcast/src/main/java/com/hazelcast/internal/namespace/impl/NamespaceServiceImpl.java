@@ -16,10 +16,6 @@
 
 package com.hazelcast.internal.namespace.impl;
 
-import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
-
-import org.jline.utils.Log;
-
 import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.internal.namespace.NamespaceService;
@@ -32,9 +28,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import javax.annotation.Nonnull;
-
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -49,7 +43,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
-import java.util.zip.DeflaterOutputStream;
+
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 public class NamespaceServiceImpl implements NamespaceService {
     private static final ILogger LOGGER = Logger.getLogger(NamespaceServiceImpl.class);
@@ -106,8 +102,23 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
     }
 
+    /**
+     * Add classes and files in the given {@code jarBytes} to the provided {@code resourceMap}, after appropriate
+     * encoding:
+     * <ul>
+     *     <li>Payload is deflated</li>
+     *     <li>For each JAR entry in {@code jarBytes} that is a class, its class name is converted to a resource ID with the
+     *     {@code "c."} prefix followed by the class name converted to a path.</li>
+     *     <li>For other JAR entries in {@code jarBytes}, its path is converted to a resource ID with the
+     *     {@code "f."} prefix followed by the path.</li>
+     * </ul>
+     * @param id
+     * @param jarBytes
+     * @param resourceMap
+     * @see     com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId(String)
+     * @see     JobRepository#classKeyName(String)
+     */
     public static void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
                 JarInputStream inputStream = new JarInputStream(bais)) {
             JarEntry entry;
@@ -116,17 +127,11 @@ public class NamespaceServiceImpl implements NamespaceService {
                 if (entry == null) {
                     break;
                 }
-
                 String className = ClassLoaderUtil.extractClassName(entry.getName());
-
-                baos.reset();
-                try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
-                    IOUtil.drainTo(inputStream, compressor);
-                }
+                byte[] payload = IOUtil.compress(inputStream.readAllBytes());
                 inputStream.closeEntry();
-                byte[] payload = baos.toByteArray();
                 resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName())
-                        : JobRepository.classKeyName(toClassResourceId(className)), payload);
+                        : classKeyName(toClassResourceId(className)), payload);
             } while (true);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
@@ -134,22 +139,15 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     /**
-     *
+     * Add the class with given {@code resourceId} to the {@code resourceMap}, after performing deflate compression on its
+     * payload.
      * @param resourceId the resource ID for the class, ie fully qualified class name converted to path, suffixed with ".class"
      * @param classBytes the class binary content
      * @param resourceMap resource map to add resource to
      * @see com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId
      */
-    void handleClass(String resourceId, byte[] classBytes, Map<String, byte[]> resourceMap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos);
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(classBytes)) {
-            IOUtil.drainTo(inputStream, compressor);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to read class bytes for resource with id " + resourceId, e);
-        }
-        byte[] classDefinition = baos.toByteArray();
-        resourceMap.put(JobRepository.classKeyName(resourceId), classDefinition);
+    public static void handleClass(String resourceId, byte[] classBytes, Map<String, byte[]> resourceMap) {
+        resourceMap.put(classKeyName(resourceId), IOUtil.compress(classBytes));
     }
 
     private void initializeClassLoader(String nsName, MapResourceClassLoader classLoader) {
@@ -172,7 +170,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                 try {
                     DriverManager.registerDriver(d);
                 } catch (SQLException e) {
-                    Log.error("Failed to register driver " + d + " in namespace " + nsName, e);
+                    LOGGER.warning("Failed to register driver " + d + " in namespace " + nsName, e);
                 }
             } else {
                 LOGGER.finest("Skipping " + d.getClass() + " because it's classloader (" + d.getClass().getClassLoader()
@@ -195,7 +193,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                     LOGGER.finest("Deregistering " + d.getClass() + " from removed classloader for namespace " + nsName);
                     DriverManager.deregisterDriver(d);
                 } catch (SQLException e) {
-                    Log.error("Failed to deregister driver " + d + " in namespace " + nsName, e);
+                    LOGGER.warning("Failed to deregister driver " + d + " in namespace " + nsName, e);
                 }
             } else {
                 LOGGER.finest("Skipping " + d.getClass() + " because it's classloader (" + d.getClass().getClassLoader()

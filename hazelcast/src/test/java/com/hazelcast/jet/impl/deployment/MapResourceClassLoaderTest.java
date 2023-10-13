@@ -17,6 +17,7 @@
 package com.hazelcast.jet.impl.deployment;
 
 import static com.hazelcast.internal.nio.IOUtil.closeResource;
+import static com.hazelcast.internal.nio.IOUtil.compress;
 import static com.hazelcast.internal.util.EmptyStatement.ignore;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -36,12 +37,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 
 import com.hazelcast.internal.nio.ClassLoaderUtil;
-import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -54,7 +53,6 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.stream.Stream;
-import java.util.zip.DeflaterOutputStream;
 
 class MapResourceClassLoaderTest {
     private Map<String, byte[]> classBytes = new HashMap<>();
@@ -148,7 +146,6 @@ class MapResourceClassLoaderTest {
 
     private void loadClassesFromJar(String jarPath) throws IOException {
         JarInputStream inputStream = null;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             inputStream = getJarInputStream(jarPath);
             JarEntry entry;
@@ -162,12 +159,8 @@ class MapResourceClassLoaderTest {
                 if (className == null) {
                     continue;
                 }
-                baos.reset();
-                try (DeflaterOutputStream compressor = new DeflaterOutputStream(baos)) {
-                    IOUtil.drainTo(inputStream, compressor);
-                }
+                byte[] classDefinition = compress(inputStream.readAllBytes());
                 inputStream.closeEntry();
-                byte[] classDefinition = baos.toByteArray();
                 classBytes.put(JobRepository.classKeyName(toClassResourceId(className)), classDefinition);
             } while (true);
         } finally {
