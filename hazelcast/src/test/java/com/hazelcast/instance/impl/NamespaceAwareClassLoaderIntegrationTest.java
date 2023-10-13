@@ -99,271 +99,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         config.setClassLoader(HazelcastInstance.class.getClassLoader());
     }
 
-    /** Find & load all .class files in the scope of this test */
-    private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
-        try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
-            final Map<String, byte[]> classNameToContent = stream
-                    .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
-                    .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
-                        try {
-                            return IOUtil.compress(Files.readAllBytes(path));
-                        } catch (final IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    }));
-
-            return new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
-                    () -> classNameToContent, true);
-        }
-    }
-
-    @Test
-    public void whenLoadClassKnownToParent_thenIsLoaded() throws Exception {
-        nodeClassLoader = Node.getConfigClassloader(config);
-        Class<?> klass = tryLoadClass("ns1", "com.hazelcast.core.HazelcastInstance");
-        assertSame(HazelcastInstance.class, klass);
-    }
-
-    @Test
-    public void whenLoadClassKnownToParent_thenIsLoadedWithNoNamespaceDefined() throws Exception {
-        nodeClassLoader = Node.getConfigClassloader(config);
-        Class<?> klass = tryLoadClass(null, "com.hazelcast.core.HazelcastInstance");
-        assertSame(HazelcastInstance.class, klass);
-    }
-
-    @Test
-    public void whenSimpleClassInNs_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(
-                new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
-        nodeClassLoader = Node.getConfigClassloader(config);
-
-        Class<?> parentClass = tryLoadClass("ns1", "usercodedeployment.ParentClass");
-        assertInstanceOf(MapResourceClassLoader.class, parentClass.getClassLoader());
-    }
-
-    @Test
-    public void whenSimpleClassInNs_thenIsNotLoadedWithNoNamespaceDefined() throws Exception {
-        config.addNamespaceConfig(
-                new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
-        nodeClassLoader = Node.getConfigClassloader(config);
-
-        assertThrows(ClassNotFoundException.class, () -> tryLoadClass(null, "usercodedeployment.ParentClass"));
-    }
-
-    @Test
-    public void whenClassWithHierarchyInNs_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(
-                new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass"))
-                        .addClass(mapResourceClassLoader.loadClass("usercodedeployment.ChildClass")));
-        nodeClassLoader = Node.getConfigClassloader(config);
-
-        Class<?> childClass = tryLoadClass("ns1", "usercodedeployment.ChildClass");
-        assertEquals("usercodedeployment.ParentClass", childClass.getSuperclass().getName());
-        // assert child & parent are loaded by same classloader
-        assertSame(childClass.getClassLoader(), childClass.getSuperclass().getClassLoader());
-    }
-
-    Class<?> tryLoadClass(String namespace, String className) throws Exception {
-        if (namespace != null) {
-            NamespaceThreadLocalContext.onStartNsAware(namespace);
-        }
-        try {
-            return nodeClassLoader.loadClass(className);
-        } catch (ClassNotFoundException e) {
-            throw new ClassNotFoundException(
-                    MessageFormat.format("\"{0}\" class not found in \"{1}\" namespace", className, namespace), e);
-        } finally {
-            if (namespace != null) {
-                NamespaceThreadLocalContext.onCompleteNsAware(namespace);
-            }
-        }
-    }
-
-    @Test
-    public void testThatDoesNotBelongHere() throws Exception {
-        int nodeCount = 2;
-        TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
-
-        try {
-            config.addNamespaceConfig(new NamespaceConfig("ns1")
-                    .addClass(mapResourceClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor")));
-            config.getMapConfig("map-ns1").setNamespace("ns1");
-
-            for (int i = 0; i < nodeCount; i++) {
-                factory.newHazelcastInstance(config);
-            }
-
-            HazelcastInstance client = factory.newHazelcastClient();
-            IMap<Integer, Integer> map = client.getMap("map-ns1");
-            // ensure the EntryProcessor can be deserialized on the member side
-            for (int i = 0; i < 100; i++) {
-                map.put(i, 1);
-            }
-            // use a different classloader with same config to instantiate the EntryProcessor
-            NamespaceAwareClassLoader nsClassLoader = (NamespaceAwareClassLoader) Node.getConfigClassloader(config);
-            @SuppressWarnings("unchecked")
-            Class<? extends EntryProcessor<Integer, Integer, ?>> incrEPClass = (Class<? extends EntryProcessor<Integer, Integer, ?>>) nsClassLoader
-                    .loadClass("usercodedeployment.IncrementingEntryProcessor");
-            EntryProcessor<Integer, Integer, ?> incrEp = incrEPClass.getDeclaredConstructor().newInstance();
-            // invoke executeOnKey from client on all 100 keys
-            for (int i = 0; i < 100; i++) {
-                map.executeOnKey(i, incrEp);
-                System.out.println(map.get(i));
-            }
-        } finally {
-            factory.terminateAll();
-        }
-    }
-
-    @Test
-    public void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(new NamespaceConfig("ns1").addJar(
-                urlFromFile(fileRelativeToBinariesFolder("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar"))));
-        nodeClassLoader = Node.getConfigClassloader(config);
-
-        tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
-        tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
-    }
-
-    private void printURLsOf(ClassLoader classLoader) throws IOException {
-        Enumeration<URL> urls = classLoader.getResources("META-INF/services/java.sql.Driver");
-        for (Iterator<URL> it = urls.asIterator(); it.hasNext();) {
-            URL u = it.next();
-            System.out.println(u);
-        }
-    }
-
-    @Test
-    public void testServiceLoader_whenMultipleServicesOnClasspath() throws Exception {
-        URL driverUrl = MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL();
-        System.out.println("Driver URL is " + driverUrl);
-        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {driverUrl});
-        config.addNamespaceConfig(
-                new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL()));
-        nodeClassLoader = Node.getConfigClassloader(config);
-        NamespaceThreadLocalContext.onStartNsAware("ns1");
-        try {
-            System.out.println("URLClassLoader resource URLs");
-            printURLsOf(urlClassLoader);
-            System.out.println("---------------");
-            System.out.println("NSAwareClassLoader resource URLs");
-            printURLsOf(nodeClassLoader);
-            System.out.println("---------------");
-            System.out.println("URLClassLoader Driver Classes");
-            ServiceLoader<Driver> loader = ServiceLoader.load(Driver.class, urlClassLoader);
-            for (Driver d : loader) {
-                System.out.println(d.getClass().getName() + " / " + d.getClass().getClassLoader());
-            }
-            System.out.println("--------------");
-            System.out.println("NSAwareClassLoader Driver Classes");
-            loader = ServiceLoader.load(Driver.class, nodeClassLoader);
-            for (Driver d : loader) {
-                System.out.println(d.getClass().getName() + " / " + d.getClass().getClassLoader());
-            }
-        } finally {
-            NamespaceThreadLocalContext.onCompleteNsAware("ns1");
-        }
-    }
-
-    /**
-     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3390">HZ-3390 - Support ServiceLoader in
-     *      NamespaceAwareClassLoader</a>
-     */
-    @Test
-    public void testServiceLoader() throws Exception {
-        // Class + Map Name
-        Pair<String, String> driverManager = Pair.of("usercodedeployment.H2WithDriverManagerBuildVersionMapLoader",
-                randomMapName());
-        Pair<String, String> dataSource = Pair.of("usercodedeployment.H2WithDataSourceBuildVersionMapLoader", randomMapName());
-
-        Pair<String, String>[] classes = new Pair[] {driverManager, dataSource};
-
-        NamespaceConfig namespace = new NamespaceConfig("ns1")
-                .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL());
-        config.addNamespaceConfig(namespace);
-
-        for (Pair<String, String> clazz : classes) {
-            namespace.addClass(mapResourceClassLoader.loadClass(clazz.getLeft()));
-            config.getMapConfig(clazz.getRight()).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
-                    .setClassName(clazz.getLeft());
-        }
-
-        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
-        nodeClassLoader = Node.getConfigClassloader(config);
-
-        assertEquals("Fixture setup of JDBC with explicit driver declaration", h2V202Artifact.getVersion(),
-                executeMapLoader(hazelcastInstance, dataSource.getRight()));
-
-        assertEquals("JDBC generally is working, but Driver Manager isn't - suggests Service Loader issue",
-                h2V202Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
-    }
-
-    private String executeMapLoader(HazelcastInstance hazelcastInstance, String mapName) {
-        return hazelcastInstance.<String, String>getMap(mapName).get(getClass().getSimpleName());
-    }
-
-    /**
-     * References to {@link EntryProcessor}s - not on the classpath - that modify the case of a {@link String} value in a map
-     */
-    private enum CaseValueProcessor {
-        UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase), LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
-
-        /** Use the same class name to assert isolation */
-        private static final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
-        private static final Object KEY = Void.TYPE;
-        private static final String VALUE = "VaLuE";
-
-        /** The operation we expect the {@link EntryProcessor} to perform - for validation purposes */
-        private final UnaryOperator<String> expectedOperation;
-        private final NamespaceConfig namespace;
-        private final String mapName = randomMapName();
-        private IMap<Object, String> map;
-
-        /** @param expectedOperation {@link #expectedOperation} */
-        CaseValueProcessor(UnaryOperator<String> expectedOperation) {
-            this.expectedOperation = expectedOperation;
-
-            try {
-                namespace = new NamespaceConfig(toString()).addClass(
-                        generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(toString()))
-                                .loadClass(className));
-            } catch (ClassNotFoundException | IOException e) {
-                throw new ExceptionInInitializerError(e);
-            }
-
-            Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
-                    () -> Class.forName(className));
-        }
-
-        private void addNamespaceToConfig(Config config) {
-            config.addNamespaceConfig(namespace);
-            config.getMapConfig(mapName).setNamespace(toString());
-        }
-
-        private void createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
-                HazelcastInstance hazelcastInstance) throws Exception {
-            // Create a map
-            map = hazelcastInstance.getMap(mapName);
-            map.put(KEY, VALUE);
-
-            // Execute the EntryProcessor
-            Class<? extends EntryProcessor<Object, String, String>> clazz = (Class<? extends EntryProcessor<Object, String, String>>) instance
-                    .tryLoadClass(toString(), className);
-            map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
-
-            assertEntryUpdated();
-        }
-
-        private void assertEntryUpdated() {
-            assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
-        }
-
-        @Override
-        public String toString() {
-            return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
-        }
-    }
-
     /**
      * Asserts a basic user workflow:
      * <ol>
@@ -481,5 +216,174 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         assertEquals("Unexpected version of H2 found in namespace", h2V202Artifact.getVersion(), namespaceH2Version);
         assertNotEquals("Namespaces dependencies do not appear to be isolated", org.h2.engine.Constants.VERSION,
                 namespaceH2Version);
+    }
+
+    @Test
+    public void testThatDoesNotBelongHere() throws Exception {
+        int nodeCount = 2;
+        TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
+
+        try {
+            config.addNamespaceConfig(new NamespaceConfig("ns1")
+                    .addClass(mapResourceClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor")));
+            config.getMapConfig("map-ns1").setNamespace("ns1");
+
+            for (int i = 0; i < nodeCount; i++) {
+                factory.newHazelcastInstance(config);
+            }
+
+            HazelcastInstance client = factory.newHazelcastClient();
+            IMap<Integer, Integer> map = client.getMap("map-ns1");
+            // ensure the EntryProcessor can be deserialized on the member side
+            for (int i = 0; i < 100; i++) {
+                map.put(i, 1);
+            }
+            // use a different classloader with same config to instantiate the EntryProcessor
+            NamespaceAwareClassLoader nsClassLoader = (NamespaceAwareClassLoader) Node.getConfigClassloader(config);
+            @SuppressWarnings("unchecked")
+            Class<? extends EntryProcessor<Integer, Integer, ?>> incrEPClass = (Class<? extends EntryProcessor<Integer, Integer, ?>>) nsClassLoader
+                    .loadClass("usercodedeployment.IncrementingEntryProcessor");
+            EntryProcessor<Integer, Integer, ?> incrEp = incrEPClass.getDeclaredConstructor().newInstance();
+            // invoke executeOnKey from client on all 100 keys
+            for (int i = 0; i < 100; i++) {
+                map.executeOnKey(i, incrEp);
+                System.out.println(map.get(i));
+            }
+        } finally {
+            factory.terminateAll();
+        }
+    }
+
+    /**
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3390">HZ-3390 - Support ServiceLoader in
+     *      NamespaceAwareClassLoader</a>
+     */
+    @Test
+    public void testServiceLoader() throws Exception {
+        // Class + Map Name
+        Pair<String, String> driverManager = Pair.of("usercodedeployment.H2WithDriverManagerBuildVersionMapLoader",
+                randomMapName());
+        Pair<String, String> dataSource = Pair.of("usercodedeployment.H2WithDataSourceBuildVersionMapLoader", randomMapName());
+
+        Pair<String, String>[] classes = new Pair[] {driverManager, dataSource};
+
+        NamespaceConfig namespace = new NamespaceConfig("ns1")
+                .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL());
+        config.addNamespaceConfig(namespace);
+
+        for (Pair<String, String> clazz : classes) {
+            namespace.addClass(mapResourceClassLoader.loadClass(clazz.getLeft()));
+            config.getMapConfig(clazz.getRight()).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
+                    .setClassName(clazz.getLeft());
+        }
+
+        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
+        nodeClassLoader = Node.getConfigClassloader(config);
+
+        assertEquals("Fixture setup of JDBC with explicit driver declaration", h2V202Artifact.getVersion(),
+                executeMapLoader(hazelcastInstance, dataSource.getRight()));
+
+        assertEquals("JDBC generally is working, but Driver Manager isn't - suggests Service Loader issue",
+                h2V202Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
+    }
+
+    /** Find & load all .class files in the scope of this test */
+    private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
+        try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
+            final Map<String, byte[]> classNameToContent = stream
+                    .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
+                    .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
+                        try {
+                            return IOUtil.compress(Files.readAllBytes(path));
+                        } catch (final IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    }));
+
+            return new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
+                    () -> classNameToContent, true);
+        }
+    }
+
+    Class<?> tryLoadClass(String namespace, String className) throws Exception {
+        if (namespace != null) {
+            NamespaceThreadLocalContext.onStartNsAware(namespace);
+        }
+        try {
+            return nodeClassLoader.loadClass(className);
+        } catch (ClassNotFoundException e) {
+            throw new ClassNotFoundException(
+                    MessageFormat.format("\"{0}\" class not found in \"{1}\" namespace", className, namespace), e);
+        } finally {
+            if (namespace != null) {
+                NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+            }
+        }
+    }
+
+    private String executeMapLoader(HazelcastInstance hazelcastInstance, String mapName) {
+        return hazelcastInstance.<String, String>getMap(mapName).get(getClass().getSimpleName());
+    }
+
+    /**
+     * References to {@link EntryProcessor}s - not on the classpath - that modify the case of a {@link String} value in a map
+     */
+    private enum CaseValueProcessor {
+        UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase), LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
+
+        /** Use the same class name to assert isolation */
+        private static final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
+        private static final Object KEY = Void.TYPE;
+        private static final String VALUE = "VaLuE";
+
+        /** The operation we expect the {@link EntryProcessor} to perform - for validation purposes */
+        private final UnaryOperator<String> expectedOperation;
+        private final NamespaceConfig namespace;
+        private final String mapName = randomMapName();
+        private IMap<Object, String> map;
+
+        /** @param expectedOperation {@link #expectedOperation} */
+        CaseValueProcessor(UnaryOperator<String> expectedOperation) {
+            this.expectedOperation = expectedOperation;
+
+            try {
+                namespace = new NamespaceConfig(toString()).addClass(
+                        generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(toString()))
+                                .loadClass(className));
+            } catch (ClassNotFoundException | IOException e) {
+                throw new ExceptionInInitializerError(e);
+            }
+
+            Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
+                    () -> Class.forName(className));
+        }
+
+        private void addNamespaceToConfig(Config config) {
+            config.addNamespaceConfig(namespace);
+            config.getMapConfig(mapName).setNamespace(toString());
+        }
+
+        private void createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
+                HazelcastInstance hazelcastInstance) throws Exception {
+            // Create a map
+            map = hazelcastInstance.getMap(mapName);
+            map.put(KEY, VALUE);
+
+            // Execute the EntryProcessor
+            Class<? extends EntryProcessor<Object, String, String>> clazz = (Class<? extends EntryProcessor<Object, String, String>>) instance
+                    .tryLoadClass(toString(), className);
+            map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
+
+            assertEntryUpdated();
+        }
+
+        private void assertEntryUpdated() {
+            assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
+        }
+
+        @Override
+        public String toString() {
+            return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
+        }
     }
 }
