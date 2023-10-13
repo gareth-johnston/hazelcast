@@ -3229,7 +3229,7 @@ public class Config {
 
     /**
      * Adds the specified {@code namespaceConfig}, replacing any existing {@link NamespaceConfig} with the same
-     * {@link NamespaceConfig#name}
+     * {@link NamespaceConfig#getName() name}.
      *
      * @since 5.4
      */
@@ -3245,14 +3245,12 @@ public class Config {
     }
 
     /** @since 5.4 */
-    public Map<String, NamespaceConfig> getNamespaceConfigs() {
-        // TODO probably immutable deep copy?
-        // Jack - I don't think so, com.hazelcast.config.Config.getPNCounterConfigs() doesn't do that - or even unmodifiable
+    Map<String, NamespaceConfig> getNamespaceConfigs() {
         return Collections.unmodifiableMap(namespaceConfigs);
     }
 
     /** @since 5.4 */
-    public void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
+    void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
         this.namespaceConfigs.clear();
         this.namespaceConfigs.putAll(namespaceConfigs);
     }
