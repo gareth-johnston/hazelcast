@@ -65,10 +65,10 @@ import static org.junit.Assert.assertNotNull;
 @Category(SlowTest.class)
 public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSupport {
     private static Path classRoot;
-    private static MapResourceClassLoader mapResourceClassLoader;
+    protected static MapResourceClassLoader mapResourceClassLoader;
     private static Artifact h2V202Artifact;
 
-    private Config config;
+    protected Config config;
     private ClassLoader nodeClassLoader;
 
     @BeforeClass
