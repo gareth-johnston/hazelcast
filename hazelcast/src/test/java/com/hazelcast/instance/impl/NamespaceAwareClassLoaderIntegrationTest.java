@@ -17,6 +17,7 @@
 package com.hazelcast.instance.impl;
 
 import com.google.common.base.CaseFormat;
+import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.NamespaceConfig;
@@ -24,6 +25,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.internal.util.OsHelper;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
@@ -51,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -278,12 +281,110 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 h2V202Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
     }
 
+    @Test
+    public void testMemberToMemberDeserialization_Simple_2Node() throws ReflectiveOperationException {
+        testMemberToMemberDeserialization(2,
+                "usercodedeployment.IncrementingStringEntryProcessor",
+                "usercodedeployment.IncrementingStringEntryProcessor");
+    }
+
+    @Test
+    public void testMemberToMemberDeserialization_Simple_5Node() throws ReflectiveOperationException {
+        testMemberToMemberDeserialization(5,
+                "usercodedeployment.IncrementingStringEntryProcessor",
+                "usercodedeployment.IncrementingStringEntryProcessor");
+    }
+
+    @Test
+    public void testMemberToMemberDeserialization_Complex_2Node() throws ReflectiveOperationException {
+        testMemberToMemberDeserialization(2,
+                "usercodedeployment.ComplexStringEntryProcessor",
+                "usercodedeployment.ComplexStringEntryProcessor",
+                "usercodedeployment.ComplexProcessor");
+    }
+
+    @Test
+    public void testMemberToMemberDeserialization_Complex_5Node() throws ReflectiveOperationException {
+        testMemberToMemberDeserialization(5,
+                "usercodedeployment.ComplexStringEntryProcessor",
+                "usercodedeployment.ComplexStringEntryProcessor",
+                "usercodedeployment.ComplexProcessor");
+    }
+
+    private void testMemberToMemberDeserialization(int nodeCount, String entryProcessClassName,
+                                                               String... resourceClassNames) throws ReflectiveOperationException {
+        assertGreaterOrEquals("nodeCount", nodeCount, 2);
+        Assert.assertThrows("The entry processor class should not be already accessible: " + entryProcessClassName,
+                ClassNotFoundException.class, () -> Class.forName(entryProcessClassName));
+
+        TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
+        final String mapName = randomMapName();
+        configureSimpleNodeConfig(mapName, "my-ns", resourceClassNames);
+        HazelcastInstance[] instances = factory.newInstances(config, nodeCount);
+
+        // Create map on the cluster as normal, populate with data for each partition
+        IMap<String, Integer> map = instances[0].getMap(mapName);
+        for (int k = 0; k < 10; k++) {
+            int j = 1;
+            for (HazelcastInstance instance : instances) {
+                map.put(generateKeyOwnedBy(instance), j++);
+            }
+        }
+
+        // Assert ownership distribution
+        Set<String> member1Keys = map.localKeySet();
+        assertEquals(10, member1Keys.size());
+
+        for (int k = 1; k < instances.length; k++) {
+            HazelcastInstance instance = instances[k];
+            IMap<String, Integer> memberMap = instance.getMap(mapName);
+            assertEquals(10, memberMap.localKeySet().size());
+        }
+
+        // Create a client that only communicates with member1 (unisocket)
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
+        clientConfig.getNetworkConfig().setSmartRouting(false);
+        HazelcastInstance client = factory.newHazelcastClient(clientConfig);
+
+        // Execute processor on keys owned by other members
+        IMap<String, Integer> clientMap = client.getMap(mapName);
+        EntryProcessor entryProcessor = (EntryProcessor) mapResourceClassLoader.loadClass(entryProcessClassName)
+                                                                               .getConstructor().newInstance();
+        for (int k = 0; k < instances.length; k++) {
+            HazelcastInstance instance = instances[k];
+            String key = (String) instance.getMap(mapName).localKeySet().iterator().next();
+            clientMap.executeOnKey(key, entryProcessor);
+
+            // Assert processor completed successfully
+            int expectedOutput = k + 2;
+            assertTrueEventually(() -> assertEquals(expectedOutput, clientMap.get(key).intValue()));
+        }
+        factory.shutdownAll();
+    }
+
+    private void configureSimpleNodeConfig(String mapName, String namespaceId, String... classNames) throws ClassNotFoundException {
+        for (String className : classNames) {
+            Assert.assertThrows("The test class should not be already accessible: " + className,
+                    ClassNotFoundException.class, () -> Class.forName(className));
+        }
+
+        NamespaceConfig namespace = new NamespaceConfig(namespaceId);
+        for (String name : classNames) {
+            namespace.addClass(mapResourceClassLoader.loadClass(name));
+        }
+        config.addNamespaceConfig(namespace);
+        config.getMapConfig(mapName)
+              .setNamespace(namespace.getName());
+        config.getNetworkConfig().setPort(5701);
+    }
+
     /** Find & load all .class files in the scope of this test */
     private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
         try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
             final Map<String, byte[]> classNameToContent = stream
                     .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
-                    .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
+                    .collect(Collectors.toMap(path -> correctResourcePath(root, path), path -> {
                         try {
                             return IOUtil.compress(Files.readAllBytes(path));
                         } catch (final IOException e) {
@@ -294,6 +395,14 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             return new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
                     () -> classNameToContent, true);
         }
+    }
+
+    private static String correctResourcePath(Path root, Path path) {
+        String classKeyName = classKeyName(root.relativize(path).toString());
+        if (OsHelper.isWindows()) {
+            classKeyName = classKeyName.replace('\\', '/');
+        }
+        return classKeyName;
     }
 
     Class<?> tryLoadClass(String namespace, String className) throws Exception {

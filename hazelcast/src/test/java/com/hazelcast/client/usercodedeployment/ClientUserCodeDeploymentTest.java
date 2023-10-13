@@ -40,11 +40,9 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 import usercodedeployment.CapitalizingFirstNameExtractor;
-import usercodedeployment.ComplexStringEntryProcessor;
 import usercodedeployment.DomainClassWithInnerClass;
 import usercodedeployment.EntryProcessorWithAnonymousAndInner;
 import usercodedeployment.IncrementingEntryProcessor;
-import usercodedeployment.IncrementingStringEntryProcessor;
 import usercodedeployment.Person;
 import usercodedeployment.SampleBaseClass;
 import usercodedeployment.SampleSubClass;
@@ -56,7 +54,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.hazelcast.query.Predicates.equal;
-import static com.hazelcast.test.Accessors.getNode;
 import static com.hazelcast.test.SplitBrainTestSupport.blockCommunicationBetween;
 import static org.junit.Assert.assertEquals;
 
@@ -341,52 +338,5 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
 
         factory.newHazelcastInstance(createNodeConfig());
         factory.newHazelcastClient(clientConfig);
-    }
-
-    @Test
-    public void testClientRequestRequiresSendingToOtherMember_Simple() {
-        testClientRequestRequiresSendingToOtherMember(new IncrementingStringEntryProcessor(), 3);
-    }
-
-    @Test
-    public void testClientRequestRequiresSendingToOtherMember_Complex() {
-        // todo move/change these tests to match NamespaceAwareClassLoaderIntegrationTest
-        testClientRequestRequiresSendingToOtherMember(new ComplexStringEntryProcessor(), 3);
-    }
-
-    private void testClientRequestRequiresSendingToOtherMember(EntryProcessor processor, int expectedOutput) {
-        final String mapName = randomMapName();
-        Config config = createNodeConfig();
-        HazelcastInstance member1 = factory.newHazelcastInstance(config);
-        HazelcastInstance member2 = factory.newHazelcastInstance(config);
-
-        // Create map on the cluster as normal, populate with data for each partition
-        IMap<String, Integer> map = member1.getMap(mapName);
-        for (int k = 0; k < 10; k++) {
-            map.put(generateKeyOwnedBy(member1), 1);
-            map.put(generateKeyOwnedBy(member2), 2);
-        }
-
-        // Assert ownership distribution
-        Set<String> member1Keys = map.localKeySet();
-        IMap<String, Integer> map2 = member2.getMap(mapName);
-        Set<String> member2Keys = map2.localKeySet();
-        assertEquals(10, member1Keys.size());
-        assertEquals(10, member2Keys.size());
-
-        // Create a client that only communicates with member1
-        HazelcastInstance client = factory.newHazelcastClient(createClientConfig());
-        blockMessagesFromInstance(member2, client);
-        blockMessagesToInstance(member2, client);
-        forceDisconnectFromServer(client, getNode(member2).getThisUuid());
-        makeSureDisconnectedFromServer(client, getNode(member2).getThisUuid());
-
-        // Execute processor on key owned by member2 from this client
-        IMap<String, Integer> clientMap = client.getMap(mapName);
-        String key = member2Keys.iterator().next();
-        clientMap.executeOnKey(key, processor);
-
-        // Assert processor completed successfully
-        assertTrueEventually(() -> assertEquals(expectedOutput, clientMap.get(key).intValue()));
     }
 }
