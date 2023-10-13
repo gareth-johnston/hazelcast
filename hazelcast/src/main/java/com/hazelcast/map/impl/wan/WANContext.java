@@ -7,6 +7,7 @@ import com.hazelcast.config.WanConsumerConfig;
 import com.hazelcast.config.WanReplicationConfig;
 import com.hazelcast.config.WanReplicationRef;
 import com.hazelcast.config.WanSyncConfig;
+import com.hazelcast.jet.impl.util.ConcurrentMemoizingSupplier;
 import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.spi.impl.NodeEngine;
@@ -14,6 +15,8 @@ import com.hazelcast.spi.merge.SplitBrainMergePolicy;
 import com.hazelcast.spi.merge.SplitBrainMergePolicyProvider;
 import com.hazelcast.wan.impl.DelegatingWanScheme;
 import com.hazelcast.wan.impl.WanReplicationService;
+
+import java.util.function.Supplier;
 
 import static com.hazelcast.config.ConsistencyCheckStrategy.MERKLE_TREES;
 import static com.hazelcast.internal.config.MergePolicyValidator.checkMapMergePolicy;
@@ -25,7 +28,7 @@ public class WANContext {
     private final String name;
     private final MapServiceContext mapServiceContext;
     protected volatile SplitBrainMergePolicy wanMergePolicy;
-    protected volatile DelegatingWanScheme wanReplicationDelegate;
+    protected ConcurrentMemoizingSupplier<DelegatingWanScheme> wanReplicationDelegateSupplier;
     private volatile boolean persistWanReplicatedData;
 
     public WANContext(MapContainer mapContainer) {
@@ -57,7 +60,12 @@ public class WANContext {
         }
 
         WanReplicationService wanReplicationService = nodeEngine.getWanReplicationService();
-        wanReplicationDelegate = wanReplicationService.getWanReplicationPublishers(wanReplicationRefName);
+
+        if (wanReplicationService.hasWanReplicationScheme(wanReplicationRefName)) {
+            wanReplicationDelegateSupplier = new ConcurrentMemoizingSupplier<>(() ->
+                    wanReplicationService.getWanReplicationPublishers(wanReplicationRefName)
+            );
+        }
         SplitBrainMergePolicyProvider mergePolicyProvider = nodeEngine.getSplitBrainMergePolicyProvider();
         wanMergePolicy = mergePolicyProvider.getMergePolicy(wanReplicationRef.getMergePolicyClassName());
         checkMapMergePolicy(mapConfig, wanReplicationRef.getMergePolicyClassName(), mergePolicyProvider);
@@ -95,7 +103,11 @@ public class WANContext {
     }
 
     public DelegatingWanScheme getWanReplicationDelegate() {
-        return wanReplicationDelegate;
+        if (wanReplicationDelegateSupplier == null) {
+            return null;
+        }
+
+        return wanReplicationDelegateSupplier.get();
     }
 
     public SplitBrainMergePolicy getWanMergePolicy() {
@@ -103,7 +115,7 @@ public class WANContext {
     }
 
     public boolean isWanReplicationEnabled() {
-        return wanReplicationDelegate != null && wanMergePolicy != null;
+        return wanReplicationDelegateSupplier != null && wanMergePolicy != null;
     }
 
     public boolean isWanRepublishingEnabled() {

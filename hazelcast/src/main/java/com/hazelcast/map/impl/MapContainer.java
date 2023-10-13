@@ -109,9 +109,9 @@ public class MapContainer {
     protected volatile MapConfig mapConfig;
     private volatile Evictor evictor;
 
-    private final ConcurrentMemoizingSupplier<WANContext> wanContextSupplier;
+    private final WANContext wanContext;
 
-    private final ConcurrentMemoizingSupplier<MapStoreContext> mapStoreContextSupplier;
+    private final MapStoreContext mapStoreContext;
 
     private volatile boolean destroyed;
 
@@ -139,16 +139,14 @@ public class MapContainer {
                 serializationService, extractors);
         this.globalIndexRegistry = shouldUseGlobalIndex()
                 ? createIndexRegistry(true, GLOBAL_INDEX_NOOP_PARTITION_ID) : null;
-        this.mapStoreContextSupplier = new ConcurrentMemoizingSupplier<>(() -> {
-            MapStoreContext context = createMapStoreContext(this);
-            context.start();
-            return context;
-        });
-        this.wanContextSupplier = new ConcurrentMemoizingSupplier<>(() -> new WANContext(this));
+        this.mapStoreContext = createMapStoreContext(this);
+        this.wanContext = new WANContext(this);
     }
 
     public void init() {
         initEvictor();
+        mapStoreContext.start();
+        wanContext.start();
     }
 
     /**
@@ -332,7 +330,7 @@ public class MapContainer {
     }
 
     public WANContext getWanContext() {
-        return wanContextSupplier.get();
+        return wanContext;
     }
 
 
@@ -357,7 +355,7 @@ public class MapContainer {
     }
 
     public MapStoreContext getMapStoreContext() {
-        return mapStoreContextSupplier.get();
+        return mapStoreContext;
     }
 
     public MapConfig getMapConfig() {
@@ -482,7 +480,7 @@ public class MapContainer {
     private class ObjectToData implements Function<Object, Data> {
         @Override
         public Data apply(Object input) {
-            SerializationService ss = mapStoreContextSupplier.get().getSerializationService();
+            SerializationService ss = mapStoreContext.getSerializationService();
             return ss.toData(input, partitioningStrategy);
         }
 
