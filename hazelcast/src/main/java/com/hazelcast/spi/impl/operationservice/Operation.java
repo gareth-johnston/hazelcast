@@ -796,7 +796,6 @@ public abstract class Operation implements DataSerializable, Tenantable {
         }
 
         readInternal(in);
-        readInternalNamespaced(nodeEngine, in);
     }
 
     /**
@@ -819,10 +818,6 @@ public abstract class Operation implements DataSerializable, Tenantable {
     }
 
     protected void readInternal(ObjectDataInput in) throws IOException {
-    }
-
-    // todo doc or cleanup if abandoned
-    protected void readInternalNamespaced(NodeEngine nodeEngine, ObjectDataInput in) throws IOException {
     }
 
     @Override

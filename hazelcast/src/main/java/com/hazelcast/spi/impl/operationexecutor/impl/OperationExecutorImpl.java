@@ -21,6 +21,7 @@ import com.hazelcast.instance.impl.NodeExtension;
 import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.hazelcast.internal.metrics.Probe;
 import com.hazelcast.internal.metrics.StaticMetricsProvider;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.nio.Packet;
 import com.hazelcast.internal.tpc.TpcServerBootstrap;
 import com.hazelcast.internal.util.ThreadAffinity;
@@ -28,6 +29,7 @@ import com.hazelcast.internal.util.concurrent.IdleStrategy;
 import com.hazelcast.internal.util.concurrent.MPSCQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.LoggingService;
+import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.PartitionSpecificRunnable;
 import com.hazelcast.spi.impl.operationexecutor.OperationExecutor;
 import com.hazelcast.spi.impl.operationexecutor.OperationHostileThread;
@@ -118,6 +120,7 @@ public final class OperationExecutorImpl implements OperationExecutor, StaticMet
                                  LoggingService loggerService,
                                  Address thisAddress,
                                  OperationRunnerFactory runnerFactory,
+                                 NodeEngine engine,
                                  NodeExtension nodeExtension,
                                  String hzName,
                                  ClassLoader configClassLoader,
@@ -127,6 +130,9 @@ public final class OperationExecutorImpl implements OperationExecutor, StaticMet
         this.logger = loggerService.getLogger(OperationExecutorImpl.class);
 
         this.adHocOperationRunner = runnerFactory.createAdHocRunner();
+
+        // Setup NodeEngine context for User Code Deployment Namespacing for operations
+        NodeEngineThreadLocalContext.declareNodeEngineReference(engine);
 
         this.partitionOperationRunners = initPartitionOperationRunners(properties, runnerFactory);
         if (!tpcServerBootstrap.isEnabled()) {
@@ -587,6 +593,7 @@ public final class OperationExecutorImpl implements OperationExecutor, StaticMet
             awaitTermination(partitionThreads);
         }
         awaitTermination(genericThreads);
+        NodeEngineThreadLocalContext.destroyNodeEngineReference();
     }
 
     private static void shutdownAll(OperationThread[] operationThreads) {
