@@ -16,6 +16,7 @@
 
 package com.hazelcast.map.impl.operation;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.impl.MapDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
@@ -57,7 +58,7 @@ public class MultipleEntryWithPredicateBackupOperation extends MultipleEntryBack
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
 
-        predicate = in.readObject();
+        predicate = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
     }
 
     @Override

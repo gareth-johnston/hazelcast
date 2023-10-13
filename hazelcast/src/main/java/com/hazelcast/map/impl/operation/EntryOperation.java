@@ -384,28 +384,8 @@ public class EntryOperation extends LockAwareOperation
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
-
-        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
-        if (engine == null) {
-            throw new IllegalStateException("NodeEngine context is not available!");
-        }
-
-        MapService mapService = engine.getService(MapService.SERVICE_NAME);
-        MapContainer mapContainer = mapService.getMapServiceContext().getMapContainer(name);
-        NamespaceUtil.setupNs(engine, mapContainer);
-        entryProcessor = in.readObject();
-        NamespaceUtil.cleanupNs(engine, mapContainer);
+        entryProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
     }
-
-    // TODO: Cleanup
-//    @Override
-//    protected void readInternalNamespaced(NodeEngine nodeEngine, ObjectDataInput in) throws IOException {
-//        MapService mapService = nodeEngine.getService(MapService.SERVICE_NAME);
-//        MapContainer mapContainer = mapService.getMapServiceContext().getMapContainer(name);
-//        NamespaceUtil.setupNs(nodeEngine, mapContainer);
-//        entryProcessor = in.readObject();
-//        NamespaceUtil.cleanupNs(nodeEngine, mapContainer);
-//    }
 
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {

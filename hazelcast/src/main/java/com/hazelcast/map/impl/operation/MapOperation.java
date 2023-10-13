@@ -523,4 +523,12 @@ public abstract class MapOperation extends AbstractNamedOperation
     public MapContainer getMapContainer() {
         return mapContainer;
     }
+
+    /**
+     * Utility method for obtaining the Namespace associated with the underlying IMap
+     * used in this operation - primarily for Namespace aware deserialization
+     */
+    protected String getNamespace() {
+        return MapServiceContext.getNamespace(name);
+    }
 }

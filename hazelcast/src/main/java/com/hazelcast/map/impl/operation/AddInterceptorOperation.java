@@ -16,6 +16,7 @@
 
 package com.hazelcast.map.impl.operation;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapDataSerializerHook;
@@ -70,7 +71,7 @@ public class AddInterceptorOperation extends AbstractNamedOperation
     public void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
         id = in.readString();
-        mapInterceptor = in.readObject();
+        mapInterceptor = NamespaceUtil.callWithNamespace(MapServiceContext.getNamespace(name), in::readObject);
     }
 
     @Override

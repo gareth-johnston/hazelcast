@@ -16,6 +16,8 @@
 
 package com.hazelcast.map.impl.operation;
 
+import com.hazelcast.cluster.Address;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.IMapEvent;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.map.impl.InterceptorRegistry;
@@ -30,7 +32,6 @@ import com.hazelcast.map.impl.querycache.accumulator.AccumulatorInfoSupplier;
 import com.hazelcast.map.impl.querycache.publisher.MapPublisherRegistry;
 import com.hazelcast.map.impl.querycache.publisher.PublisherContext;
 import com.hazelcast.map.impl.querycache.publisher.PublisherRegistry;
-import com.hazelcast.cluster.Address;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
@@ -106,9 +107,11 @@ public class PostJoinMapOperation extends Operation implements IdentifiedDataSer
         public void readData(ObjectDataInput in) throws IOException {
             mapName = in.readString();
             int size = in.readInt();
+
+            String namespace = MapServiceContext.getNamespace(mapName);
             for (int i = 0; i < size; i++) {
                 String id = in.readString();
-                MapInterceptor interceptor = in.readObject();
+                MapInterceptor interceptor = NamespaceUtil.callWithNamespace(namespace, in::readObject);
                 interceptors.add(new AbstractMap.SimpleImmutableEntry<>(id, interceptor));
             }
         }

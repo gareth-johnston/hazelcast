@@ -17,13 +17,35 @@
 package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.map.impl.MapDataSerializerHook;
+import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.spi.impl.operationservice.OperationFactory;
 
 public abstract class AbstractMapOperationFactory implements OperationFactory {
+
+    protected String name;
+
+    protected AbstractMapOperationFactory() {
+    }
+
+    protected AbstractMapOperationFactory(String name) {
+        this.name = name;
+    }
 
     @Override
     public final int getFactoryId() {
         return MapDataSerializerHook.F_ID;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * TODO: sensible approach for operation factories?
+     * Utility method for obtaining the Namespace associated with the underlying IMap
+     * used in this factory's operations - primarily for Namespace aware deserialization
+     */
+    protected String getNamespace() {
+        return MapServiceContext.getNamespace(name);
+    }
 }

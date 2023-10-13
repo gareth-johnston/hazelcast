@@ -18,8 +18,8 @@ package com.hazelcast.internal.namespace;
 
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.util.ExceptionUtil;
-import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
@@ -51,14 +51,6 @@ public class NamespaceUtil {
         if (node.namespacesEnabled) {
             NamespaceThreadLocalContext.onCompleteNsAware(namespace);
         }
-    }
-
-    public static void setupNs(@Nonnull NodeEngine nodeEngine, @Nonnull MapContainer mapContainer) {
-        setupNs(nodeEngine, mapContainer.getMapConfig().getNamespace());
-    }
-
-    public static void cleanupNs(@Nonnull NodeEngine nodeEngine, @Nonnull MapContainer mapContainer) {
-        cleanupNs(nodeEngine, mapContainer.getMapConfig().getNamespace());
     }
 
     public static void setupNs(@Nonnull NodeEngine nodeEngine, @Nullable String namespace) {
@@ -95,11 +87,9 @@ public class NamespaceUtil {
      public static <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable) {
         setupNs(namespace);
         try {
-            try {
-                return callable.call();
-            } catch (Exception e) {
-                throw ExceptionUtil.sneakyThrow(e);
-            }
+            return callable.call();
+        } catch (Exception e) {
+            throw ExceptionUtil.sneakyThrow(e);
         } finally {
             cleanupNs(namespace);
         }

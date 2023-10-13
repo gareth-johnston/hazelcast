@@ -16,6 +16,7 @@
 
 package com.hazelcast.map.impl.operation;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.impl.MapDataSerializerHook;
@@ -31,7 +32,6 @@ import static com.hazelcast.internal.util.SetUtil.createHashSet;
 
 public class MultipleEntryOperationFactory extends AbstractMapOperationFactory {
 
-    private String name;
     private Set<Data> keys;
     private EntryProcessor entryProcessor;
 
@@ -39,7 +39,7 @@ public class MultipleEntryOperationFactory extends AbstractMapOperationFactory {
     }
 
     public MultipleEntryOperationFactory(String name, Set<Data> keys, EntryProcessor entryProcessor) {
-        this.name = name;
+        super(name);
         this.keys = keys;
         this.entryProcessor = entryProcessor;
     }
@@ -68,8 +68,7 @@ public class MultipleEntryOperationFactory extends AbstractMapOperationFactory {
             Data key = IOUtil.readData(in);
             keys.add(key);
         }
-        // todo NS processing (and all other Factory operations)
-        this.entryProcessor = in.readObject();
+        this.entryProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
     }
 
     @Override

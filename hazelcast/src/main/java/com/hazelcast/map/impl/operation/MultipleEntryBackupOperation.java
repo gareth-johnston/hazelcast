@@ -16,6 +16,7 @@
 
 package com.hazelcast.map.impl.operation;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.impl.MapDataSerializerHook;
@@ -53,8 +54,7 @@ public class MultipleEntryBackupOperation extends AbstractMultipleEntryBackupOpe
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
-        // todo NS processing
-        backupProcessor = in.readObject();
+        backupProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
         int size = in.readInt();
         keys = createLinkedHashSet(size);
         for (int i = 0; i < size; i++) {
@@ -66,7 +66,6 @@ public class MultipleEntryBackupOperation extends AbstractMultipleEntryBackupOpe
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {
         super.writeInternal(out);
-        // todo no need to NS process, correct?
         out.writeObject(backupProcessor);
         out.writeInt(keys.size());
         for (Data key : keys) {

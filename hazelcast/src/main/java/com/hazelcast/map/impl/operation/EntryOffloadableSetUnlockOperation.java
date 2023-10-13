@@ -18,6 +18,7 @@ package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.core.EntryEventType;
 import com.hazelcast.internal.locksupport.LockWaitNotifyKey;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.util.UUIDSerializationUtil;
@@ -175,8 +176,7 @@ public class EntryOffloadableSetUnlockOperation extends KeyBasedMapOperation
         newValue = IOUtil.readData(in);
         caller = UUIDSerializationUtil.readUUID(in);
         begin = in.readLong();
-        // todo NS processing
-        entryBackupProcessor = in.readObject();
+        entryBackupProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
         newTtl = in.readLong();
         changeExpiryOnUpdate = in.readBoolean();
     }
