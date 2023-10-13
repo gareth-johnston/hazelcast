@@ -20,6 +20,7 @@ import com.google.common.base.CaseFormat;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
@@ -311,6 +312,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 "usercodedeployment.ComplexProcessor");
     }
 
+    // TODO use test parameters for nodeCount
     private void testMemberToMemberDeserialization(int nodeCount, String entryProcessClassName,
                                                                String... resourceClassNames) throws ReflectiveOperationException {
         assertGreaterOrEquals("nodeCount", nodeCount, 2);
@@ -319,7 +321,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
         final String mapName = randomMapName();
-        configureSimpleNodeConfig(mapName, "my-ns", resourceClassNames);
+        configureSimpleNodeConfig(mapName, "my-ep-ns", resourceClassNames);
         HazelcastInstance[] instances = factory.newInstances(config, nodeCount);
 
         // Create map on the cluster as normal, populate with data for each partition
@@ -342,10 +344,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
 
         // Create a client that only communicates with member1 (unisocket)
-        ClientConfig clientConfig = new ClientConfig();
-        clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
-        clientConfig.getNetworkConfig().setSmartRouting(false);
-        HazelcastInstance client = factory.newHazelcastClient(clientConfig);
+        HazelcastInstance client = createUnisocketClient(factory);
 
         // Execute processor on keys owned by other members
         IMap<String, Integer> clientMap = client.getMap(mapName);
@@ -363,6 +362,59 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         factory.shutdownAll();
     }
 
+    // TODO: Fails due to `namespace` not serialized in dynamic config yet - should pass once added
+    @Test
+    public void testDynamicConfigMapLoaderDeserialization_2Node() throws ReflectiveOperationException {
+        testMemberToMemberMLDeserialization(2,
+                "usercodedeployment.KeyBecomesValueMapLoader",
+                "usercodedeployment.KeyBecomesValueMapLoader");
+    }
+
+    // TODO: Fails due to `namespace` not serialized in dynamic config yet - should pass once added
+    @Test
+    public void testDynamicConfigMapLoaderDeserialization_5Node() throws ReflectiveOperationException {
+        testMemberToMemberMLDeserialization(5,
+                "usercodedeployment.KeyBecomesValueMapLoader",
+                "usercodedeployment.KeyBecomesValueMapLoader");
+    }
+
+    // TODO use test parameters for nodeCount
+    private void testMemberToMemberMLDeserialization(int nodeCount, String mapLoaderClassName,
+                                                               String... resourceClassNames) throws ReflectiveOperationException {
+        assertGreaterOrEquals("nodeCount", nodeCount, 2);
+        Assert.assertThrows("The MapLoader class should not be already accessible: " + mapLoaderClassName,
+                ClassNotFoundException.class, () -> Class.forName(mapLoaderClassName));
+
+        final TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
+        final String mapName = randomMapName();
+        final String namespace = "my-ml-ns";
+        configureSimpleNodeConfig(null, namespace, resourceClassNames);
+        HazelcastInstance[] instances = factory.newInstances(config, nodeCount);
+
+        // Create a client that only communicates with member1 (unisocket)
+        HazelcastInstance client = createUnisocketClient(factory);
+
+        // Dynamically add a new MapConfig with a MapLoader that needs to be loaded
+        MapConfig mapConfig = new MapConfig(mapName).setNamespace(namespace);
+        mapConfig.getMapStoreConfig().setEnabled(true).setClassName(mapLoaderClassName);
+        client.getConfig().addMapConfig(mapConfig);
+
+        // Trigger map loader on all members and assert values are correct
+        for (int k = 0; k < instances.length; k++) {
+            HazelcastInstance instance = instances[k];
+            String result = executeMapLoader(instance, mapName);
+            assertEquals(getClass().getSimpleName(), result);
+        }
+        factory.shutdownAll();
+    }
+
+    private HazelcastInstance createUnisocketClient(TestHazelcastFactory factory) {
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
+        clientConfig.getNetworkConfig().setSmartRouting(false);
+        return factory.newHazelcastClient(clientConfig);
+    }
+
     private void configureSimpleNodeConfig(String mapName, String namespaceId, String... classNames) throws ClassNotFoundException {
         for (String className : classNames) {
             Assert.assertThrows("The test class should not be already accessible: " + className,
@@ -374,9 +426,11 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             namespace.addClass(mapResourceClassLoader.loadClass(name));
         }
         config.addNamespaceConfig(namespace);
-        config.getMapConfig(mapName)
-              .setNamespace(namespace.getName());
         config.getNetworkConfig().setPort(5701);
+        if (mapName != null) {
+            config.getMapConfig(mapName)
+                  .setNamespace(namespace.getName());
+        }
     }
 
     /** Find & load all .class files in the scope of this test */
