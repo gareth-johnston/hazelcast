@@ -76,7 +76,6 @@ public class AddDynamicConfigOperation extends AbstractDynamicConfigOperation im
         } else {
             out.writeObject(config);
             out.writeInt(memberListVersion);
-            out.writeString(namespace);
         }
     }
 
@@ -91,7 +90,6 @@ public class AddDynamicConfigOperation extends AbstractDynamicConfigOperation im
         } else {
             config = in.readObject();
             memberListVersion = in.readInt();
-            namespace = null;
         }
     }
 
