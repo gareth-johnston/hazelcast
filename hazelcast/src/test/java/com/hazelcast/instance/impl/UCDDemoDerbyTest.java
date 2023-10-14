@@ -2,17 +2,12 @@ package com.hazelcast.instance.impl;
 
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.test.starter.MavenInterface;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,11 +32,13 @@ public class UCDDemoDerbyTest extends NamespaceAwareClassLoaderIntegrationTest {
         namespace.addClass(mapResourceClassLoader.loadClass(className));
 
         // Add a JDBC driver (Derby)
-        getDerbyJARs().forEach(namespace::addJar);
+        namespace.addJar(new URL("https://repo1.maven.org/maven2/org/apache/derby/derby/10.15.2.0/derby-10.15.2.0.jar"));
+        namespace.addJar(
+                new URL("https://repo1.maven.org/maven2/org/apache/derby/derbyshared/10.15.2.0/derbyshared-10.15.2.0.jar"));
 
         // Configure the instance
         config.addNamespaceConfig(namespace);
-        
+
         // Configure the map
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
                 .setClassName(className);
@@ -56,17 +53,5 @@ public class UCDDemoDerbyTest extends NamespaceAwareClassLoaderIntegrationTest {
 
         System.err.println(MessageFormat.format("Returned value was \"{0}\"", mapped));
         assertEquals("USER CODE DEPLOYMENT DEMO", mapped);
-    }
-
-    private static Stream<URL> getDerbyJARs() {
-        return Stream.of("derby", "derbyshared")
-                .map(artifactId -> new DefaultArtifact("org.apache.derby", artifactId, null, "10.15.2.0"))
-                .map(MavenInterface::locateArtifact).map(Path::toUri).map(url -> {
-                    try {
-                        return url.toURL();
-                    } catch (MalformedURLException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
     }
 }
