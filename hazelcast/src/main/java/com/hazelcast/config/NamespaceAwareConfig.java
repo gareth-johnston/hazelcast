@@ -19,10 +19,6 @@ package com.hazelcast.config;
 import javax.annotation.Nonnull;
 
 public interface NamespaceAwareConfig {
-
-    /**
-     * todo comment
-     */
     String DEFAULT_NAMESPACE = "default";
 
     @Nonnull
