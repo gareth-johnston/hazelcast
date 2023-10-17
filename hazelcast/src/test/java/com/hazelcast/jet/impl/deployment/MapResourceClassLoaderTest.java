@@ -16,18 +16,10 @@
 
 package com.hazelcast.jet.impl.deployment;
 
-import static com.hazelcast.internal.nio.IOUtil.closeResource;
-import static com.hazelcast.internal.nio.IOUtil.compress;
-import static com.hazelcast.internal.util.EmptyStatement.ignore;
-import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import com.hazelcast.internal.nio.ClassLoaderUtil;
+import com.hazelcast.jet.impl.JobRepository;
+import com.hazelcast.test.UserCodeUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
@@ -35,11 +27,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
-
-import com.hazelcast.internal.nio.ClassLoaderUtil;
-import com.hazelcast.internal.util.StringUtil;
-import com.hazelcast.jet.impl.JobRepository;
-import com.hazelcast.test.UserCodeUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,6 +40,18 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.stream.Stream;
+
+import static com.hazelcast.internal.nio.IOUtil.closeResource;
+import static com.hazelcast.internal.nio.IOUtil.compress;
+import static com.hazelcast.internal.util.EmptyStatement.ignore;
+import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MapResourceClassLoaderTest {
     private Map<String, byte[]> classBytes = new HashMap<>();
@@ -130,7 +129,7 @@ class MapResourceClassLoaderTest {
     }
 
     static Stream<Arguments> findResource_negativeCases() {
-        return Stream.of(Arguments.of(Named.of("Empty String", StringUtil.EMPTY_STRING)),
+        return Stream.of(Arguments.of(Named.of("Empty String", StringUtils.EMPTY)),
                 Arguments.of(Named.of("findResource is meant to only search in this classloader's resources, not the parent",
                         "com/hazelcast/map/IMap.class")));
     }
