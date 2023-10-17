@@ -16,21 +16,27 @@
 
 package com.hazelcast.config;
 
-import static com.hazelcast.internal.util.Preconditions.checkNotNull;
-
+import com.hazelcast.internal.config.ConfigDataSerializerHook;
+import com.hazelcast.internal.serialization.impl.SerializationUtil;
 import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.jet.config.ResourceType;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class NamespaceConfig implements NamedConfig {
+import static com.hazelcast.internal.util.Preconditions.checkNotNull;
+
+public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable {
     @Nullable
     private String name;
 
@@ -61,7 +67,7 @@ public class NamespaceConfig implements NamedConfig {
     }
 
     public NamespaceConfig addJar(@Nonnull URL url) {
-       return add(url, null, ResourceType.JAR);
+        return add(url, null, ResourceType.JAR);
     }
 
     public NamespaceConfig addJarsInZip(@Nonnull URL url) {
@@ -85,5 +91,31 @@ public class NamespaceConfig implements NamedConfig {
 
     Collection<ResourceConfig> getResourceConfigs() {
         return Set.copyOf(resourceConfigs.values());
+    }
+
+    @Override
+    public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeString(name);
+        SerializationUtil.writeMapStringKey(resourceConfigs, out);
+    }
+
+    @Override
+    public void readData(ObjectDataInput in) throws IOException {
+        name = in.readString();
+
+        int size = in.readInt();
+        for (int i = 0; i < size; i++) {
+            resourceConfigs.put(in.readString(), in.readObject());
+        }
+    }
+
+    @Override
+    public int getFactoryId() {
+        return ConfigDataSerializerHook.F_ID;
+    }
+
+    @Override
+    public int getClassId() {
+        return ConfigDataSerializerHook.NAMESPACE_CONFIG;
     }
 }

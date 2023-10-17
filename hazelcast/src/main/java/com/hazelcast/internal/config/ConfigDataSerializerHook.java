@@ -167,6 +167,7 @@ public final class ConfigDataSerializerHook implements DataSerializerHook {
     public static final int BTREE_INDEX_CONFIG = 67;
     public static final int DATA_CONNECTION_CONFIG = 68;
     public static final int PARTITION_ATTRIBUTE_CONFIG = 69;
+    public static final int NAMESPACE_CONFIG = 70;
 
     private static final int LEN = PARTITION_ATTRIBUTE_CONFIG + 1;
 
