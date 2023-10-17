@@ -21,8 +21,13 @@ import com.hazelcast.core.ConsistencyLostException;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.crdt.pncounter.PNCounter;
 import com.hazelcast.instance.impl.TestUtil;
+import com.hazelcast.internal.crdt.CRDTDataSerializerHook;
+import com.hazelcast.internal.serialization.impl.FactoryIdHelper;
 import com.hazelcast.test.HazelcastTestSupport;
+import com.hazelcast.test.PacketFiltersUtil;
 import org.junit.Test;
+
+import java.util.List;
 
 import static com.hazelcast.test.Accessors.getNode;
 
@@ -40,7 +45,8 @@ public abstract class AbstractPNCounterConsistencyLostTest extends HazelcastTest
         final Address currentTarget = getCurrentTargetReplicaAddress(driver);
 
         terminateMember(currentTarget);
-
+//        int facId = FactoryIdHelper.getFactoryId(FactoryIdHelper.PN_COUNTER_DS_FACTORY, FactoryIdHelper.PN_COUNTER_DS_FACTORY_ID);
+//        PacketFiltersUtil.rejectOperationsFrom(getLiteMember(), facId, List.of(CRDTDataSerializerHook.PN_COUNTER_ADD_OPERATION));
         mutate(driver);
     }
 
@@ -73,4 +79,6 @@ public abstract class AbstractPNCounterConsistencyLostTest extends HazelcastTest
     protected abstract PNCounter getCounter();
 
     protected abstract HazelcastInstance[] getMembers();
+
+    protected abstract HazelcastInstance getLiteMember();
 }

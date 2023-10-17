@@ -22,8 +22,11 @@ import com.hazelcast.core.ConsistencyLostException;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.crdt.pncounter.PNCounter;
 import com.hazelcast.cluster.Address;
+import com.hazelcast.internal.crdt.CRDTDataSerializerHook;
+import com.hazelcast.internal.serialization.impl.FactoryIdHelper;
 import com.hazelcast.spi.properties.ClusterProperty;
 import com.hazelcast.test.HazelcastParallelClassRunner;
+import com.hazelcast.test.PacketFiltersUtil;
 import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.ParallelJVMTest;
 import com.hazelcast.test.annotation.QuickTest;
@@ -31,6 +34,9 @@ import org.junit.Before;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import java.util.List;
+
+import static io.netty.util.NetUtil.LOCALHOST;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -59,6 +65,9 @@ public class PNCounterConsistencyLostTest extends AbstractPNCounterConsistencyLo
         liteMember = factory.newHazelcastInstance(liteConfig);
     }
 
+    private static Address newAddress(int port) {
+        return new Address("127.0.0.1", LOCALHOST, port);
+    }
 
     @Override
     protected HazelcastInstance[] getMembers() {
@@ -85,5 +94,9 @@ public class PNCounterConsistencyLostTest extends AbstractPNCounterConsistencyLo
         final PNCounter counter = liteMember.getPNCounter("counter");
         ((PNCounterProxy) counter).setOperationTryCount(1);
         return counter;
+    }
+
+    protected HazelcastInstance getLiteMember() {
+        return liteMember;
     }
 }

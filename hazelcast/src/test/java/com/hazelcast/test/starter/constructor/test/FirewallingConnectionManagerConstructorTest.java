@@ -45,7 +45,6 @@ public class FirewallingConnectionManagerConstructorTest {
         Set<Address> blockedAddresses = Collections.singleton(address);
 
         FirewallingServer ns = new FirewallingServer(delegate, blockedAddresses);
-
         FirewallingNetworkingInstanceConstructor constructor
                 = new FirewallingNetworkingInstanceConstructor(FirewallingServer.class);
         FirewallingServer clonedConnectionManager

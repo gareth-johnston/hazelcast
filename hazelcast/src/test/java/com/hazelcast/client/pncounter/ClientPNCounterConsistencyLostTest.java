@@ -72,6 +72,11 @@ public class ClientPNCounterConsistencyLostTest extends AbstractPNCounterConsist
     }
 
     @Override
+    protected HazelcastInstance getLiteMember() {
+        return null;
+    }
+
+    @Override
     protected Address getCurrentTargetReplicaAddress(PNCounter driver) {
         return ((ClientPNCounterProxy) driver).getCurrentTargetReplica().getAddress();
     }

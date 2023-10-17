@@ -197,7 +197,7 @@ public class PNCounterProxy extends AbstractDistributedObject<PNCounterService> 
             updateObservedReplicaTimestamps(result.getVectorClock());
             return result.getValue();
         } catch (HazelcastException e) {
-            logger.fine("Exception occurred while invoking operation on target " + target + ", choosing different target", e);
+            logger.info("###: Exception occurred while invoking operation on target " + target + ", choosing different target", e);
             if (excludedAddresses == EMPTY_ADDRESS_LIST) {
                 excludedAddresses = new ArrayList<Address>();
             }
