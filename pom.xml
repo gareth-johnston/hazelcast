@@ -111,7 +111,6 @@
         <kafka.version>3.4.1</kafka.version>
         <kotlin.version>1.9.10</kotlin.version>
         <reload4j.version>1.2.25</reload4j.version>
-        <log4j2.version>2.20.0</log4j2.version>
         <mssql.version>12.4.1.jre11</mssql.version>
         <mysql.connector.version>8.1.0</mysql.connector.version>
         <netty.version>4.1.100.Final</netty.version>
@@ -152,8 +151,6 @@
         <http.core.version>4.4.16</http.core.version>
         <http.client.version>4.5.14</http.client.version>
         <jsr107.tck.version>1.1.1</jsr107.tck.version>
-        <junit.version>4.13.2</junit.version>
-        <junit-jupiter.version>5.10.0</junit-jupiter.version>
         <mockito.version>5.6.0</mockito.version>
         <reflections.version>0.9.10</reflections.version>
         <testcontainers.version>1.19.1</testcontainers.version>
@@ -607,7 +604,8 @@
                                 <licenseMerge>
                                     BSD-2-Clause |
                                     BSD 2-Clause License |
-                                    BSD 2-Clause license
+                                    BSD 2-Clause license |
+                                    The BSD 2-Clause License
                                 </licenseMerge>
                                 <licenseMerge>
                                     BSD-3-Clause |
@@ -1911,7 +1909,7 @@
             <dependency>
                 <groupId>org.codehaus.woodstox</groupId>
                 <artifactId>stax2-api</artifactId>
-                <version>4.2.1</version>
+                <version>4.2.2</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.gson</groupId>
@@ -1945,8 +1943,10 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-api</artifactId>
-                <version>${log4j2.version}</version>
+                <artifactId>log4j-bom</artifactId>
+                <version>2.20.0</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.jline</groupId>
@@ -2037,7 +2037,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>${junit-jupiter.version}</version>
+                <version>5.10.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -2127,6 +2127,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj.version}</version>
@@ -2161,7 +2166,6 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>${log4j2.version}</version>
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
