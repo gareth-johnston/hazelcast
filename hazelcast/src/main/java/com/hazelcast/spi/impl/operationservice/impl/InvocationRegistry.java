@@ -131,6 +131,7 @@ public class InvocationRegistry implements Iterable<Invocation>, StaticMetricsPr
         try {
             // fails with IllegalStateException if the operation is already active
             setCallId(invocation.op, callId);
+            logger.info("Set callId to active operation " + invocation.op);
         } catch (IllegalStateException e) {
             callIdSequence.complete();
             throw e;

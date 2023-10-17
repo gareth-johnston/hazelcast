@@ -585,6 +585,7 @@ public abstract class Invocation<T> extends BaseInvocation implements OperationR
         }
 
         if (!context.invocationRegistry.register(this)) {
+            logger.info("###: Could not register invocation: " + this);
             return;
         }
 
