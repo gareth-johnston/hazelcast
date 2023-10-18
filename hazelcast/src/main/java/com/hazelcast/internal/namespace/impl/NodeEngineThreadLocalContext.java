@@ -22,9 +22,7 @@ import com.hazelcast.spi.impl.NodeEngine;
 // todo docs
 public final class NodeEngineThreadLocalContext {
 
-    // We use an InheritableThreadLocal so we can set this context on startup and all created
-    //  threads will automatically inherit the initial value (which won't change anyway)
-    private static final InheritableThreadLocal<NodeEngineThreadLocalContext> NE_THREAD_LOCAL = new InheritableThreadLocal<>();
+    private static final ThreadLocal<NodeEngineThreadLocalContext> NE_THREAD_LOCAL = new ThreadLocal<>();
     private final NodeEngine nodeEngine;
 
     private NodeEngineThreadLocalContext(NodeEngine nodeEngine) {
