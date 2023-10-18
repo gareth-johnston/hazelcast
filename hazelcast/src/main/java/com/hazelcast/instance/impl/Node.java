@@ -177,6 +177,9 @@ public class Node {
      */
     public final Address address;
     public final SecurityContext securityContext;
+    // todo namespacesEnabled introduces volatile read on every NS-aware op
+    //  explicit config option instead - runtime should use no-op impl if disabled
+    //  (established as M2 task to introduce no-op impl)
     public volatile boolean namespacesEnabled;
 
     final ClusterTopologyIntentTracker clusterTopologyIntentTracker;

@@ -30,6 +30,8 @@ import java.util.concurrent.Callable;
 /**
  * Utility to simplify setup/cleanup of namespace aware classloading
  */
+// TODO: Namespaces will never be null when looked up via config, since it uses a default namespace
+//  Can we do anything to save performance ahead of reaching Namespace lookup when default namespace is not defined?
 public class NamespaceUtil {
 
     private NamespaceUtil() {
@@ -83,8 +85,9 @@ public class NamespaceUtil {
             cleanupNs(namespace);
         }
     }
-
-     public static <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable) {
+    // TODO Most calls to this are not checking if Namespace is enabled via NodeEngine
+    //  This won't matter once we have a no-op implementation instead of namespacesEnabled check
+    public static <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable) {
         setupNs(namespace);
         try {
             return callable.call();
