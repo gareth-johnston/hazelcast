@@ -20,7 +20,7 @@ import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.Connection;
-import com.hazelcast.map.impl.MapContainer;
+import com.hazelcast.map.impl.MapServiceContext;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -47,16 +47,10 @@ abstract class AbstractNsAwareMapPartitionMessageTask<P> extends AbstractMapPart
     }
 
     protected void onStartNsAwareSection() {
-        MapContainer container = getMapServiceContext().getExistingMapContainer(getDistributedObjectName());
-        if (container != null) {
-            NamespaceUtil.setupNs(nodeEngine, container.getMapConfig().getNamespace());
-        }
+        NamespaceUtil.setupNs(nodeEngine, MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName()));
     }
 
     protected void onCompleteNsAwareSection() {
-        MapContainer container = getMapServiceContext().getExistingMapContainer(getDistributedObjectName());
-        if (container != null) {
-            NamespaceUtil.cleanupNs(nodeEngine, container.getMapConfig().getNamespace());
-        }
+        NamespaceUtil.cleanupNs(nodeEngine, MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName()));
     }
 }

@@ -281,19 +281,47 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
      */
     EventListenerCounter getEventListenerCounter();
 
+    /**
+     * Attempts to retrieve a {@code ThreadLocal} {@link NodeEngine} implementation
+     * for the current member, and uses it to check if Namespaces are enabled. If
+     * enabled, this method then forwards to {@link #lookupMapNamespace(NodeEngine, String)}
+     * and returns the available Namespace ID, or {@code null} if not found.
+     *
+     * @param mapName The name of the {@link com.hazelcast.map.IMap} to lookup for
+     * @return the Namespace ID if Namespaces are enabled, and it is found, or {@code null} otherwise.
+     */
     // todo move this somewhere proper?
-    // TODO: proper docs
     static String getNamespace(String mapName) {
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
         if (engine == null) {
             throw new IllegalStateException("NodeEngine context is not available for Namespaces!");
         }
         if (((NodeEngineImpl) engine).getNode().namespacesEnabled) {
-            MapService mapService = engine.getService(MapService.SERVICE_NAME);
-            MapContainer container = mapService.getMapServiceContext().getExistingMapContainer(mapName);
-            if (container != null) {
-                return container.getMapConfig().getNamespace();
-            }
+            return lookupMapNamespace(engine, mapName);
+        }
+        return null;
+    }
+
+    /**
+     * Looks up the Namespace ID associated with the specified map name. This starts
+     * by looking for an existing {@link MapContainer} and checking its defined
+     * {@link MapConfig}. If the {@link MapContainer} does not exist (containers are
+     * created lazily), then fallback to checking the Node's config tree directly.
+     *
+     * @param engine  {@link NodeEngine} implementation of this member for service and config lookups
+     * @param mapName The name of the {@link com.hazelcast.map.IMap} to lookup for
+     * @return the Namespace ID if found, or {@code null} otherwise.
+     */
+    static String lookupMapNamespace(NodeEngine engine, String mapName) {
+        MapService mapService = engine.getService(MapService.SERVICE_NAME);
+        MapContainer container = mapService.getMapServiceContext().getExistingMapContainer(mapName);
+        if (container != null) {
+            return container.getMapConfig().getNamespace();
+        }
+        // Fallback to config lookup
+        MapConfig mapConfig = engine.getConfig().getMapConfigOrNull(mapName);
+        if (mapConfig != null) {
+            return mapConfig.getNamespace();
         }
         return null;
     }
