@@ -90,6 +90,7 @@ import com.hazelcast.spi.properties.HazelcastProperties;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -1269,14 +1270,24 @@ public class DynamicConfigurationAwareConfig extends Config {
 
     @Override
     public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {
-        // todo actually add
-        return super.addNamespaceConfig(namespaceConfig);
+        // Remove any existing
+        removeNamespaceConfig(namespaceConfig.getName());
+        super.addNamespaceConfig(namespaceConfig);
+        configurationService.broadcastConfig(namespaceConfig);
+
+        return this;
     }
 
     @Override
     public Config removeNamespaceConfig(String namespaceName) {
-        // todo actually remove namespace
-        return super.removeNamespaceConfig(namespaceName);
+        NamespaceConfig namespaceConfig = getNamespaceConfigs().get(namespaceName);
+
+        if (namespaceConfig != null) {
+            super.removeNamespaceConfig(namespaceName);
+            configurationService.unbroadcastConfig(namespaceConfig);
+        }
+
+        return this;
     }
 
     @Override

@@ -25,6 +25,7 @@ import com.hazelcast.config.CachePartitionLostListenerConfig;
 import com.hazelcast.config.CacheSimpleConfig;
 import com.hazelcast.config.CacheSimpleEntryListenerConfig;
 import com.hazelcast.config.CardinalityEstimatorConfig;
+import com.hazelcast.config.DataConnectionConfig;
 import com.hazelcast.config.DataPersistenceConfig;
 import com.hazelcast.config.DiscoveryConfig;
 import com.hazelcast.config.DiscoveryStrategyConfig;
@@ -35,7 +36,6 @@ import com.hazelcast.config.EurekaConfig;
 import com.hazelcast.config.EventJournalConfig;
 import com.hazelcast.config.EvictionConfig;
 import com.hazelcast.config.ExecutorConfig;
-import com.hazelcast.config.DataConnectionConfig;
 import com.hazelcast.config.FlakeIdGeneratorConfig;
 import com.hazelcast.config.GcpConfig;
 import com.hazelcast.config.HotRestartConfig;
@@ -51,10 +51,10 @@ import com.hazelcast.config.MemoryTierConfig;
 import com.hazelcast.config.MergePolicyConfig;
 import com.hazelcast.config.MerkleTreeConfig;
 import com.hazelcast.config.MultiMapConfig;
+import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.NearCacheConfig;
 import com.hazelcast.config.NearCachePreloaderConfig;
 import com.hazelcast.config.PNCounterConfig;
-import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.config.PartitioningStrategyConfig;
 import com.hazelcast.config.PermissionConfig;
 import com.hazelcast.config.PredicateConfig;
@@ -79,6 +79,7 @@ import com.hazelcast.config.WanReplicationRef;
 import com.hazelcast.config.WanSyncConfig;
 import com.hazelcast.internal.dynamicconfig.AddDynamicConfigOperation;
 import com.hazelcast.internal.dynamicconfig.DynamicConfigPreJoinOperation;
+import com.hazelcast.internal.dynamicconfig.RemoveDynamicConfigOperation;
 import com.hazelcast.internal.serialization.DataSerializerHook;
 import com.hazelcast.internal.serialization.impl.ArrayDataSerializableFactory;
 import com.hazelcast.internal.serialization.impl.FactoryIdHelper;
@@ -92,7 +93,7 @@ import static com.hazelcast.internal.serialization.impl.FactoryIdHelper.CONFIG_D
 /**
  * DataSerializerHook for com.hazelcast.config classes
  */
-@SuppressWarnings("checkstyle:javadocvariable")
+@SuppressWarnings({"checkstyle:javadocvariable", "deprecation"})
 public final class ConfigDataSerializerHook implements DataSerializerHook {
 
     public static final int F_ID = FactoryIdHelper.getFactoryId(CONFIG_DS_FACTORY, CONFIG_DS_FACTORY_ID);
@@ -168,6 +169,7 @@ public final class ConfigDataSerializerHook implements DataSerializerHook {
     public static final int DATA_CONNECTION_CONFIG = 68;
     public static final int PARTITION_ATTRIBUTE_CONFIG = 69;
     public static final int NAMESPACE_CONFIG = 70;
+    public static final int REMOVE_DYNAMIC_CONFIG_OP = 71;
 
     private static final int LEN = PARTITION_ATTRIBUTE_CONFIG + 1;
 
@@ -248,7 +250,8 @@ public final class ConfigDataSerializerHook implements DataSerializerHook {
         constructors[DISK_TIER_CONFIG] = arg -> new DiskTierConfig();
         constructors[BTREE_INDEX_CONFIG] = arg -> new BTreeIndexConfig();
         constructors[DATA_CONNECTION_CONFIG] = arg -> new DataConnectionConfig();
-        constructors[PARTITION_ATTRIBUTE_CONFIG] = arg -> new PartitioningAttributeConfig();
+        constructors[NAMESPACE_CONFIG] = arg -> new NamespaceConfig();
+        constructors[REMOVE_DYNAMIC_CONFIG_OP] = arg -> new RemoveDynamicConfigOperation();
 
         return new ArrayDataSerializableFactory(constructors);
     }

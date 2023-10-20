@@ -60,7 +60,6 @@ public class NamespaceServiceImpl implements NamespaceService {
         nsConfigs.forEach((nsName, nsConfig) -> addNamespace(nsName, resourceDefinitions(nsConfig)));
     }
 
-    // TODO: Dynamic config: ensure this is called from ClusterWideConfigurationService#registerConfigLocally
     @Override
     public void addNamespace(@Nonnull String nsName, @Nonnull Collection<ResourceDefinition> resources) {
         Objects.requireNonNull(nsName, "namespace name cannot be null");
@@ -218,5 +217,10 @@ public class NamespaceServiceImpl implements NamespaceService {
     private static Collection<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
         return ConfigAccessor.getResourceConfigs(nsConfig).stream().map(ResourceDefinitionImpl::new)
                 .collect(Collectors.toSet());
+    }
+    
+    @Override
+    public MapResourceClassLoader getClassLoaderForNamespace(String namespace) {
+        return namespaceToClassLoader.get(namespace);
     }
 }

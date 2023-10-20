@@ -68,6 +68,7 @@ import com.hazelcast.internal.dynamicconfig.DynamicConfigurationAwareConfig;
 import com.hazelcast.internal.management.ManagementCenterService;
 import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.hazelcast.internal.metrics.impl.MetricsConfigHelper;
+import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceServiceImpl;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
@@ -339,7 +340,7 @@ public class Node {
             return parent;
         }
         // create the NamespaceAwareClassLoader with the determined parent.
-        NamespaceServiceImpl namespaceService = new NamespaceServiceImpl(parent, staticNsConfig);
+        NamespaceService namespaceService = new NamespaceServiceImpl(parent, staticNsConfig);
         return new NamespaceAwareClassLoader(parent, namespaceService);
     }
 
@@ -476,6 +477,15 @@ public class Node {
 
     public InternalPartitionService getPartitionService() {
         return partitionService;
+    }
+
+    // TODO This is bad
+    public NamespaceService getNamespaceService() {
+        if (configClassLoader instanceof NamespaceAwareClassLoader) {
+            return ((NamespaceAwareClassLoader) configClassLoader).getNamespaceService();
+        } else {
+            return null;
+        }
     }
 
     public Address getMasterAddress() {

@@ -30,6 +30,7 @@ import com.hazelcast.config.ListConfig;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MerkleTreeConfig;
 import com.hazelcast.config.MultiMapConfig;
+import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.PNCounterConfig;
 import com.hazelcast.config.QueueConfig;
 import com.hazelcast.config.ReliableTopicConfig;
@@ -58,6 +59,7 @@ import com.hazelcast.version.Version;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,6 +71,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
+import java.util.function.BiFunction;
 
 import static com.hazelcast.internal.cluster.Versions.V4_0;
 import static com.hazelcast.internal.cluster.Versions.V5_2;
@@ -121,6 +124,7 @@ public class ClusterWideConfigurationService implements
     private final ConcurrentMap<String, FlakeIdGeneratorConfig> flakeIdGeneratorConfigs = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, DataConnectionConfig> dataConnectionConfigs = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, WanReplicationConfig> wanReplicationConfigs = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, NamespaceConfig> namespaceConfigs = new ConcurrentHashMap<>();
 
     private final ConfigPatternMatcher configPatternMatcher;
 
@@ -144,6 +148,7 @@ public class ClusterWideConfigurationService implements
             pnCounterConfigs,
             dataConnectionConfigs,
             wanReplicationConfigs,
+            namespaceConfigs,
     };
 
     private volatile Version version;
@@ -209,8 +214,12 @@ public class ClusterWideConfigurationService implements
 
     @Override
     public void broadcastConfig(IdentifiedDataSerializable config) {
-        InternalCompletableFuture<Object> future = broadcastConfigAsync(config);
-        future.joinInternal();
+        broadcastConfigAsync(config).joinInternal();
+    }
+
+    @Override
+    public void unbroadcastConfig(IdentifiedDataSerializable config) {
+        broadcastConfigAsync(config, RemoveDynamicConfigOperationSupplier::new).joinInternal();
     }
 
     @Override
@@ -229,17 +238,19 @@ public class ClusterWideConfigurationService implements
     }
 
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config) {
+        return broadcastConfigAsync(config, AddDynamicConfigOperationSupplier::new);
+    }
+    
+    public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config,
+            BiFunction<ClusterService, IdentifiedDataSerializable, DynamicConfigOperationSupplier> dynamicConfigOperationGenerator) {
         checkConfigVersion(config);
         // we create a defensive copy as local operation execution might use a fast-path
         // and avoid config serialization altogether.
         // we certainly do not want the dynamic config service to reference object a user can mutate
         IdentifiedDataSerializable clonedConfig = cloneConfig(config);
         ClusterService clusterService = nodeEngine.getClusterService();
-        return invokeOnStableClusterSerial(
-                nodeEngine,
-                new AddDynamicConfigOperationSupplier(clusterService, clonedConfig),
-                CONFIG_PUBLISH_MAX_ATTEMPT_COUNT
-        );
+        return invokeOnStableClusterSerial(nodeEngine, dynamicConfigOperationGenerator.apply(clusterService, clonedConfig),
+                CONFIG_PUBLISH_MAX_ATTEMPT_COUNT);
     }
 
     private void checkConfigVersion(IdentifiedDataSerializable config) {
@@ -248,7 +259,7 @@ public class ClusterWideConfigurationService implements
         Version introducedIn = CONFIG_TO_VERSION.get(configClass);
         if (currentClusterVersion.isLessThan(introducedIn)) {
             throw new UnsupportedOperationException(format("Config '%s' is available since version '%s'. "
-                            + "Current cluster version '%s' does not allow dynamically adding '%1$s'.",
+                            + "Current cluster version '%s' does not allow dynamically modifying '%1$s'.",
                     configClass.getSimpleName(),
                     introducedIn.toString(),
                     currentClusterVersion
@@ -262,10 +273,8 @@ public class ClusterWideConfigurationService implements
         return serializationService.toObject(data);
     }
 
-
     /**
-     * Register a dynamic configuration in a local member. When a dynamic configuration with the same name already
-     * exists then this call has no effect.
+     * Register a dynamic configuration in a local member.
      *
      * @param newConfig       Configuration to register.
      * @param configCheckMode behaviour when a config is detected
@@ -344,10 +353,37 @@ public class ClusterWideConfigurationService implements
             if (currentConfig == null) {
                 nodeEngine.getWanReplicationService().addWanReplicationConfig(config);
             }
+        } else if (newConfig instanceof NamespaceConfig) {
+            NamespaceConfig config = (NamespaceConfig) newConfig;
+            // Deliberately overwrite existing
+            currentConfig = namespaceConfigs.put(config.getName(), config);
+            if (currentConfig == null) {
+                nodeEngine.getNamespaceService().addNamespaceConfig(config);
+            }
         } else {
             throw new UnsupportedOperationException("Unsupported config type: " + newConfig);
         }
         checkCurrentConfigNullOrEqual(configCheckMode, currentConfig, newConfig);
+        persist(newConfig);
+    }
+
+    /**
+     * Register a dynamic configuration in a local member.
+     *
+     * @param newConfig       Configuration to register.
+     * @param configCheckMode behaviour when a config is detected
+     * @throws UnsupportedOperationException when given configuration type is not supported
+     */
+    @SuppressWarnings("checkstyle:methodlength")
+    public void deregisterConfigLocally(IdentifiedDataSerializable newConfig, ConfigCheckMode configCheckMode) {
+        if (newConfig instanceof NamespaceConfig) {
+            NamespaceConfig config = (NamespaceConfig) newConfig;
+            if(namespaceConfigs.remove(config.getName(), newConfig)) {
+                nodeEngine.getNamespaceService().removeNamespaceConfig(config);
+            }
+        } else {
+            throw new UnsupportedOperationException("Unsupported config type: " + newConfig);
+        }
         persist(newConfig);
     }
 
@@ -566,6 +602,16 @@ public class ClusterWideConfigurationService implements
     }
 
     @Override
+    public NamespaceConfig findNamespaceConfig(String name) {
+        return lookupByPattern(configPatternMatcher, namespaceConfigs, name);
+    }
+
+    @Override
+    public Map<String, NamespaceConfig> getNamespaceConfigs() {
+        return namespaceConfigs;
+    }
+
+    @Override
     public Runnable prepareMergeRunnable() {
         IdentifiedDataSerializable[] allConfigurations = collectAllDynamicConfigs();
         if (noConfigurationExist(allConfigurations)) {
@@ -631,6 +677,7 @@ public class ClusterWideConfigurationService implements
         configToVersion.put(MerkleTreeConfig.class, V4_0);
         configToVersion.put(DataConnectionConfig.class, V5_2);
         configToVersion.put(WanReplicationConfig.class, V5_4);
+        configToVersion.put(NamespaceConfig.class, V5_4);
 
         return Collections.unmodifiableMap(configToVersion);
     }

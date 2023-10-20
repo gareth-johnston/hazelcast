@@ -16,9 +16,14 @@
 
 package com.hazelcast.internal.namespace;
 
+import com.hazelcast.config.NamespaceConfig;
+import com.hazelcast.internal.namespace.impl.ResourceDefinitionImpl;
+import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
+
 import javax.annotation.Nonnull;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public interface NamespaceService {
     String DEFAULT_NAMESPACE_ID = "default";
@@ -42,4 +47,14 @@ public interface NamespaceService {
      * @return {@code True} if a default Namespace exists, otherwise {@code False}
      */
     boolean isDefaultNamespaceDefined();
+
+    default void addNamespaceConfig(NamespaceConfig config) { 
+        addNamespace(config.getName(), config.getResourceConfigs().stream().map(ResourceDefinitionImpl::new).collect(Collectors.toList()));
+    }
+
+    default void removeNamespaceConfig(NamespaceConfig config) {
+        removeNamespace(config.getName());
+    }
+
+    MapResourceClassLoader getClassLoaderForNamespace(String namespace);
 }

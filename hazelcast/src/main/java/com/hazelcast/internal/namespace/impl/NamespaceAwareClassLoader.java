@@ -37,7 +37,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     private static final MethodHandle FIND_RESOURCE_METHOD_HANDLE;
     private static final MethodHandle FIND_RESOURCES_METHOD_HANDLE;
 
-    private final NamespaceServiceImpl namespaceService;
+    private final NamespaceService namespaceService;
 
     static {
         try {
@@ -54,7 +54,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
         }
     }
 
-    public NamespaceAwareClassLoader(ClassLoader parent, NamespaceServiceImpl namespaceService) {
+    public NamespaceAwareClassLoader(ClassLoader parent, NamespaceService namespaceService) {
         super(parent);
         this.namespaceService = namespaceService;
     }
@@ -100,7 +100,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
         if (namespace == null) {
             return getParent();
         } else {
-            ClassLoader candidate = namespaceService.namespaceToClassLoader.get(namespace);
+            ClassLoader candidate = namespaceService.getClassLoaderForNamespace(namespace);
             return candidate == null ? getParent() : candidate;
         }
     }

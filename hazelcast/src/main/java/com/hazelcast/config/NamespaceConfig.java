@@ -89,7 +89,7 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
         return this;
     }
 
-    Collection<ResourceConfig> getResourceConfigs() {
+    public Collection<ResourceConfig> getResourceConfigs() {
         return Set.copyOf(resourceConfigs.values());
     }
 

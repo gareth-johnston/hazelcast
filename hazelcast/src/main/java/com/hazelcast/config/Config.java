@@ -3245,7 +3245,7 @@ public class Config {
     }
 
     /** @since 5.4 */
-    Map<String, NamespaceConfig> getNamespaceConfigs() {
+    protected Map<String, NamespaceConfig> getNamespaceConfigs() {
         return Collections.unmodifiableMap(namespaceConfigs);
     }
 

@@ -24,6 +24,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.dataconnection.impl.InternalDataConnectionService;
 import com.hazelcast.instance.impl.NodeExtension;
 import com.hazelcast.internal.cluster.ClusterService;
+import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.partition.IPartitionService;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.SerializationService;
@@ -99,6 +100,13 @@ public interface NodeEngine {
      * @return the TransactionManagerService
      */
     TransactionManagerService getTransactionManagerService();
+
+    /**
+     * Gets the NamespaceService.
+     *
+     * @return the NamespaceService
+     */
+    NamespaceService getNamespaceService();
 
     /**
      * Gets the address of the master member.
