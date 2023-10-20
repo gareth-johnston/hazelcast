@@ -317,7 +317,6 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
      * @return the Namespace ID if found, or {@code null} otherwise.
      */
     static String lookupMapNamespace(NodeEngine engine, String mapName) {
-        // todo null = default, check if default NS defined, fail fast if not, return "default" NS otherwise
         MapService mapService = engine.getService(MapService.SERVICE_NAME);
         MapContainer container = mapService.getMapServiceContext().getExistingMapContainer(mapName);
         if (container != null) {

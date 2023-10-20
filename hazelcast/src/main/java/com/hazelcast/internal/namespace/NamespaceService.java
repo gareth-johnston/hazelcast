@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+// TODO proper documentation
 public interface NamespaceService {
     String DEFAULT_NAMESPACE_ID = "default";
 
@@ -37,6 +38,8 @@ public interface NamespaceService {
      * @return {@code true} if {@code nsName} namespace was found and removed, otherwise {@code false}.
      */
     boolean removeNamespace(@Nonnull String nsName);
+
+    boolean hasNamespace(String namespaceName);
 
     /**
      * In order to fail-fast, we skip Namespace-awareness handling when

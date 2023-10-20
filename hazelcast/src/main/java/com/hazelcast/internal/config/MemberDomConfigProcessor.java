@@ -56,6 +56,8 @@ import org.w3c.dom.Node;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1890,6 +1892,8 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
                 mapConfig.setTieredStoreConfig(createTieredStoreConfig(node));
             } else if (matches("partition-attributes", nodeName)) {
                 handlePartitionAttributes(node, mapConfig);
+            } else if (matches("namespace", nodeName)) {
+                mapConfig.setNamespace(getTextContent(node));
             }
         }
         config.addMapConfig(mapConfig);
@@ -2590,8 +2594,9 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
             String nodeName = cleanNodeName(n);
             if (matches(nodeName, "url")) {
                 try {
-                    url = new URL(getTextContent(n));
-                } catch (MalformedURLException e) {
+                    url = new URI(getTextContent(n)).toURL();
+                    break;
+                } catch (MalformedURLException | URISyntaxException e) {
                     throw new InvalidConfigurationException("Malformed resource URL", e);
                 }
             }
@@ -2603,6 +2608,7 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
             case JARS_IN_ZIP:
                 nsConfig.addJarsInZip(url);
                 break;
+            // todo remaining cases
         }
     }
 

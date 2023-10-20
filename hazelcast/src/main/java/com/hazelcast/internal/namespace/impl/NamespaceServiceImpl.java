@@ -97,6 +97,11 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
+    public boolean hasNamespace(String namespaceName) {
+        return namespaceToClassLoader.containsKey(namespaceName);
+    }
+
+    @Override
     public boolean isDefaultNamespaceDefined() {
         return hasDefaultNamespace;
     }

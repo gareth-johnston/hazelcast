@@ -23,8 +23,11 @@ import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.config.AttributeConfig;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.UserCodeDeploymentConfig;
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.test.HazelcastParallelParametersRunnerFactory;
@@ -47,6 +50,8 @@ import usercodedeployment.Person;
 import usercodedeployment.SampleBaseClass;
 import usercodedeployment.SampleSubClass;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
@@ -54,8 +59,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.hazelcast.query.Predicates.equal;
+import static com.hazelcast.test.Accessors.getNodeEngineImpl;
 import static com.hazelcast.test.SplitBrainTestSupport.blockCommunicationBetween;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(HazelcastParametrizedRunner.class)
 @UseParametersRunnerFactory(HazelcastParallelParametersRunnerFactory.class)
@@ -338,5 +345,38 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
 
         factory.newHazelcastInstance(createNodeConfig());
         factory.newHazelcastClient(clientConfig);
+    }
+
+    // TODO This test is hacky and does not belong here, but it was necessary for me to get static configuration working
+    //  we should refactor/move it eventually
+    @Test
+    public void testXmlConfigLoadingForNamespacesWithIMap() {
+        Path pathToJar = Paths.get("src", "test", "class", "usercodedeployment", "ChildParent.jar");
+        String stringPath = pathToJar.toAbsolutePath().toString().replace(" ", "%20");
+        // Windows things
+        stringPath = stringPath.replace("\\", "/");
+        String xmlPayload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"\n"
+                + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "           xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
+                + "           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd\">\n" + "\n"
+                + "    <cluster-name>cluster</cluster-name>\n" + "\n" + "    <namespace name=\"myNamespace\">\n"
+                + "        <resource type=\"JAR\">\n"
+                + "            <url>file:///" + stringPath + "</url>\n" + "        </resource>\n"
+                + "    </namespace>\n" + "    \n" + "    <map name=\"myMap\">\n" + "        <namespace>myNamespace</namespace>\n"
+                + "    </map>\n" + "</hazelcast>\n" + "\n";
+
+        HazelcastInstance instance = Hazelcast.newHazelcastInstance(Config.loadFromString(xmlPayload));
+        try {
+            assertTrue(getNodeEngineImpl(instance).getConfigClassLoader() instanceof NamespaceAwareClassLoader);
+            NamespaceAwareClassLoader classLoader = (NamespaceAwareClassLoader) getNodeEngineImpl(instance).getConfigClassLoader();
+
+            assertTrue(classLoader.getNamespaceService().hasNamespace("myNamespace"));
+
+            MapConfig mapConfig = instance.getConfig().getMapConfig("myMap");
+            assertEquals("myNamespace", mapConfig.getNamespace());
+        } finally {
+            instance.shutdown();
+        }
     }
 }
