@@ -53,6 +53,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
 
     private final ClassLoader configClassLoader;
+    private boolean hasDefaultNamespace;
 
     public NamespaceServiceImpl(ClassLoader configClassLoader, Map<String, NamespaceConfig> nsConfigs) {
         this.configClassLoader = configClassLoader;
@@ -77,6 +78,9 @@ public class NamespaceServiceImpl implements NamespaceService {
             cleanUpClassLoader(nsName, removed);
         }
         initializeClassLoader(nsName, updated);
+        if (nsName.equals(DEFAULT_NAMESPACE_ID)) {
+            hasDefaultNamespace = true;
+        }
     }
 
     @Override
@@ -84,10 +88,18 @@ public class NamespaceServiceImpl implements NamespaceService {
         MapResourceClassLoader removed = namespaceToClassLoader.remove(nsName);
         if (removed != null) {
             cleanUpClassLoader(nsName, removed);
+            if (nsName.equals(DEFAULT_NAMESPACE_ID)) {
+                hasDefaultNamespace = false;
+            }
             return true;
         } else {
             return false;
         }
+    }
+
+    @Override
+    public boolean isDefaultNamespaceDefined() {
+        return hasDefaultNamespace;
     }
 
     void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {

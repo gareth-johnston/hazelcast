@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 
 public interface NamespaceService {
+    String DEFAULT_NAMESPACE_ID = "default";
 
     void addNamespace(@Nonnull String nsName,
                       @Nonnull Collection<ResourceDefinition> resources);
@@ -31,4 +32,14 @@ public interface NamespaceService {
      * @return {@code true} if {@code nsName} namespace was found and removed, otherwise {@code false}.
      */
     boolean removeNamespace(@Nonnull String nsName);
+
+    /**
+     * In order to fail-fast, we skip Namespace-awareness handling when
+     * an object's namespace is `null` - however, if we have a default
+     * Namespace defined, we should use that in these cases. To facilitate
+     * failing fast with minimal overhead, we track this separately.
+     *
+     * @return {@code True} if a default Namespace exists, otherwise {@code False}
+     */
+    boolean isDefaultNamespaceDefined();
 }

@@ -23,6 +23,7 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.config.PartitioningStrategyConfig;
 import com.hazelcast.internal.eviction.ExpirationManager;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.util.collection.PartitionIdSet;
@@ -283,23 +284,23 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
 
     /**
      * Attempts to retrieve a {@code ThreadLocal} {@link NodeEngine} implementation
-     * for the current member, and uses it to check if Namespaces are enabled. If
-     * enabled, this method then forwards to {@link #lookupMapNamespace(NodeEngine, String)}
-     * and returns the available Namespace ID, or {@code null} if not found.
+     * for the current member, and uses it to find a Namespace ID for the provided mapName.
+     * <p>
+     * This method <b>does not</b> check for Namespace enablement, and returns a result
+     * as defined by {@link #lookupMapNamespace(NodeEngine, String)}.
      *
      * @param mapName The name of the {@link com.hazelcast.map.IMap} to lookup for
-     * @return the Namespace ID if Namespaces are enabled, and it is found, or {@code null} otherwise.
+     * @return the Namespace ID if found, or {@code null} otherwise.
      */
     // todo move this somewhere proper?
     static String getNamespace(String mapName) {
+        // TODO: We lookup NodeEngine again later in the NS-awareness stack; can we optimize?
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
         if (engine == null) {
             throw new IllegalStateException("NodeEngine context is not available for Namespaces!");
         }
-        if (((NodeEngineImpl) engine).getNode().namespacesEnabled) {
-            return lookupMapNamespace(engine, mapName);
-        }
-        return null;
+        // We're skipping enablement checks here as they're handled at NS-awareness start logic
+        return lookupMapNamespace(engine, mapName);
     }
 
     /**
@@ -307,12 +308,16 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
      * by looking for an existing {@link MapContainer} and checking its defined
      * {@link MapConfig}. If the {@link MapContainer} does not exist (containers are
      * created lazily), then fallback to checking the Node's config tree directly.
+     * <p>
+     * N.B. This method <b>does not</b> transform the Namespace ID as defined by
+     * the {@link NamespaceUtil#transformNamespace(NodeEngine, String)} method.
      *
      * @param engine  {@link NodeEngine} implementation of this member for service and config lookups
      * @param mapName The name of the {@link com.hazelcast.map.IMap} to lookup for
      * @return the Namespace ID if found, or {@code null} otherwise.
      */
     static String lookupMapNamespace(NodeEngine engine, String mapName) {
+        // todo null = default, check if default NS defined, fail fast if not, return "default" NS otherwise
         MapService mapService = engine.getService(MapService.SERVICE_NAME);
         MapContainer container = mapService.getMapServiceContext().getExistingMapContainer(mapName);
         if (container != null) {

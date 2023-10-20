@@ -16,6 +16,7 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.util.ExceptionUtil;
 
 import java.io.IOException;
@@ -107,5 +108,10 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
         return pickClassLoader().getResources(name);
+    }
+
+    // TODO: Should this be registered as a proper service and accessible via #getService() call?
+    public NamespaceService getNamespaceService() {
+        return namespaceService;
     }
 }

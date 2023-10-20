@@ -19,9 +19,10 @@ package com.hazelcast.config;
 import javax.annotation.Nonnull;
 
 public interface NamespaceAwareConfig {
-    String DEFAULT_NAMESPACE = "default";
+    // TODO document `null` = `default` in config, if default namespace is configured; otherwise no NS-awareness
+    //  Default Namespace defined as DEFAULT_NAMESPACE_ID in NamespaceService
+    String DEFAULT_NAMESPACE = null;
 
-    @Nonnull
     default String getNamespace() {
         return DEFAULT_NAMESPACE;
     }

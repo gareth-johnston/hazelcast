@@ -16,61 +16,38 @@
 
 package com.hazelcast.internal.namespace;
 
-import com.hazelcast.instance.impl.Node;
+import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.util.ExceptionUtil;
 import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.Callable;
+
+import static com.hazelcast.internal.namespace.NamespaceService.DEFAULT_NAMESPACE_ID;
 
 /**
  * Utility to simplify setup/cleanup of namespace aware classloading
  */
-// TODO: Namespaces will never be null when looked up via config, since it uses a default namespace
-//  Can we do anything to save performance ahead of reaching Namespace lookup when default namespace is not defined?
+// TODO: When we want a feature flag for NS-UCD, we will handle everything via the service
+//      and use a no-op implementation - this utility needs to be replaced or use that service
 public class NamespaceUtil {
 
     private NamespaceUtil() {
     }
 
-    public static void setupNs(@Nonnull Node node, @Nullable String namespace) {
-        if (namespace == null) {
-            return;
-        }
-        if (node.namespacesEnabled) {
-            NamespaceThreadLocalContext.onStartNsAware(namespace);
-        }
-    }
-
-    public static void cleanupNs(@Nonnull Node node, @Nullable String namespace) {
-        if (namespace == null) {
-            return;
-        }
-        if (node.namespacesEnabled) {
-            NamespaceThreadLocalContext.onCompleteNsAware(namespace);
-        }
-    }
-
-    public static void setupNs(@Nonnull NodeEngine nodeEngine, @Nullable String namespace) {
-        setupNs(((NodeEngineImpl) nodeEngine).getNode(), namespace);
-    }
-
-    public static void cleanupNs(@Nonnull NodeEngine nodeEngine, @Nullable String namespace) {
-        cleanupNs(((NodeEngineImpl) nodeEngine).getNode(), namespace);
-    }
-
-    public static void setupNs(@Nullable String namespace) {
+    // Private method to avoid calling without NodeEngine enablement checks first
+    private static void setupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;
         }
         NamespaceThreadLocalContext.onStartNsAware(namespace);
     }
 
-    public static void cleanupNs(@Nullable String namespace) {
+    // Private method to avoid calling without NodeEngine enablement checks first
+    private static void cleanupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;
         }
@@ -78,6 +55,17 @@ public class NamespaceUtil {
     }
 
     public static void runWithNamespace(@Nullable String namespace, Runnable runnable) {
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        runWithNamespace(engine, namespace, runnable);
+    }
+
+    public static void runWithNamespace(NodeEngine engine, @Nullable String namespace, Runnable runnable) {
+        if (!isNamespacesEnabled(engine)) {
+            runnable.run();
+            return;
+        }
+
+        namespace = transformNamespace(engine, namespace);
         setupNs(namespace);
         try {
             runnable.run();
@@ -85,9 +73,22 @@ public class NamespaceUtil {
             cleanupNs(namespace);
         }
     }
-    // TODO Most calls to this are not checking if Namespace is enabled via NodeEngine
-    //  This won't matter once we have a no-op implementation instead of namespacesEnabled check
+
     public static <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable) {
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        return callWithNamespace(engine, namespace, callable);
+    }
+
+    public static <V> V callWithNamespace(NodeEngine engine, @Nullable String namespace, Callable<V> callable) {
+        if (!isNamespacesEnabled(engine)) {
+            try {
+                return callable.call();
+            } catch (Exception e) {
+                throw ExceptionUtil.sneakyThrow(e);
+            }
+        }
+
+        namespace = transformNamespace(engine, namespace);
         setupNs(namespace);
         try {
             return callable.call();
@@ -96,5 +97,29 @@ public class NamespaceUtil {
         } finally {
             cleanupNs(namespace);
         }
+    }
+
+    // Internal method to transform a `null` namespace into the default namespace if available
+    public static String transformNamespace(NodeEngine engine, String namespace) {
+        if (namespace != null) {
+            return namespace;
+        }
+
+        // Check if we have a `default` environment available
+        if (engine.getConfigClassLoader() instanceof NamespaceAwareClassLoader) {
+            NamespaceAwareClassLoader classLoader = (NamespaceAwareClassLoader) engine.getConfigClassLoader();
+            // TODO: Lookup NamespaceService via getService once implemented?
+            if (classLoader.getNamespaceService().isDefaultNamespaceDefined()) {
+                return DEFAULT_NAMESPACE_ID;
+            }
+        }
+
+        // Namespace is null, no default Namespace is defined, fail-fast
+        return null;
+    }
+
+    // TODO usage will be replaced by no-op service
+    private static boolean isNamespacesEnabled(NodeEngine engine) {
+        return ((NodeEngineImpl)engine).getNode().namespacesEnabled;
     }
 }

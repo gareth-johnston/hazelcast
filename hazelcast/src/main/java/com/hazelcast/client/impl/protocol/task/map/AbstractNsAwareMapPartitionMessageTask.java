@@ -38,19 +38,7 @@ abstract class AbstractNsAwareMapPartitionMessageTask<P> extends AbstractMapPart
 
     @Override
     protected CompletableFuture<Object> processInternal() {
-        onStartNsAwareSection();
-        try {
-            return super.processInternal();
-        } finally {
-            onCompleteNsAwareSection();
-        }
-    }
-
-    protected void onStartNsAwareSection() {
-        NamespaceUtil.setupNs(nodeEngine, MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName()));
-    }
-
-    protected void onCompleteNsAwareSection() {
-        NamespaceUtil.cleanupNs(nodeEngine, MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName()));
+        String namespace = MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName());
+        return NamespaceUtil.callWithNamespace(nodeEngine, namespace, super::processInternal);
     }
 }
