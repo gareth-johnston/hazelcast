@@ -16,118 +16,10 @@
 
 package com.hazelcast.internal.config;
 
-import com.hazelcast.config.AliasedDiscoveryConfig;
-import com.hazelcast.config.AttributeConfig;
-import com.hazelcast.config.AutoDetectionConfig;
-import com.hazelcast.config.CRDTReplicationConfig;
-import com.hazelcast.config.CacheDeserializedValues;
-import com.hazelcast.config.CachePartitionLostListenerConfig;
-import com.hazelcast.config.CacheSimpleConfig;
+import com.hazelcast.config.*;
 import com.hazelcast.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.TimedExpiryPolicyFactoryConfig.ExpiryPolicyType;
-import com.hazelcast.config.CacheSimpleEntryListenerConfig;
-import com.hazelcast.config.CardinalityEstimatorConfig;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.ConsistencyCheckStrategy;
-import com.hazelcast.config.CredentialsFactoryConfig;
-import com.hazelcast.config.DataConnectionConfig;
-import com.hazelcast.config.DataConnectionConfigValidator;
-import com.hazelcast.config.DataPersistenceConfig;
-import com.hazelcast.config.DiscoveryConfig;
-import com.hazelcast.config.DiscoveryStrategyConfig;
-import com.hazelcast.config.DiskTierConfig;
-import com.hazelcast.config.DurableExecutorConfig;
-import com.hazelcast.config.DynamicConfigurationConfig;
-import com.hazelcast.config.EncryptionAtRestConfig;
-import com.hazelcast.config.EndpointConfig;
-import com.hazelcast.config.EntryListenerConfig;
-import com.hazelcast.config.EventJournalConfig;
-import com.hazelcast.config.EvictionConfig;
-import com.hazelcast.config.EvictionPolicy;
-import com.hazelcast.config.ExecutorConfig;
-import com.hazelcast.config.FlakeIdGeneratorConfig;
-import com.hazelcast.config.HotRestartClusterDataRecoveryPolicy;
-import com.hazelcast.config.HotRestartConfig;
-import com.hazelcast.config.HotRestartPersistenceConfig;
-import com.hazelcast.config.IcmpFailureDetectorConfig;
-import com.hazelcast.config.InMemoryFormat;
-import com.hazelcast.config.IndexConfig;
-import com.hazelcast.config.InterfacesConfig;
-import com.hazelcast.config.InvalidConfigurationException;
-import com.hazelcast.config.ItemListenerConfig;
-import com.hazelcast.config.JavaKeyStoreSecureStoreConfig;
-import com.hazelcast.config.JoinConfig;
-import com.hazelcast.config.ListConfig;
-import com.hazelcast.config.ListenerConfig;
-import com.hazelcast.config.LocalDeviceConfig;
-import com.hazelcast.config.ManagementCenterConfig;
-import com.hazelcast.config.MapConfig;
-import com.hazelcast.config.MapPartitionLostListenerConfig;
-import com.hazelcast.config.MapStoreConfig;
-import com.hazelcast.config.MaxSizePolicy;
-import com.hazelcast.config.MemberAddressProviderConfig;
-import com.hazelcast.config.MemberGroupConfig;
-import com.hazelcast.config.MemoryTierConfig;
-import com.hazelcast.config.MergePolicyConfig;
-import com.hazelcast.config.MetadataPolicy;
-import com.hazelcast.config.MetricsConfig;
-import com.hazelcast.config.MetricsJmxConfig;
-import com.hazelcast.config.MetricsManagementCenterConfig;
-import com.hazelcast.config.MultiMapConfig;
-import com.hazelcast.config.MulticastConfig;
-import com.hazelcast.config.NearCacheConfig;
-import com.hazelcast.config.NetworkConfig;
-import com.hazelcast.config.OnJoinPermissionOperationName;
-import com.hazelcast.config.PNCounterConfig;
-import com.hazelcast.config.PartitionGroupConfig;
 import com.hazelcast.config.PartitionGroupConfig.MemberGroupType;
-import com.hazelcast.config.PartitioningAttributeConfig;
-import com.hazelcast.config.PartitioningStrategyConfig;
-import com.hazelcast.config.PermissionConfig;
 import com.hazelcast.config.PermissionConfig.PermissionType;
-import com.hazelcast.config.PermissionPolicyConfig;
-import com.hazelcast.config.PersistenceClusterDataRecoveryPolicy;
-import com.hazelcast.config.PersistenceConfig;
-import com.hazelcast.config.PredicateConfig;
-import com.hazelcast.config.ProbabilisticSplitBrainProtectionConfigBuilder;
-import com.hazelcast.config.QueryCacheConfig;
-import com.hazelcast.config.QueueConfig;
-import com.hazelcast.config.QueueStoreConfig;
-import com.hazelcast.config.RecentlyActiveSplitBrainProtectionConfigBuilder;
-import com.hazelcast.config.ReliableTopicConfig;
-import com.hazelcast.config.ReplicatedMapConfig;
-import com.hazelcast.config.RestApiConfig;
-import com.hazelcast.config.RestEndpointGroup;
-import com.hazelcast.config.RestServerEndpointConfig;
-import com.hazelcast.config.RingbufferConfig;
-import com.hazelcast.config.RingbufferStoreConfig;
-import com.hazelcast.config.SSLConfig;
-import com.hazelcast.config.ScheduledExecutorConfig;
-import com.hazelcast.config.SecureStoreConfig;
-import com.hazelcast.config.SecurityConfig;
-import com.hazelcast.config.SecurityInterceptorConfig;
-import com.hazelcast.config.SerializationConfig;
-import com.hazelcast.config.ServerSocketEndpointConfig;
-import com.hazelcast.config.SetConfig;
-import com.hazelcast.config.SocketInterceptorConfig;
-import com.hazelcast.config.SplitBrainProtectionConfig;
-import com.hazelcast.config.SplitBrainProtectionConfigBuilder;
-import com.hazelcast.config.SplitBrainProtectionListenerConfig;
-import com.hazelcast.config.SqlConfig;
-import com.hazelcast.config.SymmetricEncryptionConfig;
-import com.hazelcast.config.TcpIpConfig;
-import com.hazelcast.config.TieredStoreConfig;
-import com.hazelcast.config.TopicConfig;
-import com.hazelcast.config.TrustedInterfacesConfigurable;
-import com.hazelcast.config.UserCodeDeploymentConfig;
-import com.hazelcast.config.VaultSecureStoreConfig;
-import com.hazelcast.config.WanAcknowledgeType;
-import com.hazelcast.config.WanBatchPublisherConfig;
-import com.hazelcast.config.WanConsumerConfig;
-import com.hazelcast.config.WanCustomPublisherConfig;
-import com.hazelcast.config.WanQueueFullBehavior;
-import com.hazelcast.config.WanReplicationConfig;
-import com.hazelcast.config.WanReplicationRef;
-import com.hazelcast.config.WanSyncConfig;
 import com.hazelcast.config.tpc.TpcConfig;
 import com.hazelcast.config.tpc.TpcSocketConfig;
 import com.hazelcast.config.cp.CPSubsystemConfig;
@@ -150,6 +42,7 @@ import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.jet.config.EdgeConfig;
 import com.hazelcast.jet.config.InstanceConfig;
 import com.hazelcast.jet.config.JetConfig;
+import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.query.impl.IndexUtils;
@@ -162,6 +55,8 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -184,6 +79,7 @@ import static com.hazelcast.config.security.LdapRoleMappingMode.getRoleMappingMo
 import static com.hazelcast.config.security.LdapSearchScope.getSearchScope;
 import static com.hazelcast.internal.config.AliasedDiscoveryConfigUtils.getConfigByTag;
 import static com.hazelcast.internal.config.ConfigSections.ADVANCED_NETWORK;
+import static com.hazelcast.internal.config.ConfigSections.NAMESPACE;
 import static com.hazelcast.internal.config.ConfigSections.TPC;
 import static com.hazelcast.internal.config.ConfigSections.AUDITLOG;
 import static com.hazelcast.internal.config.ConfigSections.CACHE;
@@ -392,6 +288,8 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
             handleDataConnections(node);
         } else if (matches(TPC.getName(), nodeName)) {
             handleTpc(node);
+        } else if (matches(NAMESPACE.getName(), nodeName)) {
+            handleNamespace(node);
         } else {
             return true;
         }
@@ -2666,6 +2564,48 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
         }
         config.addTopicConfig(tConfig);
     }
+
+    protected void handleNamespace(Node node) {
+        Node attName = getNamedItemNode(node, "name");
+        String name = getTextContent(attName);
+        NamespaceConfig nsConfig = new NamespaceConfig(name);
+        handleNamespaceNode(node, nsConfig);
+    }
+
+    void handleNamespaceNode(Node node, final NamespaceConfig nsConfig) {
+        for (Node n : childElements(node)) {
+            String nodeName = cleanNodeName(n);
+            if (matches(nodeName, "resource")) {
+                handleResourceNode(n, nsConfig);
+            }
+        }
+        config.addNamespaceConfig(nsConfig);
+    }
+
+    void handleResourceNode(Node node, final NamespaceConfig nsConfig) {
+        String type = getAttribute(node, "type");
+        ResourceType resourceType = ResourceType.valueOf(upperCaseInternal(type));
+        URL url = null;
+        for (Node n : childElements(node)) {
+            String nodeName = cleanNodeName(n);
+            if (matches(nodeName, "url")) {
+                try {
+                    url = new URL(getTextContent(n));
+                } catch (MalformedURLException e) {
+                    throw new InvalidConfigurationException("Malformed resource URL", e);
+                }
+            }
+        }
+        switch (resourceType) {
+            case JAR:
+                nsConfig.addJar(url);
+                break;
+            case JARS_IN_ZIP:
+                nsConfig.addJarsInZip(url);
+                break;
+        }
+    }
+
 
     protected void handleReliableTopic(Node node) {
         Node attName = getNamedItemNode(node, "name");

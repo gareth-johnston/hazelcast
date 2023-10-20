@@ -31,7 +31,7 @@
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.3.xsd">
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.4.xsd">
 
     <!--
         You can use the <import> element to load different Hazelcast declarative configuration files you prepared.
@@ -148,6 +148,16 @@
     <properties>
         <property name="your-property">Value of the property</property>
     </properties>
+
+<!--    <namespaces enabled="true">-->
+        <namespace name="ns1">
+            <resource type="JAR">
+                <url>file:///Users/vbekiaris/workspace/github/vbekiaris/hazelcast/hazelcast/src/test/class/ChildParent.jar</url>
+            </resource>
+        </namespace>
+<!--    </namespaces>-->
+
+
     <!--
         ===== HAZELCAST WAN REPLICATION CONFIGURATION =====
 
