@@ -28,7 +28,7 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.UserCodeDeploymentConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
+import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.test.HazelcastParallelParametersRunnerFactory;
@@ -63,6 +63,7 @@ import static com.hazelcast.query.Predicates.equal;
 import static com.hazelcast.test.Accessors.getNodeEngineImpl;
 import static com.hazelcast.test.SplitBrainTestSupport.blockCommunicationBetween;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(HazelcastParametrizedRunner.class)
@@ -369,10 +370,9 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
 
         HazelcastInstance instance = Hazelcast.newHazelcastInstance(Config.loadFromString(xmlPayload));
         try {
-            assertTrue(getNodeEngineImpl(instance).getConfigClassLoader() instanceof NamespaceAwareClassLoader);
-            NamespaceAwareClassLoader classLoader = (NamespaceAwareClassLoader) getNodeEngineImpl(instance).getConfigClassLoader();
-
-            assertTrue(classLoader.getNamespaceService().hasNamespace("myNamespace"));
+            NamespaceService service = getNodeEngineImpl(instance).getNamespaceService();
+            assertNotNull(service);
+            assertTrue(service.hasNamespace("myNamespace"));
 
             MapConfig mapConfig = instance.getConfig().getMapConfig("myMap");
             assertEquals("myNamespace", mapConfig.getNamespace());
