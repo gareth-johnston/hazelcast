@@ -1270,11 +1270,7 @@ public class DynamicConfigurationAwareConfig extends Config {
 
     @Override
     public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {
-        // Remove any existing
-        removeNamespaceConfig(namespaceConfig.getName());
-        super.addNamespaceConfig(namespaceConfig);
         configurationService.broadcastConfig(namespaceConfig);
-
         return this;
     }
 

@@ -357,9 +357,7 @@ public class ClusterWideConfigurationService implements
             NamespaceConfig config = (NamespaceConfig) newConfig;
             // Deliberately overwrite existing
             currentConfig = namespaceConfigs.put(config.getName(), config);
-            if (currentConfig == null) {
-                nodeEngine.getNamespaceService().addNamespaceConfig(config);
-            }
+            nodeEngine.getNamespaceService().addNamespaceConfig(config);
         } else {
             throw new UnsupportedOperationException("Unsupported config type: " + newConfig);
         }
