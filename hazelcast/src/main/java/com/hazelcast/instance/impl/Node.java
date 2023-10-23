@@ -192,6 +192,7 @@ public class Node {
     private final InternalSerializationService serializationService;
     private final InternalSerializationService compatibilitySerializationService;
     private final ClassLoader configClassLoader;
+    private NamespaceService namespaceService;
     private final NodeExtension nodeExtension;
     private final HazelcastProperties properties;
     private final BuildInfo buildInfo;
@@ -218,7 +219,7 @@ public class Node {
         this.hazelcastInstance = hazelcastInstance;
         this.config = config;
         this.namespacesEnabled = !ConfigAccessor.getNamespaceConfigs(config).isEmpty();
-        this.configClassLoader = getConfigClassloader(config);
+        this.configClassLoader = generateConfigClassloader(config);
 
         String policy = properties.getString(SHUTDOWNHOOK_POLICY);
         this.shutdownHookThread = new NodeShutdownHookThread("hz.ShutdownThread", policy);
@@ -331,7 +332,7 @@ public class Node {
         return clientEndpointConfig != null;
     }
 
-    static ClassLoader getConfigClassloader(Config config) {
+    private ClassLoader generateConfigClassloader(Config config) {
         // determine a parent classloader: either the legacy
         // UserCodeDeploymentClassLoader (if enabled), or config.getClassLoader().
         ClassLoader parent = getLegacyUCDClassLoader(config);
@@ -341,8 +342,8 @@ public class Node {
 //            return parent;
 //        }
         // create the NamespaceAwareClassLoader with the determined parent.
-        NamespaceService namespaceService = new NamespaceServiceImpl(parent, staticNsConfig);
-        return new NamespaceAwareClassLoader(parent, namespaceService);
+        namespaceService = new NamespaceServiceImpl(parent, staticNsConfig);
+        return new NamespaceAwareClassLoader(parent, this);
     }
 
     /**
@@ -484,13 +485,8 @@ public class Node {
         return partitionService;
     }
 
-    // TODO This is bad
     public NamespaceService getNamespaceService() {
-        if (configClassLoader instanceof NamespaceAwareClassLoader) {
-            return ((NamespaceAwareClassLoader) configClassLoader).getNamespaceService();
-        } else {
-            return null;
-        }
+        return namespaceService;
     }
 
     public Address getMasterAddress() {

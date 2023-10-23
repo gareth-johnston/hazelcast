@@ -16,6 +16,7 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.util.ExceptionUtil;
 
@@ -37,7 +38,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     private static final MethodHandle FIND_RESOURCE_METHOD_HANDLE;
     private static final MethodHandle FIND_RESOURCES_METHOD_HANDLE;
 
-    private final NamespaceService namespaceService;
+    private final Node node;
 
     static {
         try {
@@ -54,9 +55,9 @@ public class NamespaceAwareClassLoader extends ClassLoader {
         }
     }
 
-    public NamespaceAwareClassLoader(ClassLoader parent, NamespaceService namespaceService) {
+    public NamespaceAwareClassLoader(ClassLoader parent, Node node) {
         super(parent);
-        this.namespaceService = namespaceService;
+        this.node = node;
     }
 
     @Override
@@ -94,7 +95,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
         if (namespace == null) {
             return getParent();
         } else {
-            ClassLoader candidate = namespaceService.getClassLoaderForNamespace(namespace);
+            ClassLoader candidate = node.getNamespaceService().getClassLoaderForNamespace(namespace);
             return candidate == null ? getParent() : candidate;
         }
     }
@@ -102,10 +103,5 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
         return pickClassLoader().getResources(name);
-    }
-
-    // TODO: Should this be registered as a proper service and accessible via #getService() call?
-    public NamespaceService getNamespaceService() {
-        return namespaceService;
     }
 }

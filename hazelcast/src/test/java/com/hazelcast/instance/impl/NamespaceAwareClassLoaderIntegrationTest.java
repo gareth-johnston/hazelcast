@@ -31,6 +31,7 @@ import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.map.MapLoader;
+import com.hazelcast.test.Accessors;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.annotation.SlowTest;
@@ -77,6 +78,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
     @BeforeClass
     public static void setUpClass() throws IOException {
+        // TODO Remove?
         System.setProperty(MapResourceClassLoader.DEBUG_OUTPUT_PROPERTY, "true");
         classRoot = Paths.get("src/test/class");
         mapResourceClassLoader = generateMapResourceClassLoaderForDirectory(classRoot);
@@ -85,6 +87,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
     @AfterClass
     public static void cleanUpClass() {
+        // TODO Remove?
         System.clearProperty(MapResourceClassLoader.DEBUG_OUTPUT_PROPERTY);
     }
 
@@ -113,7 +116,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
 
         HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
-        nodeClassLoader = Node.getConfigClassloader(config);
+        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
 
         // "I can run a customer entry processor and configure an IMap in that namespace"
         // "to execute that entry processor on that IMap"
@@ -164,7 +167,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 .setClassName(className);
 
         HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
-        nodeClassLoader = Node.getConfigClassloader(config);
+        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
 
         String mapped = executeMapLoader(hazelcastInstance, mapName);
         assertNotNull("Was the MapStore executed?", mapped);
@@ -203,7 +206,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 .setClassName(className);
 
         HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
-        nodeClassLoader = Node.getConfigClassloader(config);
+        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
 
         String namespaceH2Version = executeMapLoader(hazelcastInstance, mapName);
 
@@ -223,7 +226,11 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                     .addClass(mapResourceClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor")));
             config.getMapConfig("map-ns1").setNamespace("ns1");
 
-            for (int i = 0; i < nodeCount; i++) {
+            // Get the first instance
+            HazelcastInstance hazelcastInstance = factory.newHazelcastInstance(config);
+
+            // Construct the rest but don't keep a reference
+            for (int i = 1; i < nodeCount; i++) {
                 factory.newHazelcastInstance(config);
             }
 
@@ -234,7 +241,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 map.put(i, 1);
             }
             // use a different classloader with same config to instantiate the EntryProcessor
-            NamespaceAwareClassLoader nsClassLoader = (NamespaceAwareClassLoader) Node.getConfigClassloader(config);
+            ClassLoader nsClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
             @SuppressWarnings("unchecked")
             Class<? extends EntryProcessor<Integer, Integer, ?>> incrEPClass = (Class<? extends EntryProcessor<Integer, Integer, ?>>) nsClassLoader
                     .loadClass("usercodedeployment.IncrementingEntryProcessor");
@@ -273,7 +280,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
 
         HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
-        nodeClassLoader = Node.getConfigClassloader(config);
+        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
 
         assertEquals("Fixture setup of JDBC with explicit driver declaration", h2V202Artifact.getVersion(),
                 executeMapLoader(hazelcastInstance, dataSource.getRight()));

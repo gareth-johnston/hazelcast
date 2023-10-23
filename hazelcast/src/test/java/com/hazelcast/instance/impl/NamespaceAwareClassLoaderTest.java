@@ -16,22 +16,6 @@
 
 package com.hazelcast.instance.impl;
 
-import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
-import static com.hazelcast.test.UserCodeUtil.urlFromFile;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.apache.commons.io.FilenameUtils;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import com.hazelcast.config.Config;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.NamespaceUtil;
@@ -40,6 +24,11 @@ import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.test.starter.MavenInterface;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -56,67 +45,64 @@ import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+import static com.hazelcast.test.UserCodeUtil.urlFromFile;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
-public class NamespaceAwareClassLoaderTest {
+public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
     private static Path classRoot;
     private static MapResourceClassLoader mapResourceClassLoader;
     private static Artifact h2V202Artifact;
 
-    private Config config;
-    private ClassLoader nodeClassLoader;
-
-    @BeforeAll
+    @BeforeClass
     public static void setUpClass() throws IOException {
         classRoot = Paths.get("src/test/class");
         mapResourceClassLoader = generateMapResourceClassLoaderForDirectory(classRoot);
         h2V202Artifact = new DefaultArtifact("com.h2database", "h2", null, "2.0.202");
     }
 
-    @BeforeEach
-    public void setUp() {
-        config = new Config();
-        config.setClassLoader(HazelcastInstance.class.getClassLoader());
-    }
-
     @Test
-    void whenLoadClassKnownToParent_thenIsLoaded() throws Exception {
-        nodeClassLoader = Node.getConfigClassloader(config);
+    public void whenLoadClassKnownToParent_thenIsLoaded() throws Exception {
+        populateConfigClassLoader();
         Class<?> klass = tryLoadClass("ns1", "com.hazelcast.core.HazelcastInstance");
         assertSame(HazelcastInstance.class, klass);
     }
 
     @Test
-    void whenLoadClassKnownToParent_thenIsLoadedWithNoNamespaceDefined() throws Exception {
-        nodeClassLoader = Node.getConfigClassloader(config);
+    public void whenLoadClassKnownToParent_thenIsLoadedWithNoNamespaceDefined() throws Exception {
+        populateConfigClassLoader();
         Class<?> klass = tryLoadClass(null, "com.hazelcast.core.HazelcastInstance");
         assertSame(HazelcastInstance.class, klass);
     }
 
     @Test
-    void whenSimpleClassInNs_thenIsLoaded() throws Exception {
+    public void whenSimpleClassInNs_thenIsLoaded() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
-        nodeClassLoader = Node.getConfigClassloader(config);
+         populateConfigClassLoader();
 
         Class<?> parentClass = tryLoadClass("ns1", "usercodedeployment.ParentClass");
         assertInstanceOf(MapResourceClassLoader.class, parentClass.getClassLoader());
     }
 
     @Test
-    void whenSimpleClassInNs_thenIsNotLoadedWithNoNamespaceDefined() throws Exception {
+    public void whenSimpleClassInNs_thenIsNotLoadedWithNoNamespaceDefined() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
-        nodeClassLoader = Node.getConfigClassloader(config);
+        populateConfigClassLoader();
 
         assertThrows(ClassNotFoundException.class, () -> tryLoadClass(null, "usercodedeployment.ParentClass"));
     }
 
     @Test
-    void whenClassWithHierarchyInNs_thenIsLoaded() throws Exception {
+    public void whenClassWithHierarchyInNs_thenIsLoaded() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass"))
                         .addClass(mapResourceClassLoader.loadClass("usercodedeployment.ChildClass")));
-        nodeClassLoader = Node.getConfigClassloader(config);
+         populateConfigClassLoader();
 
         Class<?> childClass = tryLoadClass("ns1", "usercodedeployment.ChildClass");
         assertEquals("usercodedeployment.ParentClass", childClass.getSuperclass().getName());
@@ -125,16 +111,16 @@ public class NamespaceAwareClassLoaderTest {
     }
 
     @Test
-    void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
+    public void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("ns1").addJar(
                 urlFromFile(fileRelativeToBinariesFolder("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar"))));
-        nodeClassLoader = Node.getConfigClassloader(config);
+         populateConfigClassLoader();
 
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner$Test");
     }
 
-    private static int countSqlDriversOf(ClassLoader classLoader)  {
+    private static int countSqlDriversOf(ClassLoader classLoader) {
         Enumeration<URL> urls = Util.uncheckCall(() -> classLoader.getResources("META-INF/services/java.sql.Driver"));
         int count = 0;
         while (urls.hasMoreElements()) {
@@ -145,10 +131,10 @@ public class NamespaceAwareClassLoaderTest {
     }
 
     @Test
-    void testServiceLoader_whenMultipleServicesOnClasspath() throws Exception {
+    public void testServiceLoader_whenMultipleServicesOnClasspath() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL()));
-        nodeClassLoader = Node.getConfigClassloader(config);
+         populateConfigClassLoader();
         ClassLoader testClassLoader = NamespaceAwareClassLoaderTest.class.getClassLoader();
         NamespaceUtil.runWithNamespace("ns1", () -> {
             int countInTestClasspath = countSqlDriversOf(testClassLoader);
@@ -171,9 +157,8 @@ public class NamespaceAwareClassLoaderTest {
 
             Driver h2DriverFromNamespaceCP = null;
             loader = ServiceLoader.load(Driver.class, nodeClassLoader);
-            List<ServiceLoader.Provider<Driver>> providers = loader.stream()
-                    .filter(d -> d.type().getName().equals("org.h2.Driver"))
-                    .collect(Collectors.toList());
+            List<ServiceLoader.Provider<Driver>> providers =
+                    loader.stream().filter(d -> d.type().getName().equals("org.h2.Driver")).collect(Collectors.toList());
             assertEquals(1, providers.size());
             h2DriverFromNamespaceCP = providers.get(0).get();
             // verify driver is loaded from older version that is present in namespace classpath
@@ -186,18 +171,18 @@ public class NamespaceAwareClassLoaderTest {
     /** Find & load all .class files in the scope of this test */
     private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
         try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
-            final Map<String, byte[]> classNameToContent = stream
-                    .filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
-                    .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
-                        try {
-                            return IOUtil.compress(Files.readAllBytes(path));
-                        } catch (final IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    }));
+            final Map<String, byte[]> classNameToContent =
+                    stream.filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
+                            .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
+                                try {
+                                    return IOUtil.compress(Files.readAllBytes(path));
+                                } catch (final IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                            }));
 
-            return new MapResourceClassLoader(NamespaceAwareClassLoaderTest.class.getClassLoader(),
-                    () -> classNameToContent, true);
+            return new MapResourceClassLoader(NamespaceAwareClassLoaderTest.class.getClassLoader(), () -> classNameToContent,
+                    true);
         }
     }
 
@@ -216,5 +201,4 @@ public class NamespaceAwareClassLoaderTest {
             }
         }
     }
-
 }

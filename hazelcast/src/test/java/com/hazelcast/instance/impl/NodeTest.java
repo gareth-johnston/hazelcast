@@ -16,7 +16,6 @@
 
 package com.hazelcast.instance.impl;
 
-import com.hazelcast.config.Config;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.usercodedeployment.UserCodeDeploymentClassLoader;
@@ -26,35 +25,32 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertSame;
 
-public class NodeTest {
-
+// TODO These tests fail
+public class NodeTest extends ConfigClassLoaderTest {
     @Test
     public void testConfigClassLoader_whenNoNamespaceExists_andUCDDisabled() {
-        Config config = new Config();
-        config.setClassLoader(NodeTest.class.getClassLoader());
-        ClassLoader fromNode = Node.getConfigClassloader(config);
-        assertSame(config.getClassLoader(), fromNode);
+        populateConfigClassLoader();
+
+        assertSame(config.getClassLoader(), nodeClassLoader);
     }
 
     @Test
     public void testConfigClassLoader_whenNoNamespaceExists_andUCDEnabled_thenIsUCDClassLoader() {
-        Config config = new Config();
-        config.setClassLoader(NodeTest.class.getClassLoader());
         config.getUserCodeDeploymentConfig().setEnabled(true);
-        ClassLoader fromNode = Node.getConfigClassloader(config);
-        assertThat(fromNode, instanceOf(UserCodeDeploymentClassLoader.class));
-        assertSame(config.getClassLoader(), fromNode.getParent());
+
+        populateConfigClassLoader();
+        assertThat(nodeClassLoader, instanceOf(UserCodeDeploymentClassLoader.class));
+        assertSame(config.getClassLoader(), nodeClassLoader.getParent());
     }
 
     @Test
     public void testConfigClassLoader_whenNamespaceExists_andUCDEnabled_thenIsNsAwareWithUCDParent() {
-        Config config = new Config();
-        config.setClassLoader(NodeTest.class.getClassLoader());
         config.getUserCodeDeploymentConfig().setEnabled(true);
         config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("namespace"));
-        ClassLoader fromNode = Node.getConfigClassloader(config);
-        assertThat(fromNode, instanceOf(NamespaceAwareClassLoader.class));
-        assertThat(fromNode.getParent(), instanceOf(UserCodeDeploymentClassLoader.class));
-        assertSame(config.getClassLoader(), fromNode.getParent().getParent());
+
+        populateConfigClassLoader();
+        assertThat(nodeClassLoader, instanceOf(NamespaceAwareClassLoader.class));
+        assertThat(nodeClassLoader.getParent(), instanceOf(UserCodeDeploymentClassLoader.class));
+        assertSame(config.getClassLoader(), nodeClassLoader.getParent().getParent());
     }
 }
