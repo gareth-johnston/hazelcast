@@ -336,9 +336,10 @@ public class Node {
         // UserCodeDeploymentClassLoader (if enabled), or config.getClassLoader().
         ClassLoader parent = getLegacyUCDClassLoader(config);
         Map<String, NamespaceConfig> staticNsConfig = ConfigAccessor.getNamespaceConfigs(config);
-        if (staticNsConfig.isEmpty()) {
-            return parent;
-        }
+        // todo: disable namespace-aware config classloader only if namespaces feature is completely disabled
+//        if (staticNsConfig.isEmpty()) {
+//            return parent;
+//        }
         // create the NamespaceAwareClassLoader with the determined parent.
         NamespaceService namespaceService = new NamespaceServiceImpl(parent, staticNsConfig);
         return new NamespaceAwareClassLoader(parent, namespaceService);
