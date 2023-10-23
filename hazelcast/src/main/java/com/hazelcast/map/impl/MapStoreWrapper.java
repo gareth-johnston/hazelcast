@@ -54,7 +54,9 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     private final String namespace;
 
-    public MapStoreWrapper(String mapName, Object impl, String namespace) {
+    private final NodeEngine nodeEngine;
+
+    public MapStoreWrapper(NodeEngine nodeEngine, String mapName, Object impl, String namespace) {
         this.mapName = mapName;
         this.impl = impl;
         MapLoader loader = null;
@@ -72,6 +74,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
         this.mapLoader = loader;
         this.mapStore = store;
         this.namespace = namespace;
+        this.nodeEngine = nodeEngine;
     }
 
     public MapStore getMapStore() {
@@ -80,7 +83,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     @Override
     public void destroy() {
-        NamespaceUtil.runWithNamespace(namespace, () -> {
+        NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> {
             if (impl instanceof MapLoaderLifecycleSupport) {
                 ((MapLoaderLifecycleSupport) impl).destroy();
             }
@@ -89,7 +92,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     @Override
     public void init(HazelcastInstance hazelcastInstance, Properties properties, String mapName) {
-        NamespaceUtil.runWithNamespace(namespace, () -> {
+        NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> {
             if (impl instanceof MapLoaderLifecycleSupport) {
                 ((MapLoaderLifecycleSupport) impl).init(hazelcastInstance, properties, mapName);
             }
@@ -125,7 +128,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     @Override
     public void delete(Object key) {
-        NamespaceUtil.runWithNamespace(namespace, () -> {
+        NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> {
             if (isMapStore()) {
                 mapStore.delete(key);
             }
@@ -134,7 +137,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
 
     public void store(Object key, Object value) {
         if (isMapStore()) {
-            NamespaceUtil.runWithNamespace(namespace, () -> {
+            NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> {
                 mapStore.store(key, value);
             });
         }
@@ -143,7 +146,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
     @Override
     public void storeAll(Map map) {
         if (isMapStore()) {
-            NamespaceUtil.runWithNamespace(namespace, () -> {
+            NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> {
                 mapStore.storeAll(map);
             });
         }
@@ -155,7 +158,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
             return;
         }
         if (isMapStore()) {
-            NamespaceUtil.runWithNamespace(namespace, () -> {
+            NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> {
                 mapStore.deleteAll(keys);
             });
         }
@@ -169,7 +172,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
     @Override
     public Iterable<Object> loadAllKeys() {
         if (isMapLoader()) {
-            return NamespaceUtil.callWithNamespace(namespace, () -> (Iterable<Object>) mapLoader.loadAllKeys());
+            return NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> (Iterable<Object>) mapLoader.loadAllKeys());
         }
         return null;
     }
@@ -177,7 +180,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
     @Override
     public Object load(Object key) {
         if (isMapLoader()) {
-            return NamespaceUtil.callWithNamespace(namespace, () -> mapLoader.load(key));
+            return NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> mapLoader.load(key));
         }
         return null;
     }
@@ -188,7 +191,7 @@ public class MapStoreWrapper implements MapStore, MapLoaderLifecycleSupport {
             return Collections.EMPTY_MAP;
         }
         if (isMapLoader()) {
-            return NamespaceUtil.callWithNamespace(namespace, () -> mapLoader.loadAll(keys));
+            return NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> mapLoader.loadAll(keys));
         }
         return null;
     }

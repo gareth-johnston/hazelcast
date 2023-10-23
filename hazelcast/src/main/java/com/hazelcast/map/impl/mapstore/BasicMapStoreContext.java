@@ -123,7 +123,7 @@ final class BasicMapStoreContext implements MapStoreContext {
         // create store.
         final Object store = NamespaceUtil.callWithNamespace(nodeEngine, mapConfig.getNamespace(),
                 () -> createStore(mapName, mapStoreConfig, configClassLoader));
-        final MapStoreWrapper storeWrapper = new MapStoreWrapper(mapName, store, mapConfig.getNamespace());
+        final MapStoreWrapper storeWrapper = new MapStoreWrapper(nodeEngine, mapName, store, mapConfig.getNamespace());
         storeWrapper.instrument(nodeEngine);
 
         context.setMapName(mapName);
