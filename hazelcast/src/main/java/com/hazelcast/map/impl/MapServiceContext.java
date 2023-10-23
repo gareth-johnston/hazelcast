@@ -45,7 +45,6 @@ import com.hazelcast.query.impl.IndexProvider;
 import com.hazelcast.query.impl.getters.Extractors;
 import com.hazelcast.query.impl.predicates.QueryOptimizer;
 import com.hazelcast.spi.impl.NodeEngine;
-import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.impl.eventservice.EventFilter;
 import com.hazelcast.spi.properties.HazelcastProperty;
 
@@ -276,11 +275,6 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
     default boolean shouldEnableMerkleTree(MapConfig mapConfig, boolean log) {
         return false;
     }
-
-    /**
-     * @return {@link EventListenerCounter} object.
-     */
-    EventListenerCounter getEventListenerCounter();
 
     /**
      * Attempts to retrieve a {@code ThreadLocal} {@link NodeEngine} implementation
