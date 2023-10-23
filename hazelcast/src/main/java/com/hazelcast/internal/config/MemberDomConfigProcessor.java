@@ -2583,7 +2583,7 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
                 handleResourceNode(n, nsConfig);
             }
         }
-        config.addNamespaceConfig(nsConfig);
+        config.getNamespacesConfig().addNamespaceConfig(nsConfig);
     }
 
     void handleResourceNode(Node node, final NamespaceConfig nsConfig) {

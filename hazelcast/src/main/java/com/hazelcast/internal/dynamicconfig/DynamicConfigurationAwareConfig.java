@@ -107,7 +107,7 @@ import static com.hazelcast.spi.properties.ClusterProperty.SEARCH_DYNAMIC_CONFIG
         "checkstyle:classdataabstractioncoupling"})
 public class DynamicConfigurationAwareConfig extends Config {
 
-    private final ConfigSupplier<MapConfig> mapConfigOrNullConfigSupplier = new ConfigSupplier<MapConfig>() {
+    private final ConfigSupplier<MapConfig> mapConfigOrNullConfigSupplier = new ConfigSupplier<>() {
         @Override
         public MapConfig getDynamicConfig(@Nonnull ConfigurationService configurationService, @Nonnull String name) {
             return configurationService.findMapConfig(name);
@@ -143,8 +143,7 @@ public class DynamicConfigurationAwareConfig extends Config {
         this.dynamicSecurityConfig = new DynamicSecurityConfig(staticConfig.getSecurityConfig(), null);
         this.dynamicCPSubsystemConfig = new DynamicCPSubsystemConfig(staticConfig.getCPSubsystemConfig());
         this.configSearcher = initConfigSearcher();
-        // todo reconsider access
-        ConfigAccessor.setNamespaceConfigs(this, ConfigAccessor.getNamespaceConfigs(staticConfig));
+        namespacesConfig = new DynamicNamespacesConfig(configurationService, staticConfig.getNamespacesConfig());
     }
 
     @Override
@@ -1266,24 +1265,6 @@ public class DynamicConfigurationAwareConfig extends Config {
     @Override
     public DataConnectionConfig findDataConnectionConfig(String name) {
         return new DataConnectionConfigReadOnly(getDataConnectionConfigInternal(name, "default"));
-    }
-
-    @Override
-    public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {
-        configurationService.broadcastConfig(namespaceConfig);
-        return this;
-    }
-
-    @Override
-    public Config removeNamespaceConfig(String namespaceName) {
-        NamespaceConfig namespaceConfig = getNamespaceConfigs().get(namespaceName);
-
-        if (namespaceConfig != null) {
-            super.removeNamespaceConfig(namespaceName);
-            configurationService.unbroadcastConfig(namespaceConfig);
-        }
-
-        return this;
     }
 
     @Override

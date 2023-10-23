@@ -159,7 +159,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derbyshared", null, "10.15.2.0"))
                         .toUri().toURL());
 
-        config.addNamespaceConfig(namespace);
+        config.getNamespacesConfig().addNamespaceConfig(namespace);
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
                 .setClassName(className);
 
@@ -197,7 +197,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         // Deliberately use an older version
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
                 .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL());
-        config.addNamespaceConfig(namespace);
+        config.getNamespacesConfig().addNamespaceConfig(namespace);
 
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
                 .setClassName(className);
@@ -219,7 +219,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
 
         try {
-            config.addNamespaceConfig(new NamespaceConfig("ns1")
+            config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("ns1")
                     .addClass(mapResourceClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor")));
             config.getMapConfig("map-ns1").setNamespace("ns1");
 
@@ -264,7 +264,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         NamespaceConfig namespace = new NamespaceConfig("ns1")
                 .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL());
-        config.addNamespaceConfig(namespace);
+        config.getNamespacesConfig().addNamespaceConfig(namespace);
 
         for (Pair<String, String> clazz : classes) {
             namespace.addClass(mapResourceClassLoader.loadClass(clazz.getLeft()));
@@ -425,7 +425,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         for (String name : classNames) {
             namespace.addClass(mapResourceClassLoader.loadClass(name));
         }
-        config.addNamespaceConfig(namespace);
+        config.getNamespacesConfig().addNamespaceConfig(namespace);
         config.getNetworkConfig().setPort(5701);
         if (mapName != null) {
             config.getMapConfig(mapName)
@@ -513,7 +513,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
 
         private void addNamespaceToConfig(Config config) {
-            config.addNamespaceConfig(namespace);
+            config.getNamespacesConfig().addNamespaceConfig(namespace);
             config.getMapConfig(mapName).setNamespace(toString());
         }
 

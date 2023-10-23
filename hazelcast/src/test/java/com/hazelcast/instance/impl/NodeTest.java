@@ -51,7 +51,7 @@ public class NodeTest {
         Config config = new Config();
         config.setClassLoader(NodeTest.class.getClassLoader());
         config.getUserCodeDeploymentConfig().setEnabled(true);
-        config.addNamespaceConfig(new NamespaceConfig("namespace"));
+        config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("namespace"));
         ClassLoader fromNode = Node.getConfigClassloader(config);
         assertThat(fromNode, instanceOf(NamespaceAwareClassLoader.class));
         assertThat(fromNode.getParent(), instanceOf(UserCodeDeploymentClassLoader.class));

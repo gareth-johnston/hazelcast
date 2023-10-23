@@ -94,7 +94,7 @@ public class NamespaceAwareClassLoaderTest {
 
     @Test
     void whenSimpleClassInNs_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(
+        config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
         nodeClassLoader = Node.getConfigClassloader(config);
 
@@ -104,7 +104,7 @@ public class NamespaceAwareClassLoaderTest {
 
     @Test
     void whenSimpleClassInNs_thenIsNotLoadedWithNoNamespaceDefined() throws Exception {
-        config.addNamespaceConfig(
+        config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass")));
         nodeClassLoader = Node.getConfigClassloader(config);
 
@@ -113,7 +113,7 @@ public class NamespaceAwareClassLoaderTest {
 
     @Test
     void whenClassWithHierarchyInNs_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(
+        config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass("usercodedeployment.ParentClass"))
                         .addClass(mapResourceClassLoader.loadClass("usercodedeployment.ChildClass")));
         nodeClassLoader = Node.getConfigClassloader(config);
@@ -126,7 +126,7 @@ public class NamespaceAwareClassLoaderTest {
 
     @Test
     void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
-        config.addNamespaceConfig(new NamespaceConfig("ns1").addJar(
+        config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("ns1").addJar(
                 urlFromFile(fileRelativeToBinariesFolder("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar"))));
         nodeClassLoader = Node.getConfigClassloader(config);
 
@@ -146,7 +146,7 @@ public class NamespaceAwareClassLoaderTest {
 
     @Test
     void testServiceLoader_whenMultipleServicesOnClasspath() throws Exception {
-        config.addNamespaceConfig(
+        config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL()));
         nodeClassLoader = Node.getConfigClassloader(config);
         ClassLoader testClassLoader = NamespaceAwareClassLoaderTest.class.getClassLoader();

@@ -51,11 +51,11 @@ public final class ConfigAccessor {
     }
 
     public static Map<String, NamespaceConfig> getNamespaceConfigs(Config config) {
-       return config.getNamespaceConfigs();
+       return config.getNamespacesConfig().getNamespaceConfigs();
     }
 
     public static void setNamespaceConfigs(Config config, Map<String, NamespaceConfig> namespaceConfigs) {
-       config.setNamespaceConfigs(namespaceConfigs);
+       config.getNamespacesConfig().setNamespaceConfigs(namespaceConfigs);
     }
 
     public static Collection<ResourceConfig> getResourceConfigs(NamespaceConfig nsConfig) {

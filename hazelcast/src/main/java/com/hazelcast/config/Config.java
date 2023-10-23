@@ -168,7 +168,7 @@ public class Config {
             Collections.singletonMap(DEFAULT_DEVICE_NAME, new LocalDeviceConfig())
     );
 
-    private final Map<String, NamespaceConfig> namespaceConfigs = new ConcurrentHashMap<>();
+    protected NamespacesConfig namespacesConfig = new NamespacesConfig();
 
     // @since 3.12
     private AdvancedNetworkConfig advancedNetworkConfig = new AdvancedNetworkConfig();
@@ -3227,32 +3227,13 @@ public class Config {
         return new DataConnectionConfigReadOnly(getDataConnectionConfig("default"));
     }
 
-    /**
-     * Adds the specified {@code namespaceConfig}, replacing any existing {@link NamespaceConfig} with the same
-     * {@link NamespaceConfig#getName() name}.
-     *
-     * @since 5.4
-     */
-    public Config addNamespaceConfig(NamespaceConfig namespaceConfig) {
-        namespaceConfigs.put(namespaceConfig.getName(), namespaceConfig);
+    public NamespacesConfig getNamespacesConfig() {
+        return namespacesConfig;
+    }
+
+    public Config setNamespacesConfig(NamespacesConfig namespacesConfig) {
+        this.namespacesConfig = namespacesConfig;
         return this;
-    }
-
-    /** @since 5.4 */
-    public Config removeNamespaceConfig(String namespaceName) {
-        namespaceConfigs.remove(namespaceName);
-        return this;
-    }
-
-    /** @since 5.4 */
-    protected Map<String, NamespaceConfig> getNamespaceConfigs() {
-        return Collections.unmodifiableMap(namespaceConfigs);
-    }
-
-    /** @since 5.4 */
-    void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
-        this.namespaceConfigs.clear();
-        this.namespaceConfigs.putAll(namespaceConfigs);
     }
 
     /**
@@ -3321,7 +3302,7 @@ public class Config {
                 + ", cardinalityEstimatorConfigs=" + cardinalityEstimatorConfigs
                 + ", flakeIdGeneratorConfigMap=" + flakeIdGeneratorConfigMap
                 + ", pnCounterConfigs=" + pnCounterConfigs
-                + ", namespaceConfigs=" + namespaceConfigs
+                + ", namespacesConfig=" + namespacesConfig
                 + ", advancedNetworkConfig=" + advancedNetworkConfig
                 + ", servicesConfig=" + servicesConfig
                 + ", securityConfig=" + securityConfig
