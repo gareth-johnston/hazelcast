@@ -85,7 +85,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
 
     @Parameters(name = "ClassCacheMode:{0}, ProviderMode:{1}")
     public static Collection<Object[]> parameters() {
-        LinkedList<Object[]> parameters = new LinkedList<Object[]>();
+        LinkedList<Object[]> parameters = new LinkedList<>();
         for (UserCodeDeploymentConfig.ClassCacheMode classCacheMode : UserCodeDeploymentConfig.ClassCacheMode.values()) {
             for (UserCodeDeploymentConfig.ProviderMode providerMode : UserCodeDeploymentConfig.ProviderMode.values()) {
                 parameters.add(new Object[]{classCacheMode, providerMode});
@@ -105,7 +105,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
         return config;
     }
 
-    private ClientConfig createClientConfig() {
+    private static ClientConfig createClientConfig() {
         ClientConfig config = new ClientConfig();
         ClientUserCodeDeploymentConfig clientUserCodeDeploymentConfig = new ClientUserCodeDeploymentConfig();
         clientUserCodeDeploymentConfig.addClass("usercodedeployment.IncrementingEntryProcessor");
@@ -208,7 +208,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
         assertCodeDeploymentWorking(client, new IncrementingEntryProcessor());
     }
 
-    private void assertCodeDeploymentWorking(HazelcastInstance client, EntryProcessor entryProcessor) {
+    private static void assertCodeDeploymentWorking(HazelcastInstance client, EntryProcessor<Integer, Integer, ?> entryProcessor) {
         int keyCount = 100;
         IMap<Integer, Integer> map = client.getMap(randomName());
 
