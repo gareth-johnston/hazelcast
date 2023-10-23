@@ -1056,8 +1056,9 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         out.writeBoolean(perEntryStatsEnabled);
         out.writeObject(dataPersistenceConfig);
         out.writeObject(tieredStoreConfig);
-        if (out.getVersion().isGreaterOrEqual(Versions.V5_3)) {
-            writeNullableList(partitioningAttributeConfigs, out);
+        writeNullableList(partitioningAttributeConfigs, out);
+        if (out.getVersion().isGreaterOrEqual(Versions.V5_4)) {
+            out.writeString(namespace);
         }
     }
 
@@ -1091,8 +1092,9 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         perEntryStatsEnabled = in.readBoolean();
         setDataPersistenceConfig(in.readObject());
         setTieredStoreConfig(in.readObject());
-        if (in.getVersion().isGreaterOrEqual(Versions.V5_3)) {
-            partitioningAttributeConfigs = readNullableList(in);
+        partitioningAttributeConfigs = readNullableList(in);
+        if (in.getVersion().isGreaterOrEqual(Versions.V5_4)) {
+            namespace = in.readString();
         }
     }
 }
