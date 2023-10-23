@@ -16,6 +16,7 @@
 
 package com.hazelcast.client.usercodedeployment;
 
+import com.google.common.net.UrlEscapers;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientUserCodeDeploymentConfig;
 import com.hazelcast.client.test.ClientTestSupport;
@@ -352,7 +353,7 @@ public class ClientUserCodeDeploymentTest extends ClientTestSupport {
     @Test
     public void testXmlConfigLoadingForNamespacesWithIMap() {
         Path pathToJar = Paths.get("src", "test", "class", "usercodedeployment", "ChildParent.jar");
-        String stringPath = pathToJar.toAbsolutePath().toString().replace(" ", "%20");
+        String stringPath = UrlEscapers.urlFragmentEscaper().escape(pathToJar.toAbsolutePath().toString());
         // Windows things
         stringPath = stringPath.replace("\\", "/");
         String xmlPayload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
