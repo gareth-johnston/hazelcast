@@ -16,7 +16,6 @@
 
 package com.hazelcast.internal.namespace;
 
-import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.util.ExceptionUtil;
@@ -103,19 +102,13 @@ public class NamespaceUtil {
     public static String transformNamespace(NodeEngine engine, String namespace) {
         if (namespace != null) {
             return namespace;
+        } else if (engine.getNamespaceService() != null && engine.getNamespaceService().isDefaultNamespaceDefined()) {
+            // Check if we have a `default` environment available
+            return DEFAULT_NAMESPACE_ID;
+        } else {
+            // Namespace is null, no default Namespace is defined, fail-fast
+            return null;
         }
-
-        // Check if we have a `default` environment available
-        if (engine.getConfigClassLoader() instanceof NamespaceAwareClassLoader) {
-            NamespaceAwareClassLoader classLoader = (NamespaceAwareClassLoader) engine.getConfigClassLoader();
-            // TODO: Lookup NamespaceService via getService once implemented?
-            if (classLoader.getNamespaceService().isDefaultNamespaceDefined()) {
-                return DEFAULT_NAMESPACE_ID;
-            }
-        }
-
-        // Namespace is null, no default Namespace is defined, fail-fast
-        return null;
     }
 
     // TODO usage will be replaced by no-op service

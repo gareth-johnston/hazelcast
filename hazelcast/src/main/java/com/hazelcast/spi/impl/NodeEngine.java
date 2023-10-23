@@ -101,6 +101,7 @@ public interface NodeEngine {
      */
     TransactionManagerService getTransactionManagerService();
 
+    // TODO Should this be nullable? I don't know!
     /**
      * Gets the NamespaceService.
      *
