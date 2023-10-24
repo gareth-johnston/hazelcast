@@ -62,11 +62,9 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 public class MapResourceClassLoader extends JetDelegatingClassLoader {
     public static final String DEBUG_OUTPUT_PROPERTY = "hazelcast.classloading.debug";
 
-    private static final boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
-
-    private final ILogger logger = Logger.getLogger(getClass());
-
     static final String PROTOCOL = "map-resource";
+
+    private static final boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
 
     // todo: consider alternative to IMap
     //  take into account potential deadlocks like https://hazelcast.atlassian.net/browse/HZ-3121
@@ -77,6 +75,8 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
      */
     protected final boolean childFirst;
     protected volatile boolean isShutdown;
+
+    private final ILogger logger = Logger.getLogger(getClass());
 
     static {
         ClassLoader.registerAsParallelCapable();
