@@ -31,10 +31,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static com.hazelcast.internal.util.Preconditions.checkNotNull;
 
 public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable {
     @Nullable
@@ -61,7 +60,7 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
     }
 
     public NamespaceConfig addClass(@Nonnull Class<?>... classes) {
-        checkNotNull(classes, "Classes cannot be null");
+        Objects.requireNonNull(classes, "Classes cannot be null");
         ResourceConfig.fromClass(classes).forEach(cfg -> resourceConfigs.put(cfg.getId(), cfg));
         return this;
     }
