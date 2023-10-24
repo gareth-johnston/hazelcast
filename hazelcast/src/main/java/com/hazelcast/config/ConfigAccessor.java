@@ -17,10 +17,8 @@
 package com.hazelcast.config;
 
 import com.hazelcast.internal.config.ServicesConfig;
-import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.spi.annotation.PrivateApi;
 
-import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -56,9 +54,5 @@ public final class ConfigAccessor {
 
     public static void setNamespaceConfigs(Config config, Map<String, NamespaceConfig> namespaceConfigs) {
        config.getNamespacesConfig().setNamespaceConfigs(namespaceConfigs);
-    }
-
-    public static Collection<ResourceConfig> getResourceConfigs(NamespaceConfig nsConfig) {
-        return nsConfig.getResourceConfigs();
     }
 }

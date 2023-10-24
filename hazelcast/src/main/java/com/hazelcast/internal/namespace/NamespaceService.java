@@ -17,14 +17,13 @@
 package com.hazelcast.internal.namespace;
 
 import com.hazelcast.config.NamespaceConfig;
-import com.hazelcast.internal.namespace.impl.ResourceDefinitionImpl;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.util.Collection;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 // TODO proper documentation
 public interface NamespaceService {
@@ -66,8 +65,7 @@ public interface NamespaceService {
     <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable);
 
     default void addNamespaceConfig(NamespaceConfig config) {
-        addNamespace(config.getName(),
-                config.getResourceConfigs().stream().map(ResourceDefinitionImpl::new).collect(Collectors.toList()));
+        addNamespace(config.getName(), config.getResourceConfigs());
     }
 
     default void removeNamespaceConfig(NamespaceConfig config) {

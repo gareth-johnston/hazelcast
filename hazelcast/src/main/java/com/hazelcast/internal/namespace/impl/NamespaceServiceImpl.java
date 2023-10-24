@@ -16,7 +16,6 @@
 
 package com.hazelcast.internal.namespace.impl;
 
-import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
@@ -30,6 +29,7 @@ import com.hazelcast.logging.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Driver;
@@ -45,7 +45,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import java.util.stream.Collectors;
 
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
@@ -283,8 +282,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     private static Collection<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
-        return ConfigAccessor.getResourceConfigs(nsConfig).stream().map(ResourceDefinitionImpl::new)
-                .collect(Collectors.toSet());
+        return nsConfig.getResourceConfigs();
     }
 
     @Override

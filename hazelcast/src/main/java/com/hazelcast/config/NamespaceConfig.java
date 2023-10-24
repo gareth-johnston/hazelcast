@@ -17,6 +17,8 @@
 package com.hazelcast.config;
 
 import com.hazelcast.internal.config.ConfigDataSerializerHook;
+import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.internal.namespace.impl.ResourceDefinitionImpl;
 import com.hazelcast.internal.serialization.impl.SerializationUtil;
 import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.jet.config.ResourceType;
@@ -39,7 +41,7 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
     @Nullable
     private String name;
 
-    private final Map<String, ResourceConfig> resourceConfigs = new ConcurrentHashMap<>();
+    private final Map<String, ResourceDefinition> resourceDefinitions = new ConcurrentHashMap<>();
 
     public NamespaceConfig() {
     }
@@ -61,7 +63,8 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
 
     public NamespaceConfig addClass(@Nonnull Class<?>... classes) {
         Objects.requireNonNull(classes, "Classes cannot be null");
-        ResourceConfig.fromClass(classes).forEach(cfg -> resourceConfigs.put(cfg.getId(), cfg));
+        ResourceConfig.fromClass(classes).map(ResourceDefinitionImpl::new)
+                .forEach(resourceDefinition -> resourceDefinitions.put(resourceDefinition.id(), resourceDefinition));
         return this;
     }
 
@@ -74,28 +77,28 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
     }
 
     private NamespaceConfig add(@Nonnull URL url, @Nullable String id, @Nonnull ResourceType resourceType) {
-        final ResourceConfig cfg = new ResourceConfig(url, id, resourceType);
+        final ResourceDefinitionImpl resourceDefinition = new ResourceDefinitionImpl(new ResourceConfig(url, id, resourceType));
 
-        if (resourceConfigs.putIfAbsent(cfg.getId(), cfg) != null) {
-            throw new IllegalArgumentException("Resource with id: " + cfg.getId() + " already exists");
+        if (resourceDefinitions.putIfAbsent(resourceDefinition.id(), resourceDefinition) != null) {
+            throw new IllegalArgumentException("Resource with id: " + resourceDefinition.id() + " already exists");
         } else {
             return this;
         }
     }
 
     public NamespaceConfig removeResourceConfig(String id) {
-        resourceConfigs.remove(id);
+        resourceDefinitions.remove(id);
         return this;
     }
 
-    public Collection<ResourceConfig> getResourceConfigs() {
-        return Set.copyOf(resourceConfigs.values());
+    public Collection<ResourceDefinition> getResourceConfigs() {
+        return Set.copyOf(resourceDefinitions.values());
     }
 
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeString(name);
-        SerializationUtil.writeMapStringKey(resourceConfigs, out);
+        SerializationUtil.writeMapStringKey(resourceDefinitions, out);
     }
 
     @Override
@@ -104,7 +107,7 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
 
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            resourceConfigs.put(in.readString(), in.readObject());
+            resourceDefinitions.put(in.readString(), in.readObject());
         }
     }
 
