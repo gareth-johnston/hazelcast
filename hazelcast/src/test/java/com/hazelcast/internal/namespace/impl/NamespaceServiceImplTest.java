@@ -16,8 +16,20 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import static com.hazelcast.test.Accessors.getNodeEngineImpl;
+import static com.hazelcast.test.HazelcastTestSupport.smallInstanceConfig;
 import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import com.google.common.net.UrlEscapers;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.MapConfig;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.internal.namespace.NamespaceService;
+import com.hazelcast.spi.impl.NodeEngineImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +44,8 @@ import com.hazelcast.test.HazelcastParametrizedRunner;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -95,5 +109,61 @@ public class NamespaceServiceImplTest {
                 throw new UncheckedIOException(e);
             }
         }).collect(Collectors.toSet());
+    }
+
+    // TODO This test is hacky and probably does not belong here - we should refactor/move it eventually
+    @Test
+    public void testXmlConfigLoadingForNamespacesWithIMap() {
+        Path pathToJar = Paths.get("src", "test", "class", "usercodedeployment", "ChildParent.jar");
+        String stringPath = UrlEscapers.urlFragmentEscaper().escape(pathToJar.toAbsolutePath().toString());
+        // Windows things
+        stringPath = stringPath.replace("\\", "/");
+        String xmlPayload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"\n"
+                + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "           xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
+                + "           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd\">\n" + "\n"
+                + "    <cluster-name>cluster</cluster-name>\n\n"
+                + "    <namespaces enabled=\"true\">\n" +
+                "        <namespace name=\"myNamespace\">\n"
+                + "          <resource type=\"JAR\">\n"
+                + "              <url>file:///" + stringPath + "</url>\n"
+                + "          </resource>\n"
+                + "      </namespace>\n"
+                + "    </namespaces>\n\n"
+                + "    <map name=\"myMap\">\n"
+                + "        <namespace>myNamespace</namespace>\n"
+                + "    </map>\n"
+                + "</hazelcast>\n" + "\n";
+
+        HazelcastInstance instance = Hazelcast.newHazelcastInstance(Config.loadFromString(xmlPayload));
+        try {
+            NodeEngineImpl nodeEngine = getNodeEngineImpl(instance);
+            NamespaceService service = nodeEngine.getNamespaceService();
+            assertTrue(service.isEnabled());
+            assertTrue(nodeEngine.getConfigClassLoader() instanceof NamespaceAwareClassLoader);
+            assertTrue(service.hasNamespace("myNamespace"));
+
+            MapConfig mapConfig = instance.getConfig().getMapConfig("myMap");
+            assertEquals("myNamespace", mapConfig.getNamespace());
+        } finally {
+            instance.shutdown();
+        }
+    }
+
+    // "No-op" implementation test TODO Should this be in a separate test class? It would only be the 1 test...
+    @Test
+    public void testNoOpImplementation() {
+        // Do not enable Namespaces in any form, results in No-Op implementation being used
+        HazelcastInstance instance = Hazelcast.newHazelcastInstance(smallInstanceConfig());
+        try {
+            NodeEngineImpl nodeEngine = getNodeEngineImpl(instance);
+            NamespaceService service = nodeEngine.getNamespaceService();
+            assertFalse(service.isEnabled());
+            assertFalse(nodeEngine.getConfigClassLoader() instanceof NamespaceAwareClassLoader);
+            assertFalse(service.isDefaultNamespaceDefined());
+        } finally {
+            instance.shutdown();
+        }
     }
 }

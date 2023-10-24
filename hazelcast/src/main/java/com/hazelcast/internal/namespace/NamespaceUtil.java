@@ -28,29 +28,11 @@ import java.util.concurrent.Callable;
 import static com.hazelcast.internal.namespace.NamespaceService.DEFAULT_NAMESPACE_ID;
 
 /**
- * Utility to simplify setup/cleanup of namespace aware classloading
+ * Utility to simplify accessing the NamespaceService and Namespace-aware wrapping
  */
-// TODO: When we want a feature flag for NS-UCD, we will handle everything via the service
-//      and use a no-op implementation - this utility needs to be replaced or use that service
 public class NamespaceUtil {
 
     private NamespaceUtil() {
-    }
-
-    // Private method to avoid calling without NodeEngine enablement checks first
-    private static void setupNs(@Nullable String namespace) {
-        if (namespace == null) {
-            return;
-        }
-        NamespaceThreadLocalContext.onStartNsAware(namespace);
-    }
-
-    // Private method to avoid calling without NodeEngine enablement checks first
-    private static void cleanupNs(@Nullable String namespace) {
-        if (namespace == null) {
-            return;
-        }
-        NamespaceThreadLocalContext.onCompleteNsAware(namespace);
     }
 
     public static void runWithNamespace(@Nullable String namespace, Runnable runnable) {
@@ -59,18 +41,7 @@ public class NamespaceUtil {
     }
 
     public static void runWithNamespace(NodeEngine engine, @Nullable String namespace, Runnable runnable) {
-        if (!isNamespacesEnabled(engine)) {
-            runnable.run();
-            return;
-        }
-
-        namespace = transformNamespace(engine, namespace);
-        setupNs(namespace);
-        try {
-            runnable.run();
-        } finally {
-            cleanupNs(namespace);
-        }
+        engine.getNamespaceService().runWithNamespace(namespace, runnable);
     }
 
     public static <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable) {
@@ -79,40 +50,6 @@ public class NamespaceUtil {
     }
 
     public static <V> V callWithNamespace(NodeEngine engine, @Nullable String namespace, Callable<V> callable) {
-        if (!isNamespacesEnabled(engine)) {
-            try {
-                return callable.call();
-            } catch (Exception e) {
-                throw ExceptionUtil.sneakyThrow(e);
-            }
-        }
-
-        namespace = transformNamespace(engine, namespace);
-        setupNs(namespace);
-        try {
-            return callable.call();
-        } catch (Exception e) {
-            throw ExceptionUtil.sneakyThrow(e);
-        } finally {
-            cleanupNs(namespace);
-        }
-    }
-
-    // Internal method to transform a `null` namespace into the default namespace if available
-    public static String transformNamespace(NodeEngine engine, String namespace) {
-        if (namespace != null) {
-            return namespace;
-        } else if (engine.getNamespaceService() != null && engine.getNamespaceService().isDefaultNamespaceDefined()) {
-            // Check if we have a `default` environment available
-            return DEFAULT_NAMESPACE_ID;
-        } else {
-            // Namespace is null, no default Namespace is defined, fail-fast
-            return null;
-        }
-    }
-
-    // TODO usage will be replaced by no-op service
-    private static boolean isNamespacesEnabled(NodeEngine engine) {
-        return ((NodeEngineImpl) engine).getNode().namespacesEnabled;
+        return engine.getNamespaceService().callWithNamespace(namespace, callable);
     }
 }

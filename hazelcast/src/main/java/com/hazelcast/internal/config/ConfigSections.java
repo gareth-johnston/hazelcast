@@ -74,7 +74,7 @@ public enum ConfigSections {
     TCP_IP("tcp-ip", false),
     DATA_CONNECTION("data-connection", true),
     TPC("tpc", false),
-    NAMESPACE("namespace", true);
+    NAMESPACES("namespaces", false);
 
     final boolean multipleOccurrence;
     private final String name;

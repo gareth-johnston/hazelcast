@@ -71,6 +71,7 @@ import com.hazelcast.internal.metrics.impl.MetricsConfigHelper;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceServiceImpl;
+import com.hazelcast.internal.namespace.impl.NoOpNamespaceService;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.Packet;
 import com.hazelcast.internal.partition.InternalPartitionService;
@@ -333,15 +334,12 @@ public class Node {
     }
 
     private ClassLoader generateConfigClassloader(Config config) {
-        // determine a parent classloader: either the legacy
-        // UserCodeDeploymentClassLoader (if enabled), or config.getClassLoader().
         ClassLoader parent = getLegacyUCDClassLoader(config);
+        if (!config.getNamespacesConfig().isEnabled()) {
+            namespaceService = new NoOpNamespaceService();
+            return parent;
+        }
         Map<String, NamespaceConfig> staticNsConfig = ConfigAccessor.getNamespaceConfigs(config);
-        // todo: disable namespace-aware config classloader only if namespaces feature is completely disabled
-//        if (staticNsConfig.isEmpty()) {
-//            return parent;
-//        }
-        // create the NamespaceAwareClassLoader with the determined parent.
         namespaceService = new NamespaceServiceImpl(parent, staticNsConfig);
         return new NamespaceAwareClassLoader(parent, this);
     }

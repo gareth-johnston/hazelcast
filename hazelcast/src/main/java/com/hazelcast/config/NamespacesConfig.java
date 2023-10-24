@@ -18,11 +18,11 @@ package com.hazelcast.config;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** @since 5.4 */
 public class NamespacesConfig {
-    // TODO This does nothing!
     private boolean enabled;
     private final Map<String, NamespaceConfig> namespaceConfigs = new ConcurrentHashMap<>();
 
@@ -64,5 +64,28 @@ public class NamespacesConfig {
     void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
         this.namespaceConfigs.clear();
         this.namespaceConfigs.putAll(namespaceConfigs);
+    }
+
+    @Override
+    public String toString() {
+        return "NamespacesConfig{" + "enabled=" + enabled + ", "
+                + "namespaceConfigs=" + namespaceConfigs + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NamespacesConfig that = (NamespacesConfig) o;
+        return enabled == that.enabled && Objects.equals(namespaceConfigs, that.namespaceConfigs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(enabled, namespaceConfigs);
     }
 }

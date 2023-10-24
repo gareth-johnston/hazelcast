@@ -149,13 +149,13 @@
         <property name="your-property">Value of the property</property>
     </properties>
 
-<!--    <namespaces enabled="true">-->
+    <namespaces enabled="true">
         <namespace name="ns1">
             <resource type="JAR">
                 <url>file:///Users/vbekiaris/workspace/github/vbekiaris/hazelcast/hazelcast/src/test/class/ChildParent.jar</url>
             </resource>
         </namespace>
-<!--    </namespaces>-->
+    </namespaces>
 
 
     <!--

@@ -21,8 +21,9 @@ import com.hazelcast.internal.namespace.impl.ResourceDefinitionImpl;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nonnull;
-
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 // TODO proper documentation
@@ -42,6 +43,15 @@ public interface NamespaceService {
     boolean hasNamespace(String namespaceName);
 
     /**
+     * Fast check method to see if the underlying implementation is
+     * a no-op implementation (<b>not enabled</b>), or an actual
+     * implementation (<b>enabled</b>).
+     *
+     * @return true if the underlying implementation is functional
+     */
+    boolean isEnabled();
+
+    /**
      * In order to fail-fast, we skip Namespace-awareness handling when
      * an object's namespace is `null` - however, if we have a default
      * Namespace defined, we should use that in these cases. To facilitate
@@ -50,6 +60,10 @@ public interface NamespaceService {
      * @return {@code True} if a default Namespace exists, otherwise {@code False}
      */
     boolean isDefaultNamespaceDefined();
+
+    void runWithNamespace(@Nullable String namespace, Runnable runnable);
+
+    <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable);
 
     default void addNamespaceConfig(NamespaceConfig config) {
         addNamespace(config.getName(),

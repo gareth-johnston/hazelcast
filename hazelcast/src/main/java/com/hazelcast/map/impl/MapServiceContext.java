@@ -302,9 +302,6 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
      * by looking for an existing {@link MapContainer} and checking its defined
      * {@link MapConfig}. If the {@link MapContainer} does not exist (containers are
      * created lazily), then fallback to checking the Node's config tree directly.
-     * <p>
-     * N.B. This method <b>does not</b> transform the Namespace ID as defined by
-     * the {@link NamespaceUtil#transformNamespace(NodeEngine, String)} method.
      *
      * @param engine  {@link NodeEngine} implementation of this member for service and config lookups
      * @param mapName The name of the {@link com.hazelcast.map.IMap} to lookup for

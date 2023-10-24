@@ -190,6 +190,8 @@ import static com.hazelcast.config.security.LdapRoleMappingMode.getRoleMappingMo
 import static com.hazelcast.config.security.LdapSearchScope.getSearchScope;
 import static com.hazelcast.internal.config.AliasedDiscoveryConfigUtils.getConfigByTag;
 import static com.hazelcast.internal.config.ConfigSections.ADVANCED_NETWORK;
+import static com.hazelcast.internal.config.ConfigSections.NAMESPACES;
+import static com.hazelcast.internal.config.ConfigSections.TPC;
 import static com.hazelcast.internal.config.ConfigSections.AUDITLOG;
 import static com.hazelcast.internal.config.ConfigSections.CACHE;
 import static com.hazelcast.internal.config.ConfigSections.CARDINALITY_ESTIMATOR;
@@ -399,8 +401,8 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
             handleDataConnections(node);
         } else if (matches(TPC.getName(), nodeName)) {
             handleTpc(node);
-        } else if (matches(NAMESPACE.getName(), nodeName)) {
-            handleNamespace(node);
+        } else if (matches(NAMESPACES.getName(), nodeName)) {
+            handleNamespaces(node);
         } else {
             return true;
         }
@@ -2676,6 +2678,21 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
             }
         }
         config.addTopicConfig(tConfig);
+    }
+
+    protected void handleNamespaces(Node node) {
+        Node enabledNode = getNamedItemNode(node, "enabled");
+        boolean enabled = enabledNode != null && getBooleanValue(getTextContent(enabledNode));
+        config.getNamespacesConfig().setEnabled(enabled);
+
+        if (enabled) {
+            for (Node n : childElements(node)) {
+                String nodeName = cleanNodeName(n);
+                if (matches(nodeName, "namespace")) {
+                    handleNamespace(n);
+                }
+            }
+        }
     }
 
     protected void handleNamespace(Node node) {

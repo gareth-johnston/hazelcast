@@ -80,7 +80,7 @@
                 <xs:element name="integrity-checker" type="integrity-checker" minOccurs="0" maxOccurs="1"/>
                 <xs:element name="data-connection" type="data-connection" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="tpc" type="tpc" minOccurs="0"/>
-                <xs:element name="namespace" type="namespace" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="namespaces" type="namespaces" minOccurs="0"/>
             </xs:choice>
             <xs:attribute name="id" type="xs:string" default="default"/>
         </xs:complexType>
@@ -6183,8 +6183,7 @@
         </xs:all>
     </xs:complexType>
 
-    <!-- TODO namespaces elements container with enable/disable toggle, unused for now -->
-    <xs:complexType name="namespace-config">
+    <xs:complexType name="namespaces">
         <xs:annotation>
             <xs:documentation>
                 TODO NamespaceConfig javadoc here

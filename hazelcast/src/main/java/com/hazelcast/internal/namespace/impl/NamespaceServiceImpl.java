@@ -22,12 +22,14 @@ import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.internal.util.ExceptionUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Driver;
@@ -38,6 +40,7 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarEntry;
@@ -102,9 +105,70 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    @Override
     public boolean isDefaultNamespaceDefined() {
         return hasDefaultNamespace;
     }
+
+    // Namespace setup/cleanup handling functions
+
+    private void setupNs(@Nullable String namespace) {
+        if (namespace == null) {
+            return;
+        }
+        NamespaceThreadLocalContext.onStartNsAware(namespace);
+    }
+
+    // Private method to avoid calling without NodeEngine enablement checks first
+    private void cleanupNs(@Nullable String namespace) {
+        if (namespace == null) {
+            return;
+        }
+        NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+    }
+
+    @Override
+    public void runWithNamespace(@Nullable String namespace, Runnable runnable) {
+        namespace = transformNamespace(namespace);
+        setupNs(namespace);
+        try {
+            runnable.run();
+        } finally {
+            cleanupNs(namespace);
+        }
+    }
+
+    @Override
+    public <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable) {
+        namespace = transformNamespace(namespace);
+        setupNs(namespace);
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            throw ExceptionUtil.sneakyThrow(e);
+        } finally {
+            cleanupNs(namespace);
+        }
+    }
+
+    // Internal method to transform a `null` namespace into the default namespace if available
+    private String transformNamespace(String namespace) {
+        if (namespace != null) {
+            return namespace;
+            // Check if we have a `default` environment available
+        } else if (isDefaultNamespaceDefined()) {
+            return DEFAULT_NAMESPACE_ID;
+        } else {
+            // Namespace is null, no default Namespace is defined, fail-fast
+            return null;
+        }
+    }
+
+    // Resource/classloader handling functions
 
     void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
         switch (resource.type()) {
