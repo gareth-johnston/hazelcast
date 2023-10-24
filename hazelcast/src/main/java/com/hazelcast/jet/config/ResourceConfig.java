@@ -56,8 +56,8 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
      * @param resourceType  type of the resource
      */
     public ResourceConfig(@Nonnull URL url, @Nullable String id, @Nonnull ResourceType resourceType) {
-        Preconditions.checkNotNull(url, "url");
-        Preconditions.checkNotNull(resourceType, "resourceType");
+        Objects.requireNonNull(url, "url");
+        Objects.requireNonNull(resourceType, "resourceType");
 
         this.url = url;
         this.id = StringUtil.isNullOrEmpty(id) ? urlToFileName() : id;
@@ -71,7 +71,7 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
      * @param clazz the class to deploy
      */
     private ResourceConfig(@Nonnull Class<?> clazz) {
-        Preconditions.checkNotNull(clazz, "clazz");
+        Objects.requireNonNull(clazz, "clazz");
 
         this.id = toClassResourceId(clazz.getName());
         ClassLoader cl = clazz.getClassLoader();
