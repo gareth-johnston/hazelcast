@@ -240,7 +240,7 @@ public class ClusterWideConfigurationService implements
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config) {
         return broadcastConfigAsync(config, AddDynamicConfigOperationSupplier::new);
     }
-    
+
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config,
             BiFunction<ClusterService, IdentifiedDataSerializable, DynamicConfigOperationSupplier> dynamicConfigOperationGenerator) {
         checkConfigVersion(config);
@@ -376,7 +376,7 @@ public class ClusterWideConfigurationService implements
     public void deregisterConfigLocally(IdentifiedDataSerializable newConfig, ConfigCheckMode configCheckMode) {
         if (newConfig instanceof NamespaceConfig) {
             NamespaceConfig config = (NamespaceConfig) newConfig;
-            if(namespaceConfigs.remove(config.getName(), newConfig)) {
+            if (namespaceConfigs.remove(config.getName(), newConfig)) {
                 nodeEngine.getNamespaceService().removeNamespaceConfig(config);
             }
         } else {

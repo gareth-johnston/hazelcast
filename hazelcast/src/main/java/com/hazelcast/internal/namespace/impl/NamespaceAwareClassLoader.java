@@ -17,7 +17,6 @@
 package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.instance.impl.Node;
-import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.util.ExceptionUtil;
 
 import java.io.IOException;

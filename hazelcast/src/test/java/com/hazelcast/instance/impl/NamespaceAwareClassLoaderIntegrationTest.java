@@ -23,7 +23,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.internal.util.OsHelper;

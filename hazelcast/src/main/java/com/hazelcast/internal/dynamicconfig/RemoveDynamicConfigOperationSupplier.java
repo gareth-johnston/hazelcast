@@ -21,8 +21,6 @@ import com.hazelcast.internal.cluster.ClusterService;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.spi.impl.operationservice.Operation;
 
-import java.util.function.Supplier;
-
 /**
  * Supplier that creates {@link RemoveDynamicConfigOperation}s for a given config.
  */
