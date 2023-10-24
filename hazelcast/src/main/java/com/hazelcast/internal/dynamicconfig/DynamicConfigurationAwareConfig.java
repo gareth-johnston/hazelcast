@@ -42,7 +42,6 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MemberAttributeConfig;
 import com.hazelcast.config.MetricsConfig;
 import com.hazelcast.config.MultiMapConfig;
-import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.NativeMemoryConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.config.PNCounterConfig;
@@ -61,8 +60,8 @@ import com.hazelcast.config.SqlConfig;
 import com.hazelcast.config.TopicConfig;
 import com.hazelcast.config.UserCodeDeploymentConfig;
 import com.hazelcast.config.WanReplicationConfig;
-import com.hazelcast.config.tpc.TpcConfig;
 import com.hazelcast.config.cp.CPSubsystemConfig;
+import com.hazelcast.config.tpc.TpcConfig;
 import com.hazelcast.core.ManagedContext;
 import com.hazelcast.internal.config.CacheSimpleConfigReadOnly;
 import com.hazelcast.internal.config.DataConnectionConfigReadOnly;
@@ -88,9 +87,9 @@ import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.properties.HazelcastProperties;
 
 import javax.annotation.Nonnull;
+
 import java.io.File;
 import java.net.URL;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;

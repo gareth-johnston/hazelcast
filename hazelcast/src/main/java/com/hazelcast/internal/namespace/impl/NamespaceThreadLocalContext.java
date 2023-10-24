@@ -28,7 +28,7 @@ import com.hazelcast.logging.Logger;
 public final class NamespaceThreadLocalContext {
     private static final ILogger LOGGER = Logger.getLogger(NamespaceThreadLocalContext.class);
     private static final ThreadLocal<NamespaceThreadLocalContext> NS_THREAD_LOCAL = new ThreadLocal<>();
-    
+
     private final String namespace;
     private int counter = 1;
 

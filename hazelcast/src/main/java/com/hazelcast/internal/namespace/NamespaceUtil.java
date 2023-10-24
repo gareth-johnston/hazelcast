@@ -113,6 +113,6 @@ public class NamespaceUtil {
 
     // TODO usage will be replaced by no-op service
     private static boolean isNamespacesEnabled(NodeEngine engine) {
-        return ((NodeEngineImpl)engine).getNode().namespacesEnabled;
+        return ((NodeEngineImpl) engine).getNode().namespacesEnabled;
     }
 }

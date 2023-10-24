@@ -112,6 +112,8 @@ public class Config {
      */
     public static final String DEFAULT_CLUSTER_NAME = "dev";
 
+    protected NamespacesConfig namespacesConfig = new NamespacesConfig();
+
     private URL configurationUrl;
 
     private File configurationFile;
@@ -167,8 +169,6 @@ public class Config {
     private final Map<String, DeviceConfig> deviceConfigs = new ConcurrentHashMap<>(
             Collections.singletonMap(DEFAULT_DEVICE_NAME, new LocalDeviceConfig())
     );
-
-    protected NamespacesConfig namespacesConfig = new NamespacesConfig();
 
     // @since 3.12
     private AdvancedNetworkConfig advancedNetworkConfig = new AdvancedNetworkConfig();

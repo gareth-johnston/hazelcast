@@ -51,8 +51,9 @@ public interface NamespaceService {
      */
     boolean isDefaultNamespaceDefined();
 
-    default void addNamespaceConfig(NamespaceConfig config) { 
-        addNamespace(config.getName(), config.getResourceConfigs().stream().map(ResourceDefinitionImpl::new).collect(Collectors.toList()));
+    default void addNamespaceConfig(NamespaceConfig config) {
+        addNamespace(config.getName(),
+                config.getResourceConfigs().stream().map(ResourceDefinitionImpl::new).collect(Collectors.toList()));
     }
 
     default void removeNamespaceConfig(NamespaceConfig config) {

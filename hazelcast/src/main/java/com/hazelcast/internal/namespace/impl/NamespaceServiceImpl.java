@@ -49,7 +49,7 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 public class NamespaceServiceImpl implements NamespaceService {
     private static final ILogger LOGGER = Logger.getLogger(NamespaceServiceImpl.class);
-    
+
     final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
 
     private final ClassLoader configClassLoader;
@@ -223,7 +223,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         return ConfigAccessor.getResourceConfigs(nsConfig).stream().map(ResourceDefinitionImpl::new)
                 .collect(Collectors.toSet());
     }
-    
+
     @Override
     public MapResourceClassLoader getClassLoaderForNamespace(String namespace) {
         return namespaceToClassLoader.get(namespace);

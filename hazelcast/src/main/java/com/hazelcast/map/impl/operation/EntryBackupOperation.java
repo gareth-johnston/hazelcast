@@ -64,7 +64,7 @@ public class EntryBackupOperation extends KeyBasedMapOperation implements Backup
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
-        entryBackupProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);;
+        entryBackupProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
     }
 
     @Override

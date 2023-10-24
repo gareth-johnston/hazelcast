@@ -62,9 +62,9 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 public class MapResourceClassLoader extends JetDelegatingClassLoader {
     public static final String DEBUG_OUTPUT_PROPERTY = "hazelcast.classloading.debug";
 
-    private final ILogger logger = Logger.getLogger(getClass());
-
     private static final boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
+
+    private final ILogger logger = Logger.getLogger(getClass());
 
     static final String PROTOCOL = "map-resource";
 
