@@ -123,7 +123,6 @@ public class NamespaceServiceImpl implements NamespaceService {
         NamespaceThreadLocalContext.onStartNsAware(namespace);
     }
 
-    // Private method to avoid calling without NodeEngine enablement checks first
     private void cleanupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;

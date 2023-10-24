@@ -160,6 +160,7 @@ public class NamespaceServiceImplTest {
             NodeEngineImpl nodeEngine = getNodeEngineImpl(instance);
             NamespaceService service = nodeEngine.getNamespaceService();
             assertFalse(service.isEnabled());
+            assertTrue(service instanceof NoOpNamespaceService);
             assertFalse(nodeEngine.getConfigClassLoader() instanceof NamespaceAwareClassLoader);
             assertFalse(service.isDefaultNamespaceDefined());
         } finally {
