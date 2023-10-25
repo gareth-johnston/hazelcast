@@ -54,8 +54,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -116,7 +118,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3301">HZ-3301 - Test case for Milestone 1 use cases</a>
      */
     @Test
-    public void testMilestone1() throws Exception {
+    public void testMilestone1() {
         // "I can statically configure a namespace with a java class that gets resolved at runtime"
         for (CaseValueProcessor processor : CaseValueProcessor.values()) {
             processor.addNamespaceToConfig(config);
@@ -128,15 +130,13 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         // "I can run a customer entry processor and configure an IMap in that namespace"
         // "to execute that entry processor on that IMap"
         // "I can configure N > 1 namespaces with simple Java class resources of same name and different behavior"
-        for (CaseValueProcessor processor : CaseValueProcessor.values()) {
-            processor.createExecuteAssertOnMap(this, hazelcastInstance);
-        }
+        Map<CaseValueProcessor, IMap<Object, String>> processorToMap =
+                Arrays.stream(CaseValueProcessor.values()).collect(Collectors.toMap(Function.identity(),
+                        processor -> processor.createExecuteAssertOnMap(this, hazelcastInstance)));
 
         // "IMaps configured in the respective namespaces will correctly load and execute the respective EntryProcessor defined
         // in their namespace, without class name clashes."
-        for (CaseValueProcessor processor : CaseValueProcessor.values()) {
-            processor.assertEntryUpdated();
-        }
+        processorToMap.forEach((processor, map) -> processor.assertEntryUpdated(map));
     }
 
     /**
@@ -156,7 +156,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      */
     @Test
     public void testMilestone1Dependencies() throws Exception {
-
         String mapName = randomMapName();
         String className = "usercodedeployment.DerbyUpperCaseStringMapLoader";
 
@@ -222,6 +221,59 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         assertEquals("Unexpected version of H2 found in namespace", h2V202Artifact.getVersion(), namespaceH2Version);
         assertNotEquals("Namespaces dependencies do not appear to be isolated", org.h2.engine.Constants.VERSION,
                 namespaceH2Version);
+    }
+
+    // TODO I think all the "milestone" tests should be in their own class(es) that extend this one
+    /**
+     * "As a Java developer, I can dynamically configure namespaces and their resources. A new data structure config I add at
+     * runtime, can reference a namespace I dynamically added and resources will be looked up in the configured namespace."
+     * 
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3413">HZ-3413 - Test cases for Milestone 2</a>
+     */
+    @Test
+    public void testMilestone2TestCase1() {
+        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
+        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
+
+        CaseValueProcessor processor = CaseValueProcessor.LOWER_CASE_VALUE_ENTRY_PROCESSOR;
+
+        // Set the map up, but catch a failure because we haven't configured the processor
+        assertThrows(Exception.class, () -> processor.createExecuteAssertOnMap(this, hazelcastInstance));
+
+        // Then dynamically configure
+        processor.addNamespaceToConfig(config);
+
+        // And re-run the test expecting sucess
+        processor.createExecuteAssertOnMap(this, hazelcastInstance);
+    }
+
+    /**
+     * "As a Java developer, I can replace the resources in a namespace at runtime and they will be picked up the next time a
+     * user customization is instantiated. Can be tested e.g. with an EntryProcessor that is executed with on implementation,
+     * then namespace is updated with a new implementation and execute the EntryProcessor again to observe updated behaviour."
+     * 
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3413">HZ-3413 - Test cases for Milestone 2</a>
+     */
+    @Test
+    public void testMilestone2TestCase2() {
+        CaseValueProcessor processor = CaseValueProcessor.LOWER_CASE_VALUE_ENTRY_PROCESSOR;
+        CaseValueProcessor otherProcessor = CaseValueProcessor.UPPER_CASE_VALUE_ENTRY_PROCESSOR;
+
+        processor.addNamespaceToConfig(config);
+
+        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
+        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
+
+        // Assert the basic functionality
+        processor.createExecuteAssertOnMap(this, hazelcastInstance);
+
+        // Now swap the class in the namespace
+        String namespaceName = processor.namespace.getName();
+        config.getNamespacesConfig().removeNamespaceConfig(namespaceName)
+                .addNamespaceConfig(new NamespaceConfig(namespaceName).addClass(otherProcessor.clazz));
+
+        // Now assert the behavior has swapped, too
+        otherProcessor.createExecuteAssertOnMap(processor.mapName, this, hazelcastInstance);
     }
 
     /**
@@ -413,7 +465,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
     }
 
-    /** Find & load all .class files in the scope of this test */
+    /** Find & load all {@code .class} files in the scope of this test */
     private static MapResourceClassLoader generateMapResourceClassLoaderForDirectory(Path root) throws IOException {
         try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
             final Map<String, byte[]> classNameToContent = stream
@@ -433,6 +485,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
     private static String correctResourcePath(Path root, Path path) {
         String classKeyName = classKeyName(root.relativize(path).toString());
+        // TODO is there a platform-independant way of solving this using File.seperator?
         if (OsHelper.isWindows()) {
             classKeyName = classKeyName.replace('\\', '/');
         }
@@ -472,18 +525,18 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         /** The operation we expect the {@link EntryProcessor} to perform - for validation purposes */
         private final UnaryOperator<String> expectedOperation;
+        private final Class<? extends EntryProcessor<Object, String, String>>  clazz;
         private final NamespaceConfig namespace;
         private final String mapName = randomMapName();
-        private IMap<Object, String> map;
 
         /** @param expectedOperation {@link #expectedOperation} */
         CaseValueProcessor(UnaryOperator<String> expectedOperation) {
             this.expectedOperation = expectedOperation;
 
             try {
-                namespace = new NamespaceConfig(toString()).addClass(
-                        generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(toString()))
-                                .loadClass(className));
+                clazz = (Class<? extends EntryProcessor<Object, String, String>>) generateMapResourceClassLoaderForDirectory(
+                        classRoot.resolve("usercodedeployment").resolve(toString())).loadClass(className);
+                namespace = new NamespaceConfig(toString()).addClass(clazz);
             } catch (ClassNotFoundException | IOException e) {
                 throw new ExceptionInInitializerError(e);
             }
@@ -497,21 +550,32 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             config.getMapConfig(mapName).setNamespace(toString());
         }
 
-        private void createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
-                HazelcastInstance hazelcastInstance) throws Exception {
-            // Create a map
-            map = hazelcastInstance.getMap(mapName);
-            map.put(KEY, VALUE);
-
-            // Execute the EntryProcessor
-            Class<? extends EntryProcessor<Object, String, String>> clazz = (Class<? extends EntryProcessor<Object, String, String>>) instance
-                    .tryLoadClass(toString(), className);
-            map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
-
-            assertEntryUpdated();
+        private IMap<Object, String> createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
+                HazelcastInstance hazelcastInstance)  {
+            return createExecuteAssertOnMap(mapName, instance, hazelcastInstance);
         }
 
-        private void assertEntryUpdated() {
+        private IMap<Object, String> createExecuteAssertOnMap(String mapName, NamespaceAwareClassLoaderIntegrationTest instance,
+                HazelcastInstance hazelcastInstance) {
+            // Create a map
+            IMap<Object, String> map = hazelcastInstance.getMap(mapName);
+            map.put(KEY, VALUE);
+
+            try {
+                // Execute the EntryProcessor
+                Class<? extends EntryProcessor<Object, String, String>> clazz =
+                        (Class<? extends EntryProcessor<Object, String, String>>) instance.tryLoadClass(toString(), className);
+                map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            assertEntryUpdated(map);
+
+            return map;
+        }
+
+        private void assertEntryUpdated(IMap<Object, String> map) {
             assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
         }
 
