@@ -64,6 +64,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
     static final String PROTOCOL = "map-resource";
 
+    // TODO Shouldn't this be a logging param?
     private static final boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
 
     // todo: consider alternative to IMap
