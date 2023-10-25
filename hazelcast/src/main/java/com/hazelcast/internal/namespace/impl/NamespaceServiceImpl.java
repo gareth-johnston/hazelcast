@@ -114,14 +114,14 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     // Namespace setup/cleanup handling functions
 
-    private void setupNs(@Nullable String namespace) {
+    private static void setupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;
         }
         NamespaceThreadLocalContext.onStartNsAware(namespace);
     }
 
-    private void cleanupNs(@Nullable String namespace) {
+    private static void cleanupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;
         }
@@ -229,11 +229,11 @@ public class NamespaceServiceImpl implements NamespaceService {
         resourceMap.put(classKeyName(resourceId), IOUtil.compress(classBytes));
     }
 
-    private void initializeClassLoader(String nsName, MapResourceClassLoader classLoader) {
+    private static void initializeClassLoader(String nsName, MapResourceClassLoader classLoader) {
         initializeJdbcDrivers(nsName, classLoader);
     }
 
-    private void cleanUpClassLoader(String nsName, MapResourceClassLoader removedClassLoader) {
+    private static void cleanUpClassLoader(String nsName, MapResourceClassLoader removedClassLoader) {
         cleanupJdbcDrivers(nsName, removedClassLoader);
     }
 

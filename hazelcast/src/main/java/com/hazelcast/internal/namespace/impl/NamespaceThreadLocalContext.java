@@ -17,6 +17,7 @@
 package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.config.NamespaceAwareConfig;
+import com.hazelcast.jet.impl.util.LoggingUtil;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
@@ -57,7 +58,7 @@ public final class NamespaceThreadLocalContext {
         if (tlContext == null) {
             tlContext = new NamespaceThreadLocalContext(namespace);
             NS_THREAD_LOCAL.set(tlContext);
-            LOGGER.finest(">> start " + tlContext);
+            LoggingUtil.logFinest(LOGGER, ">> start %s", tlContext);
         } else {
             if (!tlContext.namespace.equals(namespace)) {
                 // doesn't look like a valid state...
@@ -65,7 +66,7 @@ public final class NamespaceThreadLocalContext {
                     + " but there is an existing context " + tlContext);
             }
             tlContext.incCounter();
-            LOGGER.finest(">> inc " + tlContext);
+            LoggingUtil.logFinest(LOGGER, ">> inc %s", tlContext);
         }
     }
 
@@ -77,7 +78,7 @@ public final class NamespaceThreadLocalContext {
                         + " but there is an existing context " + tlContext);
             }
             int count = tlContext.decCounter();
-            LOGGER.finest(">> dec " + tlContext);
+            LoggingUtil.logFinest(LOGGER, ">> dec %s", tlContext);
             if (count == 0) {
                 NS_THREAD_LOCAL.remove();
             }
