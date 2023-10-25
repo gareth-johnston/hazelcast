@@ -39,6 +39,8 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     private static final MethodHandle FIND_RESOURCES_METHOD_HANDLE;
 
     private final Node node;
+    // Retain Parent for faster referencing (skips permission checks)
+    private final ClassLoader parent;
 
     static {
         try {
@@ -57,6 +59,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
 
     public NamespaceAwareClassLoader(ClassLoader parent, Node node) {
         super(parent);
+        this.parent = parent;
         this.node = node;
     }
 
@@ -93,10 +96,10 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     ClassLoader pickClassLoader() {
         String namespace = NamespaceThreadLocalContext.getNamespaceThreadLocalContext();
         if (namespace == null) {
-            return getParent();
+            return parent;
         } else {
             ClassLoader candidate = node.getNamespaceService().getClassLoaderForNamespace(namespace);
-            return candidate == null ? getParent() : candidate;
+            return candidate == null ? parent : candidate;
         }
     }
 
