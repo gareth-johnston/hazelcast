@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.util.Enumeration;
 
@@ -42,13 +43,13 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     static {
         try {
             ClassLoader.registerAsParallelCapable();
+            Lookup lookup = MethodHandles.lookup();
 
-            Lookup privateLookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
+            FIND_RESOURCE_METHOD_HANDLE = lookup.findSpecial(ClassLoader.class, "findResource",
+                    MethodType.methodType(URL.class, String.class), NamespaceAwareClassLoader.class);
 
-            FIND_RESOURCE_METHOD_HANDLE = privateLookup
-                    .unreflect(ClassLoader.class.getDeclaredMethod("findResource", String.class));
-            FIND_RESOURCES_METHOD_HANDLE = privateLookup
-                    .unreflect(ClassLoader.class.getDeclaredMethod("findResources", String.class));
+            FIND_RESOURCES_METHOD_HANDLE = lookup.findSpecial(ClassLoader.class, "findResources",
+                    MethodType.methodType(Enumeration.class, String.class), NamespaceAwareClassLoader.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
         }

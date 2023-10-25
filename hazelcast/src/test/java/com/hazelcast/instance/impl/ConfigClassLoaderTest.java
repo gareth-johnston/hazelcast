@@ -17,12 +17,9 @@
 package com.hazelcast.instance.impl;
 
 import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.test.Accessors;
 import com.hazelcast.test.HazelcastTestSupport;
-import org.junit.After;
-import org.junit.Before;
 
 /** Stub to get a qualified instance of {@link Node#getConfigClassLoader()} */
 public abstract class ConfigClassLoaderTest extends HazelcastTestSupport {
