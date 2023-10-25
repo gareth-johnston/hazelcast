@@ -324,7 +324,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
             // Execute processor on keys owned by other members
             IMap<String, Integer> clientMap = client.getMap(mapName);
-            EntryProcessor entryProcessor = (EntryProcessor) mapResourceClassLoader.loadClass(entryProcessClassName)
+            EntryProcessor<String, Integer, ?> entryProcessor = (EntryProcessor<String, Integer, ?>) mapResourceClassLoader.loadClass(entryProcessClassName)
                                                                                    .getConstructor().newInstance();
             for (int k = 0; k < instances.length; k++) {
                 HazelcastInstance instance = instances[k];
@@ -356,7 +356,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 "usercodedeployment.KeyBecomesValueMapLoader");
     }
 
-    // TODO use test parameters for nodeCount
     private void testMemberToMemberMLDeserialization(int nodeCount, String mapLoaderClassName,
                                                                String... resourceClassNames) throws ReflectiveOperationException {
         assertGreaterOrEquals("nodeCount", nodeCount, 2);
@@ -389,7 +388,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
     }
 
-    private HazelcastInstance createUnisocketClient(TestHazelcastFactory factory) {
+    private static HazelcastInstance createUnisocketClient(TestHazelcastFactory factory) {
         ClientConfig clientConfig = new ClientConfig();
         clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
         clientConfig.getNetworkConfig().setSmartRouting(false);
