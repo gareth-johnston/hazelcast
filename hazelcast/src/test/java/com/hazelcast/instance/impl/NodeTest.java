@@ -25,8 +25,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertSame;
 
-// TODO These tests fail
 public class NodeTest extends ConfigClassLoaderTest {
+
     @Test
     public void testConfigClassLoader_whenNoNamespaceExists_andUCDDisabled() {
         populateConfigClassLoader();
@@ -46,6 +46,7 @@ public class NodeTest extends ConfigClassLoaderTest {
     @Test
     public void testConfigClassLoader_whenNamespaceExists_andUCDEnabled_thenIsNsAwareWithUCDParent() {
         config.getUserCodeDeploymentConfig().setEnabled(true);
+        config.getNamespacesConfig().setEnabled(true);
         config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("namespace"));
 
         populateConfigClassLoader();

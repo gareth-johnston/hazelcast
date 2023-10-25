@@ -20,13 +20,16 @@ import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.test.starter.MavenInterface;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -45,7 +48,7 @@ import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.test.Accessors.getNodeEngineImpl;
 import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
 import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 import static org.junit.Assert.assertEquals;
@@ -62,6 +65,11 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
         classRoot = Paths.get("src/test/class");
         mapResourceClassLoader = generateMapResourceClassLoaderForDirectory(classRoot);
         h2V202Artifact = new DefaultArtifact("com.h2database", "h2", null, "2.0.202");
+    }
+
+    @Before
+    public void prepareConfig() {
+        config.getNamespacesConfig().setEnabled(true);
     }
 
     @Test
@@ -134,8 +142,11 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
     public void testServiceLoader_whenMultipleServicesOnClasspath() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(
                 new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL()));
-         populateConfigClassLoader();
+        populateConfigClassLoader();
         ClassLoader testClassLoader = NamespaceAwareClassLoaderTest.class.getClassLoader();
+
+        // We need to provide NodeEngine context (as would be in place for Operations normally)
+        NodeEngineThreadLocalContext.declareNodeEngineReference(getNodeEngineImpl(lastInstance));
         NamespaceUtil.runWithNamespace("ns1", () -> {
             int countInTestClasspath = countSqlDriversOf(testClassLoader);
             int countInNamespace = countSqlDriversOf(nodeClassLoader);
@@ -173,7 +184,7 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
         try (Stream<Path> stream = Files.walk(root.resolve("usercodedeployment"))) {
             final Map<String, byte[]> classNameToContent =
                     stream.filter(path -> FilenameUtils.isExtension(path.getFileName().toString(), "class"))
-                            .collect(Collectors.toMap(path -> classKeyName(root.relativize(path).toString()), path -> {
+                            .collect(Collectors.toMap(path -> JobRepository.classKeyName(root.relativize(path).toString()), path -> {
                                 try {
                                     return IOUtil.compress(Files.readAllBytes(path));
                                 } catch (final IOException e) {

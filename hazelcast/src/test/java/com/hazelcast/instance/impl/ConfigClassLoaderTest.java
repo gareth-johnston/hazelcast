@@ -17,8 +17,11 @@
 package com.hazelcast.instance.impl;
 
 import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.test.Accessors;
 import com.hazelcast.test.HazelcastTestSupport;
+import org.junit.After;
 import org.junit.Before;
 
 /** Stub to get a qualified instance of {@link Node#getConfigClassLoader()} */
@@ -26,13 +29,20 @@ public abstract class ConfigClassLoaderTest extends HazelcastTestSupport {
     protected Config config;
     protected ClassLoader nodeClassLoader;
 
-    @Before
-    public void setUp() {
+    protected HazelcastInstance lastInstance;
+
+    public ConfigClassLoaderTest() {
         config = new Config();
-        config.setClassLoader(getClass().getClassLoader());
+        config.setClassLoader(HazelcastInstance.class.getClassLoader());
     }
 
+    // TODO Better way of doing this? We need to create an instance (or mock lots of pieces that account for NS)
+    //  and we need to reference that instance for NodeEngine context in tests
     protected void populateConfigClassLoader() {
-        nodeClassLoader = Accessors.getNode(createHazelcastInstance(config)).getConfigClassLoader();
+        if (lastInstance != null) {
+            lastInstance.getLifecycleService().terminate();
+        }
+        lastInstance = createHazelcastInstance(config);
+        nodeClassLoader = Accessors.getNode(lastInstance).getConfigClassLoader();
     }
 }
