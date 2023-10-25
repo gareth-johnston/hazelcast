@@ -22,6 +22,7 @@ import com.hazelcast.core.HazelcastInstanceNotActiveException;
 import com.hazelcast.core.LifecycleService;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.internal.util.OsHelper;
 import com.hazelcast.jet.JetException;
 import com.hazelcast.jet.Job;
 import com.hazelcast.jet.config.JobConfig;
@@ -683,14 +684,14 @@ public class JobRepository {
      * Returns the key name in the form {@code file.<id>}
      */
     public static String fileKeyName(String id) {
-        return FILE_STORAGE_KEY_NAME_PREFIX + id;
+        return OsHelper.ensureUnixSeparators(FILE_STORAGE_KEY_NAME_PREFIX + id);
     }
 
     /**
      * Returns the key name in the form {@code class.<id>}
      */
     public static String classKeyName(String id) {
-        return CLASS_STORAGE_KEY_NAME_PREFIX + id;
+        return OsHelper.ensureUnixSeparators(CLASS_STORAGE_KEY_NAME_PREFIX + id);
     }
 
     /**

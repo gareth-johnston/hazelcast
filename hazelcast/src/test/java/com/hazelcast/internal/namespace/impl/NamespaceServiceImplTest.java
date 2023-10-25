@@ -16,31 +16,24 @@
 
 package com.hazelcast.internal.namespace.impl;
 
-import static com.hazelcast.test.Accessors.getNodeEngineImpl;
-import static com.hazelcast.test.HazelcastTestSupport.smallInstanceConfig;
-import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.NamespaceService;
+import com.hazelcast.internal.namespace.ResourceDefinition;
+import com.hazelcast.internal.util.BiTuple;
+import com.hazelcast.internal.util.OsHelper;
+import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.spi.impl.NodeEngineImpl;
+import com.hazelcast.test.HazelcastParametrizedRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-
-import com.google.common.io.Files;
-import com.hazelcast.internal.namespace.ResourceDefinition;
-import com.hazelcast.internal.util.BiTuple;
-import com.hazelcast.jet.config.ResourceType;
-import com.hazelcast.test.HazelcastParametrizedRunner;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -51,6 +44,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.hazelcast.test.Accessors.getNodeEngineImpl;
+import static com.hazelcast.test.HazelcastTestSupport.smallInstanceConfig;
+import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(HazelcastParametrizedRunner.class)
 public class NamespaceServiceImplTest {
@@ -115,8 +115,9 @@ public class NamespaceServiceImplTest {
     @Test
     public void testXmlConfigLoadingForNamespacesWithIMap() {
         Path pathToJar = Paths.get("src", "test", "class", "usercodedeployment", "ChildParent.jar");
-        String stringPath = UrlEscapers.urlFragmentEscaper().escape(pathToJar.toAbsolutePath().toString());
-        // Windows things
+        String stringPath = OsHelper.ensureUnixSeparators(
+                UrlEscapers.urlFragmentEscaper().escape(pathToJar.toAbsolutePath().toString()));
+
         stringPath = stringPath.replace("\\", "/");
         String xmlPayload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"\n"

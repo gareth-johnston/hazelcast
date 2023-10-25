@@ -26,6 +26,11 @@ public final class OsHelper {
      */
     public static final String OS = System.getProperty("os.name").toLowerCase();
 
+    private static final boolean IS_WINDOWS = OS.contains("windows");
+    private static final boolean IS_MAC = (OS.contains("mac") || OS.contains("darwin"));
+    private static final boolean IS_LINUX = OS.contains("nux");
+    private static final boolean IS_UNIX_FAMILY = (OS.contains("nix") || OS.contains("nux") || OS.contains("aix"));
+
     private OsHelper() {
     }
 
@@ -35,7 +40,7 @@ public final class OsHelper {
      * @return {@code true} if the current system is Linux.
      */
     public static boolean isLinux() {
-        return OS.contains("nux");
+        return IS_LINUX;
     }
 
     /**
@@ -44,7 +49,7 @@ public final class OsHelper {
      * @return {@code true} if the current system is Unix/Linux/AIX.
      */
     public static boolean isUnixFamily() {
-        return (OS.contains("nix") || OS.contains("nux") || OS.contains("aix"));
+        return IS_UNIX_FAMILY;
     }
 
     /**
@@ -53,7 +58,7 @@ public final class OsHelper {
      * @return {@code true} if the current system is Mac.
      */
     public static boolean isMac() {
-        return (OS.contains("mac") || OS.contains("darwin"));
+        return IS_MAC;
     }
 
     /**
@@ -62,6 +67,21 @@ public final class OsHelper {
      * @return {@code true} if the current system is a Windows one.
      */
     public static boolean isWindows() {
-        return OS.contains("windows");
+        return IS_WINDOWS;
+    }
+
+    /**
+     * Returns a file path string that replaces Windows `\\` file
+     * separators with the Unix equivalent `/` if the current machine
+     * is using Windows as its Operating System.
+     *
+     * @param path the file path string to convert
+     * @return the file path string, with file separators set to `/`
+     */
+    public static String ensureUnixSeparators(final String path) {
+        if (IS_WINDOWS) {
+            return path.replace('\\', '/');
+        }
+        return path;
     }
 }

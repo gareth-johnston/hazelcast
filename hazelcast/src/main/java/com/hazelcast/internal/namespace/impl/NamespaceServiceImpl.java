@@ -29,7 +29,6 @@ import com.hazelcast.logging.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Driver;
@@ -196,6 +195,7 @@ public class NamespaceServiceImpl implements NamespaceService {
      * @param resourceMap
      * @see     com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId(String)
      * @see     JobRepository#classKeyName(String)
+     * @see     JobRepository#fileKeyName(String)
      */
     public static void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
@@ -210,7 +210,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                 byte[] payload = IOUtil.compress(inputStream.readAllBytes());
                 inputStream.closeEntry();
                 resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName())
-                        : classKeyName(toClassResourceId(className)), payload);
+                        : JobRepository.classKeyName(toClassResourceId(className)), payload);
             } while (true);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
