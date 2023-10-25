@@ -94,6 +94,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     public void setUp() {
         config = new Config();
         config.setClassLoader(HazelcastInstance.class.getClassLoader());
+        config.getNamespacesConfig().setEnabled(true);
     }
 
     /**
@@ -215,6 +216,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 namespaceH2Version);
     }
 
+    // TODO: This test does not appear to be correct, and passes with Namespaces disabled
     @Test
     public void testThatDoesNotBelongHere() throws Exception {
         int nodeCount = 2;
@@ -326,49 +328,52 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 ClassNotFoundException.class, () -> Class.forName(entryProcessClassName));
 
         TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
-        final String mapName = randomMapName();
-        configureSimpleNodeConfig(mapName, "my-ep-ns", resourceClassNames);
-        HazelcastInstance[] instances = factory.newInstances(config, nodeCount);
+        try {
+            final String mapName = randomMapName();
+            configureSimpleNodeConfig(mapName, "my-ep-ns", resourceClassNames);
+            HazelcastInstance[] instances = factory.newInstances(config, nodeCount);
 
-        // Create map on the cluster as normal, populate with data for each partition
-        IMap<String, Integer> map = instances[0].getMap(mapName);
-        for (int k = 0; k < 10; k++) {
-            int j = 1;
-            for (HazelcastInstance instance : instances) {
-                map.put(generateKeyOwnedBy(instance), j++);
+            // Create map on the cluster as normal, populate with data for each partition
+            IMap<String, Integer> map = instances[0].getMap(mapName);
+            for (int k = 0; k < 10; k++) {
+                int j = 1;
+                for (HazelcastInstance instance : instances) {
+                    map.put(generateKeyOwnedBy(instance), j++);
+                }
             }
+
+            // Assert ownership distribution
+            Set<String> member1Keys = map.localKeySet();
+            assertEquals(10, member1Keys.size());
+
+            for (int k = 1; k < instances.length; k++) {
+                HazelcastInstance instance = instances[k];
+                IMap<String, Integer> memberMap = instance.getMap(mapName);
+                assertEquals(10, memberMap.localKeySet().size());
+            }
+
+            // Create a client that only communicates with member1 (unisocket)
+            HazelcastInstance client = createUnisocketClient(factory);
+
+            // Execute processor on keys owned by other members
+            IMap<String, Integer> clientMap = client.getMap(mapName);
+            EntryProcessor entryProcessor = (EntryProcessor) mapResourceClassLoader.loadClass(entryProcessClassName)
+                                                                                   .getConstructor().newInstance();
+            for (int k = 0; k < instances.length; k++) {
+                HazelcastInstance instance = instances[k];
+                String key = (String) instance.getMap(mapName).localKeySet().iterator().next();
+                clientMap.executeOnKey(key, entryProcessor);
+
+                // Assert processor completed successfully
+                int expectedOutput = k + 2;
+                assertTrueEventually(() -> assertEquals(expectedOutput, clientMap.get(key).intValue()));
+            }
+        } finally {
+            factory.shutdownAll();
         }
-
-        // Assert ownership distribution
-        Set<String> member1Keys = map.localKeySet();
-        assertEquals(10, member1Keys.size());
-
-        for (int k = 1; k < instances.length; k++) {
-            HazelcastInstance instance = instances[k];
-            IMap<String, Integer> memberMap = instance.getMap(mapName);
-            assertEquals(10, memberMap.localKeySet().size());
-        }
-
-        // Create a client that only communicates with member1 (unisocket)
-        HazelcastInstance client = createUnisocketClient(factory);
-
-        // Execute processor on keys owned by other members
-        IMap<String, Integer> clientMap = client.getMap(mapName);
-        EntryProcessor entryProcessor = (EntryProcessor) mapResourceClassLoader.loadClass(entryProcessClassName)
-                                                                               .getConstructor().newInstance();
-        for (int k = 0; k < instances.length; k++) {
-            HazelcastInstance instance = instances[k];
-            String key = (String) instance.getMap(mapName).localKeySet().iterator().next();
-            clientMap.executeOnKey(key, entryProcessor);
-
-            // Assert processor completed successfully
-            int expectedOutput = k + 2;
-            assertTrueEventually(() -> assertEquals(expectedOutput, clientMap.get(key).intValue()));
-        }
-        factory.shutdownAll();
     }
 
-    // TODO: Fails due to `namespace` not serialized in dynamic config yet - should pass once added
+    // TODO: Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added
     @Test
     public void testDynamicConfigMapLoaderDeserialization_2Node() throws ReflectiveOperationException {
         testMemberToMemberMLDeserialization(2,
@@ -376,7 +381,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 "usercodedeployment.KeyBecomesValueMapLoader");
     }
 
-    // TODO: Fails due to `namespace` not serialized in dynamic config yet - should pass once added
+    // TODO: Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added
     @Test
     public void testDynamicConfigMapLoaderDeserialization_5Node() throws ReflectiveOperationException {
         testMemberToMemberMLDeserialization(5,
@@ -392,26 +397,29 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 ClassNotFoundException.class, () -> Class.forName(mapLoaderClassName));
 
         final TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
-        final String mapName = randomMapName();
-        final String namespace = "my-ml-ns";
-        configureSimpleNodeConfig(null, namespace, resourceClassNames);
-        HazelcastInstance[] instances = factory.newInstances(config, nodeCount);
+        try {
+            final String mapName = randomMapName();
+            final String namespace = "my-ml-ns";
+            configureSimpleNodeConfig(null, namespace, resourceClassNames);
+            HazelcastInstance[] instances = factory.newInstances(config, nodeCount);
 
-        // Create a client that only communicates with member1 (unisocket)
-        HazelcastInstance client = createUnisocketClient(factory);
+            // Create a client that only communicates with member1 (unisocket)
+            HazelcastInstance client = createUnisocketClient(factory);
 
-        // Dynamically add a new MapConfig with a MapLoader that needs to be loaded
-        MapConfig mapConfig = new MapConfig(mapName).setNamespace(namespace);
-        mapConfig.getMapStoreConfig().setEnabled(true).setClassName(mapLoaderClassName);
-        client.getConfig().addMapConfig(mapConfig);
+            // Dynamically add a new MapConfig with a MapLoader that needs to be loaded
+            MapConfig mapConfig = new MapConfig(mapName).setNamespace(namespace);
+            mapConfig.getMapStoreConfig().setEnabled(true).setClassName(mapLoaderClassName);
+            client.getConfig().addMapConfig(mapConfig);
 
-        // Trigger map loader on all members and assert values are correct
-        for (int k = 0; k < instances.length; k++) {
-            HazelcastInstance instance = instances[k];
-            String result = executeMapLoader(instance, mapName);
-            assertEquals(getClass().getSimpleName(), result);
+            // Trigger map loader on all members and assert values are correct
+            for (int k = 0; k < instances.length; k++) {
+                HazelcastInstance instance = instances[k];
+                String result = executeMapLoader(instance, mapName);
+                assertEquals(getClass().getSimpleName(), result);
+            }
+        } finally {
+            factory.shutdownAll();
         }
-        factory.shutdownAll();
     }
 
     private HazelcastInstance createUnisocketClient(TestHazelcastFactory factory) {

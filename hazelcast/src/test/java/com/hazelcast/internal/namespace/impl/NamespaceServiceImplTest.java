@@ -66,13 +66,10 @@ public class NamespaceServiceImplTest {
     @Parameters(name = "Source: {0}")
     public static Iterable<Object[]> parameters() throws IOException {
         return List.of(
-                new Object[] {"JAR",
-                        singletonJarResourceFromBinaries("usercodedeployment/ChildParent.jar",
-                                "usercodedeployment/ChildParent.jar")},
-                new Object[] {"Class",
-                        classResourcesFromClassPath(
-                                BiTuple.of("usercodedeployment.ChildClass", "usercodedeployment/ChildClass.class"),
-                                BiTuple.of("usercodedeployment.ParentClass", "usercodedeployment/ParentClass.class"))});
+                new Object[] {"JAR", singletonJarResourceFromBinaries("usercodedeployment/ChildParent.jar")},
+                new Object[] {"Class", classResourcesFromClassPath("usercodedeployment/ChildClass.class",
+                                "usercodedeployment/ParentClass.class")}
+        );
     }
 
     @Before
@@ -92,19 +89,17 @@ public class NamespaceServiceImplTest {
         klass.getDeclaredConstructor().newInstance();
     }
 
-    private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String id, final String path)
+    private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String idPath)
             throws IOException {
-        final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(path));
-        return Collections.singleton(new ResourceDefinitionImpl(id, bytes, ResourceType.JAR));
+        final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(idPath));
+        return Collections.singleton(new ResourceDefinitionImpl(idPath, bytes, ResourceType.JAR));
     }
 
-    @SafeVarargs
-    private static Set<ResourceDefinition> classResourcesFromClassPath(final BiTuple<String, String>... idPathTuples)
-            throws IOException {
-        return Arrays.stream(idPathTuples).map(idPathTuple -> {
+    private static Set<ResourceDefinition> classResourcesFromClassPath(String... classIdPaths) {
+        return Arrays.stream(classIdPaths).map(idPath -> {
             try {
-                final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(idPathTuple.element2));
-                return new ResourceDefinitionImpl(idPathTuple.element1, bytes, ResourceType.CLASS);
+                final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(idPath));
+                return new ResourceDefinitionImpl(idPath, bytes, ResourceType.CLASS);
             } catch (final IOException e) {
                 throw new UncheckedIOException(e);
             }
