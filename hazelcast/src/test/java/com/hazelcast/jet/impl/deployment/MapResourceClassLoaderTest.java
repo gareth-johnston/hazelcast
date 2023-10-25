@@ -19,7 +19,9 @@ package com.hazelcast.jet.impl.deployment;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.test.UserCodeUtil;
+import com.hazelcast.test.annotation.NamespaceTest;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Category(NamespaceTest.class)
 class MapResourceClassLoaderTest {
     private Map<String, byte[]> classBytes = new HashMap<>();
     private MapResourceClassLoader classLoader;

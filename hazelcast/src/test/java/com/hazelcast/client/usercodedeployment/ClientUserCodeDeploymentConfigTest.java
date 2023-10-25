@@ -22,6 +22,7 @@ import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.test.HazelcastParallelClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.UserCodeUtil;
+import com.hazelcast.test.annotation.NamespaceTest;
 import com.hazelcast.test.annotation.ParallelJVMTest;
 import com.hazelcast.test.annotation.QuickTest;
 import org.junit.After;
@@ -46,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(HazelcastParallelClassRunner.class)
-@Category({QuickTest.class, ParallelJVMTest.class})
+@Category({QuickTest.class, ParallelJVMTest.class, NamespaceTest.class})
 public class ClientUserCodeDeploymentConfigTest extends HazelcastTestSupport {
 
     private TestHazelcastFactory factory = new TestHazelcastFactory();

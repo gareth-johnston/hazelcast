@@ -29,8 +29,10 @@ import com.hazelcast.internal.util.OsHelper;
 import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.test.HazelcastParametrizedRunner;
+import com.hazelcast.test.annotation.NamespaceTest;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
@@ -53,6 +55,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(HazelcastParametrizedRunner.class)
+@Category(NamespaceTest.class)
 public class NamespaceServiceImplTest {
 
     @Parameter(0)

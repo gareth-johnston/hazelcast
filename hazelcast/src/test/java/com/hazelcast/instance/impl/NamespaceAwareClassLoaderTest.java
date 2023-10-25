@@ -25,6 +25,7 @@ import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.jet.impl.util.Util;
+import com.hazelcast.test.annotation.NamespaceTest;
 import com.hazelcast.test.starter.MavenInterface;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.aether.artifact.Artifact;
@@ -32,6 +33,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -55,6 +57,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
+@Category(NamespaceTest.class)
 public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
     private static Path classRoot;
     private static MapResourceClassLoader mapResourceClassLoader;

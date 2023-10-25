@@ -33,6 +33,7 @@ import com.hazelcast.map.MapLoader;
 import com.hazelcast.test.Accessors;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
+import com.hazelcast.test.annotation.NamespaceTest;
 import com.hazelcast.test.annotation.SlowTest;
 import com.hazelcast.test.starter.MavenInterface;
 import org.apache.commons.io.FilenameUtils;
@@ -66,7 +67,7 @@ import static org.junit.Assert.assertNotNull;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
 @RunWith(HazelcastSerialClassRunner.class)
-@Category(SlowTest.class)
+@Category({SlowTest.class, NamespaceTest.class})
 public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSupport {
     private static Path classRoot;
     protected static MapResourceClassLoader mapResourceClassLoader;
@@ -221,47 +222,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         assertEquals("Unexpected version of H2 found in namespace", h2V202Artifact.getVersion(), namespaceH2Version);
         assertNotEquals("Namespaces dependencies do not appear to be isolated", org.h2.engine.Constants.VERSION,
                 namespaceH2Version);
-    }
-
-    // TODO: This test does not appear to be correct, and passes with Namespaces disabled
-    @Test
-    public void testThatDoesNotBelongHere() throws Exception {
-        int nodeCount = 2;
-        TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
-
-        try {
-            config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("ns1")
-                    .addClass(mapResourceClassLoader.loadClass("usercodedeployment.IncrementingEntryProcessor")));
-            config.getMapConfig("map-ns1").setNamespace("ns1");
-
-            // Get the first instance
-            HazelcastInstance hazelcastInstance = factory.newHazelcastInstance(config);
-
-            // Construct the rest but don't keep a reference
-            for (int i = 1; i < nodeCount; i++) {
-                factory.newHazelcastInstance(config);
-            }
-
-            HazelcastInstance client = factory.newHazelcastClient();
-            IMap<Integer, Integer> map = client.getMap("map-ns1");
-            // ensure the EntryProcessor can be deserialized on the member side
-            for (int i = 0; i < 100; i++) {
-                map.put(i, 1);
-            }
-            // use a different classloader with same config to instantiate the EntryProcessor
-            ClassLoader nsClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
-            @SuppressWarnings("unchecked")
-            Class<? extends EntryProcessor<Integer, Integer, ?>> incrEPClass = (Class<? extends EntryProcessor<Integer, Integer, ?>>) nsClassLoader
-                    .loadClass("usercodedeployment.IncrementingEntryProcessor");
-            EntryProcessor<Integer, Integer, ?> incrEp = incrEPClass.getDeclaredConstructor().newInstance();
-            // invoke executeOnKey from client on all 100 keys
-            for (int i = 0; i < 100; i++) {
-                map.executeOnKey(i, incrEp);
-                System.out.println(map.get(i));
-            }
-        } finally {
-            factory.terminateAll();
-        }
     }
 
     /**

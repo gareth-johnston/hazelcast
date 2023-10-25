@@ -19,12 +19,15 @@ package com.hazelcast.instance.impl;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.usercodedeployment.UserCodeDeploymentClassLoader;
+import com.hazelcast.test.annotation.NamespaceTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertSame;
 
+@Category(NamespaceTest.class)
 public class NodeTest extends ConfigClassLoaderTest {
 
     @Test
