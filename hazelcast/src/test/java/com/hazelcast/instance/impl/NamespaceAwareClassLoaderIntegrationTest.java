@@ -98,6 +98,12 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     }
 
     /**
+     * "As a java developer, I can statically configure a namespace with a java class that gets resolved at runtime. I can run a
+     * customer entry processor and configure an IMap in that namespace, allowing me to execute that entry processor on that
+     * IMap. Namespace isolation: As a Java developer, I can configure N > 1 namespaces with simple Java class resources of same
+     * name and different behavior. IMaps configured in the respective namespaces will correctly load and execute the respective
+     * EntryProcessor defined in their namespace, without class name clashes."
+     * 
      * Asserts a basic user workflow:
      * <ol>
      * <li>Add classes to the {@link NamespaceConfig}
@@ -133,6 +139,9 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     }
 
     /**
+     * "As a Java developer, I can define a MapLoader with JDBC driver dependency in a namespace and IMap configured with that
+     * namespace will correctly instantiate and use my MapLoader."
+     * 
      * Asserts a basic user workflow:
      * <ol>
      * <li>Creates a {@link NamespaceConfig} referencing a {@link MapLoader} {@code .class} and it's database dependency - which
@@ -146,8 +155,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      */
     @Test
     public void testMilestone1Dependencies() throws Exception {
-        // "As a Java developer, I can define a MapLoader with JDBC driver dependency in a namespace and IMap configured with
-        // that namespace will correctly instantiate and use my MapLoader."
 
         String mapName = randomMapName();
         String className = "usercodedeployment.DerbyUpperCaseStringMapLoader";
@@ -175,6 +182,9 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     }
 
     /**
+     * "Isolation against Hazelcast member classpath: even when Hazelcast member classpath includes a clashing version of my
+     * JDBC driver, my preferred JDBC driver version that is configured in namespace resources is used by my MapLoader."
+     * 
      * Asserts a basic user workflow:
      * <ol>
      * <li>Creates a {@link NamespaceConfig} referencing a {@link MapLoader} {@code .class} and it's database dependency - which
@@ -188,9 +198,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      */
     @Test
     public void testMilestone1DependenciesIsolation() throws Exception {
-        // "Isolation against Hazelcast member classpath: even when Hazelcast member classpath includes a clashing version of my
-        // JDBC driver, my preferred JDBC driver version that is configured in namespace resources is used by my MapLoader."
-
         String mapName = randomMapName();
         String className = "usercodedeployment.H2WithDriverManagerBuildVersionMapLoader";
 
