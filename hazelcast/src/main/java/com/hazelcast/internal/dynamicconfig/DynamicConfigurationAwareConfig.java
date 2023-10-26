@@ -142,7 +142,7 @@ public class DynamicConfigurationAwareConfig extends Config {
         this.dynamicSecurityConfig = new DynamicSecurityConfig(staticConfig.getSecurityConfig(), null);
         this.dynamicCPSubsystemConfig = new DynamicCPSubsystemConfig(staticConfig.getCPSubsystemConfig());
         this.configSearcher = initConfigSearcher();
-        namespacesConfig = new DynamicNamespacesConfig(configurationService, staticConfig.getNamespacesConfig());
+        namespacesConfig = new DynamicNamespacesConfig(() -> configurationService, staticConfig.getNamespacesConfig());
     }
 
     @Override

@@ -19,18 +19,21 @@ package com.hazelcast.internal.dynamicconfig;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.NamespacesConfig;
 
+import java.util.function.Supplier;
+
 /** {@link NamespacesConfig} wrapper that supports dynamically updating */
 public class DynamicNamespacesConfig extends NamespacesConfig {
-    private final ConfigurationService configurationService;
+    /** The configuration service can change at runtime, so we always need to grab a fresh copy */
+    private final Supplier<ConfigurationService> configurationServiceAccessor;
 
-    public DynamicNamespacesConfig(ConfigurationService configurationService, NamespacesConfig namespacesConfig) {
+    public DynamicNamespacesConfig(Supplier<ConfigurationService> configurationServiceAccessor, NamespacesConfig namespacesConfig) {
         super(namespacesConfig);
-        this.configurationService = configurationService;
+        this.configurationServiceAccessor = configurationServiceAccessor;
     }
 
     @Override
     public NamespacesConfig addNamespaceConfig(NamespaceConfig namespaceConfig) {
-        configurationService.broadcastConfig(namespaceConfig);
+        configurationServiceAccessor.get().broadcastConfig(namespaceConfig);
         return this;
     }
 
@@ -40,7 +43,7 @@ public class DynamicNamespacesConfig extends NamespacesConfig {
 
         if (namespaceConfig != null) {
             super.removeNamespaceConfig(namespaceName);
-            configurationService.unbroadcastConfig(namespaceConfig);
+            configurationServiceAccessor.get().unbroadcastConfig(namespaceConfig);
         }
 
         return this;
