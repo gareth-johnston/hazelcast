@@ -269,7 +269,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         // Now swap the class in the namespace
         String namespaceName = processor.namespace.getName();
-        config.getNamespacesConfig().removeNamespaceConfig(namespaceName)
+        hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(namespaceName)
                 .addNamespaceConfig(new NamespaceConfig(namespaceName).addClass(otherProcessor.clazz));
 
         // Now assert the behavior has swapped, too
