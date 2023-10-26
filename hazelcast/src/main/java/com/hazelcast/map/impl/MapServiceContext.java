@@ -290,9 +290,6 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
     static String getNamespace(String mapName) {
         // TODO: We lookup NodeEngine again later in the NS-awareness stack; can we optimize?
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
-        if (engine == null) {
-            throw new IllegalStateException("NodeEngine context is not available for Namespaces!");
-        }
         // We're skipping enablement checks here as they're handled at NS-awareness start logic
         return lookupMapNamespace(engine, mapName);
     }

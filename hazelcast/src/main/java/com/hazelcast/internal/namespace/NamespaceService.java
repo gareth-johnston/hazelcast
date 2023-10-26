@@ -60,6 +60,10 @@ public interface NamespaceService {
      */
     boolean isDefaultNamespaceDefined();
 
+    void setupNamespace(@Nullable String namespace);
+
+    void cleanupNamespace(@Nullable String namespace);
+
     void runWithNamespace(@Nullable String namespace, Runnable runnable);
 
     <V> V callWithNamespace(@Nullable String namespace, Callable<V> callable);

@@ -109,11 +109,13 @@ public class PostJoinMapOperation extends Operation implements IdentifiedDataSer
             int size = in.readInt();
 
             String namespace = MapServiceContext.getNamespace(mapName);
+            NamespaceUtil.setupNamespace(namespace);
             for (int i = 0; i < size; i++) {
                 String id = in.readString();
-                MapInterceptor interceptor = NamespaceUtil.callWithNamespace(namespace, in::readObject);
+                MapInterceptor interceptor = in.readObject();
                 interceptors.add(new AbstractMap.SimpleImmutableEntry<>(id, interceptor));
             }
+            NamespaceUtil.cleanupNamespace(namespace);
         }
 
         @Override

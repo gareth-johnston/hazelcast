@@ -47,7 +47,8 @@ public class PartitionWideEntryWithPredicateBackupOperation extends PartitionWid
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
-        predicate = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
+        // Namespace inherited from PartitionWideEntryBackupOperation
+        predicate = in.readObject();
     }
 
     @Override

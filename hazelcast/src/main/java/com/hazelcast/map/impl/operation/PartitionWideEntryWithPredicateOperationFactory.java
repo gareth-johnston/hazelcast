@@ -114,8 +114,10 @@ public class PartitionWideEntryWithPredicateOperationFactory extends PartitionAw
     public void readData(ObjectDataInput in) throws IOException {
         name = in.readString();
         String namespace = MapServiceContext.getNamespace(name);
-        entryProcessor = NamespaceUtil.callWithNamespace(namespace, in::readObject);
-        predicate = NamespaceUtil.callWithNamespace(namespace, in::readObject);
+        NamespaceUtil.setupNamespace(namespace);
+        entryProcessor = in.readObject();
+        predicate = in.readObject();
+        NamespaceUtil.cleanupNamespace(namespace);
     }
 
     /**

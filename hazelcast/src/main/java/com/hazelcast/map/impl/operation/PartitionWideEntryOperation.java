@@ -282,8 +282,11 @@ public class PartitionWideEntryOperation extends MapOperation
 
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
+        // Setup Namespace early so awareness is available for super
+        NamespaceUtil.setupNamespace(getNamespace());
         super.readInternal(in);
-        entryProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
+        entryProcessor = in.readObject();
+        NamespaceUtil.cleanupNamespace(getNamespace());
     }
 
     @Override

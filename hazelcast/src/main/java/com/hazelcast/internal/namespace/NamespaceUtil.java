@@ -35,6 +35,17 @@ public class NamespaceUtil {
     private NamespaceUtil() {
     }
 
+    // TODO Docs for all methods
+    public static void setupNamespace(@Nullable String namespace) {
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        engine.getNamespaceService().setupNamespace(namespace);
+    }
+
+    public static void cleanupNamespace(@Nullable String namespace) {
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        engine.getNamespaceService().cleanupNamespace(namespace);
+    }
+
     public static void runWithNamespace(@Nullable String namespace, Runnable runnable) {
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
         runWithNamespace(engine, namespace, runnable);

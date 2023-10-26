@@ -102,10 +102,12 @@ public class PartitionWideEntryBackupOperation extends AbstractMultipleEntryBack
     }
 
     @Override
-    protected void readInternal(ObjectDataInput in) throws
-            IOException {
+    protected void readInternal(ObjectDataInput in) throws IOException {
+        // Setup Namespace early so awareness is available for super
+        NamespaceUtil.setupNamespace(getNamespace());
         super.readInternal(in);
-        backupProcessor = NamespaceUtil.callWithNamespace(getNamespace(), in::readObject);
+        backupProcessor = in.readObject();
+        NamespaceUtil.cleanupNamespace(getNamespace());
     }
 
     @Override
