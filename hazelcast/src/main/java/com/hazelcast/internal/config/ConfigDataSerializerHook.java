@@ -58,6 +58,7 @@ import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.NearCacheConfig;
 import com.hazelcast.config.NearCachePreloaderConfig;
 import com.hazelcast.config.PNCounterConfig;
+import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.config.PartitioningStrategyConfig;
 import com.hazelcast.config.PermissionConfig;
 import com.hazelcast.config.PredicateConfig;
