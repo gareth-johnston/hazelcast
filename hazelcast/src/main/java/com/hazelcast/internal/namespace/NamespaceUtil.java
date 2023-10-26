@@ -46,6 +46,14 @@ public class NamespaceUtil {
         engine.getNamespaceService().cleanupNamespace(namespace);
     }
 
+    public static void setupNamespace(NodeEngine engine, @Nullable String namespace) {
+        engine.getNamespaceService().setupNamespace(namespace);
+    }
+
+    public static void cleanupNamespace(NodeEngine engine, @Nullable String namespace) {
+        engine.getNamespaceService().cleanupNamespace(namespace);
+    }
+
     public static void runWithNamespace(@Nullable String namespace, Runnable runnable) {
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
         runWithNamespace(engine, namespace, runnable);
