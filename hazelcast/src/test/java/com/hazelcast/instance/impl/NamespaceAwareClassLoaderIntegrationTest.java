@@ -273,7 +273,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 .addNamespaceConfig(new NamespaceConfig(namespaceName).addClass(otherProcessor.clazz));
 
         // Now assert the behavior has swapped, too
-        otherProcessor.createExecuteAssertOnMap(processor.mapName, this, hazelcastInstance);
+        otherProcessor.createExecuteAssertOnMap(namespaceName, processor.mapName, this, hazelcastInstance);
     }
 
     /**
@@ -552,10 +552,10 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         private IMap<Object, String> createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
                 HazelcastInstance hazelcastInstance)  {
-            return createExecuteAssertOnMap(mapName, instance, hazelcastInstance);
+            return createExecuteAssertOnMap(toString(), mapName, instance, hazelcastInstance);
         }
 
-        private IMap<Object, String> createExecuteAssertOnMap(String mapName, NamespaceAwareClassLoaderIntegrationTest instance,
+        private IMap<Object, String> createExecuteAssertOnMap(String namespace, String mapName, NamespaceAwareClassLoaderIntegrationTest instance,
                 HazelcastInstance hazelcastInstance) {
             // Create a map
             IMap<Object, String> map = hazelcastInstance.getMap(mapName);
@@ -564,7 +564,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             try {
                 // Execute the EntryProcessor
                 Class<? extends EntryProcessor<Object, String, String>> clazz =
-                        (Class<? extends EntryProcessor<Object, String, String>>) instance.tryLoadClass(toString(), className);
+                        (Class<? extends EntryProcessor<Object, String, String>>) instance.tryLoadClass(namespace, className);
                 map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
             } catch (Exception e) {
                 throw new RuntimeException(e);
