@@ -241,7 +241,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         assertThrows(Exception.class, () -> processor.createExecuteAssertOnMap(this, hazelcastInstance));
 
         // Then dynamically configure
-        processor.addNamespaceToConfig(config);
+        processor.addNamespaceToConfig(hazelcastInstance.getConfig());
 
         // And re-run the test expecting sucess
         processor.createExecuteAssertOnMap(this, hazelcastInstance);
