@@ -159,8 +159,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         String mapName = randomMapName();
         String className = "usercodedeployment.DerbyUpperCaseStringMapLoader";
 
-        Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
-                () -> Class.forName(className));
+        assertClassNotAccessible(className);
 
         // Add the latest Derby version that supports Java 11 (newer versions require Java 17)
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
@@ -201,8 +200,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         String mapName = randomMapName();
         String className = "usercodedeployment.H2WithDriverManagerBuildVersionMapLoader";
 
-        Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
-                () -> Class.forName(className));
+        assertClassNotAccessible(className);
 
         // Deliberately use an older version
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
@@ -343,8 +341,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     private void testMemberToMemberDeserialization(int nodeCount, String entryProcessClassName,
                                                                String... resourceClassNames) throws ReflectiveOperationException {
         assertGreaterOrEquals("nodeCount", nodeCount, 2);
-        Assert.assertThrows("The entry processor class should not be already accessible: " + entryProcessClassName,
-                ClassNotFoundException.class, () -> Class.forName(entryProcessClassName));
+        assertClassNotAccessible(entryProcessClassName);
 
         TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
         try {
@@ -411,8 +408,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     private void testMemberToMemberMLDeserialization(int nodeCount, String mapLoaderClassName,
                                                                String... resourceClassNames) throws ReflectiveOperationException {
         assertGreaterOrEquals("nodeCount", nodeCount, 2);
-        Assert.assertThrows("The MapLoader class should not be already accessible: " + mapLoaderClassName,
-                ClassNotFoundException.class, () -> Class.forName(mapLoaderClassName));
+        assertClassNotAccessible(mapLoaderClassName);
 
         final TestHazelcastFactory factory = new TestHazelcastFactory(nodeCount);
         try {
@@ -449,8 +445,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
     private void configureSimpleNodeConfig(String mapName, String namespaceId, String... classNames) throws ClassNotFoundException {
         for (String className : classNames) {
-            Assert.assertThrows("The test class should not be already accessible: " + className,
-                    ClassNotFoundException.class, () -> Class.forName(className));
+            assertClassNotAccessible(className);
         }
 
         NamespaceConfig namespace = new NamespaceConfig(namespaceId);
@@ -541,8 +536,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 throw new ExceptionInInitializerError(e);
             }
 
-            Assert.assertThrows("The test class should not be already accessible", ClassNotFoundException.class,
-                    () -> Class.forName(className));
+            assertClassNotAccessible(className);
         }
 
         private void addNamespaceToConfig(Config config) {
@@ -583,5 +577,10 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         public String toString() {
             return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
         }
+    }
+    
+    private static void assertClassNotAccessible(String className) {
+        Assert.assertThrows("The test class should not be already accessible: " + className,
+                ClassNotFoundException.class, () -> Class.forName(className));
     }
 }
