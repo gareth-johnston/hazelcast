@@ -49,7 +49,7 @@ import java.util.jar.JarInputStream;
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
-public class NamespaceServiceImpl implements NamespaceService {
+public final class NamespaceServiceImpl implements NamespaceService {
     private static final ILogger LOGGER = Logger.getLogger(NamespaceServiceImpl.class);
 
     final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
@@ -127,6 +127,16 @@ public class NamespaceServiceImpl implements NamespaceService {
             return;
         }
         NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+    }
+
+    @Override
+    public void setupNamespace(@Nullable String namespace) {
+        setupNs(transformNamespace(namespace));
+    }
+
+    @Override
+    public void cleanupNamespace(@Nullable String namespace) {
+        cleanupNs(transformNamespace(namespace));
     }
 
     @Override

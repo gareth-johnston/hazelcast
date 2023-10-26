@@ -18,6 +18,8 @@ package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapStoreConfig;
+import com.hazelcast.internal.namespace.NamespaceUtil;
+import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.nearcache.impl.invalidation.Invalidator;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.services.ObjectNamespace;
@@ -90,6 +92,7 @@ public abstract class MapOperation extends AbstractNamedOperation
     protected transient boolean tieredStoreOffloadEnabled;
 
     private transient boolean canPublishWanEvent;
+    private transient String namespace;
 
     public MapOperation() {
     }
@@ -134,8 +137,11 @@ public abstract class MapOperation extends AbstractNamedOperation
         tieredStoreOffloadEnabled = metWithCommonOffloadConditions
                 && (mapServiceContext.isForceOffloadEnabled() || supportsSteppedRun());
 
-
         assertNativeMapOnPartitionThread();
+
+        // Setup Namespace awareness
+        namespace = mapConfig.getNamespace();
+        getNodeEngine().getNamespaceService().setupNamespace(namespace);
 
         innerBeforeRun();
     }
@@ -273,6 +279,10 @@ public abstract class MapOperation extends AbstractNamedOperation
                 || tieredStoreOffloadEnabled) {
             return;
         }
+        // Cleanup Namespace awareness
+        // TODO: Can we drop the `namespace` on cleanup and avoid storing it in all Map ops?
+        getNodeEngine().getNamespaceService().cleanupNamespace(namespace);
+
         afterRunInternal();
         disposeDeferredBlocks();
         super.afterRun();

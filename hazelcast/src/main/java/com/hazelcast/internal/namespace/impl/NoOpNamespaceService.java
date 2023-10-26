@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
-public class NoOpNamespaceService implements NamespaceService {
+public final class NoOpNamespaceService implements NamespaceService {
     @Override
     public void addNamespace(@Nonnull String nsName, @Nonnull Collection<ResourceDefinition> resources) {
         // No-op
@@ -34,6 +34,16 @@ public class NoOpNamespaceService implements NamespaceService {
     @Override
     public boolean isDefaultNamespaceDefined() {
         return false;
+    }
+
+    @Override
+    public void setupNamespace(@Nullable String namespace) {
+        // No-op
+    }
+
+    @Override
+    public void cleanupNamespace(@Nullable String namespace) {
+        // No-op
     }
 
     @Override

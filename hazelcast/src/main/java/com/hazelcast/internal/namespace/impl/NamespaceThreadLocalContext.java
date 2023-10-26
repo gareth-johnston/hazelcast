@@ -70,6 +70,7 @@ public final class NamespaceThreadLocalContext {
         }
     }
 
+    // TODO: Do we need to know the namespace? Is it safe to just clear the namespace without reference?
     public static void onCompleteNsAware(String namespace) {
         NamespaceThreadLocalContext tlContext = NS_THREAD_LOCAL.get();
         if (tlContext != null) {
