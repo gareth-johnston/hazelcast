@@ -369,11 +369,10 @@ public class ClusterWideConfigurationService implements
      * Register a dynamic configuration in a local member.
      *
      * @param newConfig       Configuration to register.
-     * @param configCheckMode behaviour when a config is detected
      * @throws UnsupportedOperationException when given configuration type is not supported
      */
     @SuppressWarnings("checkstyle:methodlength")
-    public void deregisterConfigLocally(IdentifiedDataSerializable newConfig, ConfigCheckMode configCheckMode) {
+    public void deregisterConfigLocally(IdentifiedDataSerializable newConfig) {
         if (newConfig instanceof NamespaceConfig) {
             NamespaceConfig config = (NamespaceConfig) newConfig;
             if (namespaceConfigs.remove(config.getName(), newConfig)) {

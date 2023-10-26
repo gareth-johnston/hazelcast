@@ -32,7 +32,7 @@ public class RemoveDynamicConfigOperation extends UpdateDynamicConfigOperation {
     @Override
     public void run() throws Exception {
         ClusterWideConfigurationService service = getService();
-        service.unbroadcastConfig(config);
+        service.deregisterConfigLocally(config);
         super.run();
     }
 
