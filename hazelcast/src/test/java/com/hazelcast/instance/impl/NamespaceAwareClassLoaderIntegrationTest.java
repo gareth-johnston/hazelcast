@@ -44,6 +44,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -389,7 +390,8 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
     }
 
-    // TODO: Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added
+    // TODO
+    @Ignore("Milestone 3 - Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added")
     @Test
     public void testDynamicConfigMapLoaderDeserialization_2Node() throws ReflectiveOperationException {
         testMemberToMemberMLDeserialization(2,
@@ -397,7 +399,8 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 "usercodedeployment.KeyBecomesValueMapLoader");
     }
 
-    // TODO: Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added
+    // TODO
+    @Ignore("Milestone 3 - Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added")
     @Test
     public void testDynamicConfigMapLoaderDeserialization_5Node() throws ReflectiveOperationException {
         testMemberToMemberMLDeserialization(5,
