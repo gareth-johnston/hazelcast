@@ -22,6 +22,7 @@ import com.hazelcast.jet.config.ResourceType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 public class ResourceDefinitionImpl implements ResourceDefinition {
     private final String id;
@@ -59,5 +60,22 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
     @Override
     public byte[] payload() {
         return payload;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        ResourceDefinitionImpl other = (ResourceDefinitionImpl) obj;
+        return Objects.equals(id, other.id);
     }
 }

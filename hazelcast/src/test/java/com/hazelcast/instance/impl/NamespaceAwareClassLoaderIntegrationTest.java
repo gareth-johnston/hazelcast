@@ -75,6 +75,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     private static Path classRoot;
     protected static MapResourceClassLoader mapResourceClassLoader;
     private static Artifact h2V202Artifact;
+    private static Artifact h2V204Artifact;
 
     protected Config config;
     private ClassLoader nodeClassLoader;
@@ -86,6 +87,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         classRoot = Paths.get("src/test/class");
         mapResourceClassLoader = generateMapResourceClassLoaderForDirectory(classRoot);
         h2V202Artifact = new DefaultArtifact("com.h2database", "h2", null, "2.0.202");
+        h2V204Artifact = new DefaultArtifact("com.h2database", "h2", null, "2.0.204");
     }
 
     @AfterClass
@@ -242,8 +244,12 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         // Then dynamically configure
         processor.addNamespaceToConfig(hazelcastInstance.getConfig());
 
-        // And re-run the test expecting sucess
+        // And re-run the test expecting success
         processor.createExecuteAssertOnMap(this, hazelcastInstance);
+        
+        // And able to roll back by removing it again
+        hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace.getName());
+        assertThrows(Exception.class, () -> processor.createExecuteAssertOnMap(this, hazelcastInstance));
     }
 
     /**
@@ -268,7 +274,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         // Now swap the class in the namespace
         String namespaceName = processor.namespace.getName();
-        hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(namespaceName)
+        hazelcastInstance.getConfig().getNamespacesConfig()
                 .addNamespaceConfig(new NamespaceConfig(namespaceName).addClass(otherProcessor.clazz));
 
         // Now assert the behavior has swapped, too
@@ -306,6 +312,27 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         assertEquals("JDBC generally is working, but Driver Manager isn't - suggests Service Loader issue",
                 h2V202Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
+        
+        // Now dynamically reconfigure to an alternative version of H2
+        
+        // TODO UNable to test this currently
+         
+        hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(namespace.getName());
+        
+        namespace = new NamespaceConfig(namespace.getName())
+                .addJar(MavenInterface.locateArtifact(h2V204Artifact).toUri().toURL());
+
+        for (Pair<String, String> clazz : classes) {
+            namespace.addClass(mapResourceClassLoader.loadClass(clazz.getLeft()));
+        }
+
+        hazelcastInstance.getConfig().getNamespacesConfig().addNamespaceConfig(namespace);
+
+        assertEquals("Worked with static configuration, but did not refresh when dynamically reconfigured", h2V204Artifact.getVersion(),
+                executeMapLoader(hazelcastInstance, dataSource.getRight()));
+
+        assertEquals("JDBC generally is working, but Driver Manager isn't - suggests dynamic configuration Service Loader issue",
+                h2V204Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
     }
 
     @Test

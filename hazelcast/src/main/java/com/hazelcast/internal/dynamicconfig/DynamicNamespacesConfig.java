@@ -33,6 +33,7 @@ public class DynamicNamespacesConfig extends NamespacesConfig {
 
     @Override
     public NamespacesConfig addNamespaceConfig(NamespaceConfig namespaceConfig) {
+        super.addNamespaceConfig(namespaceConfig);
         configurationServiceAccessor.get().broadcastConfig(namespaceConfig);
         return this;
     }
