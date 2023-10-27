@@ -22,8 +22,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marker for interfaces that can be implemented by users and uploaded to clusters via User Code Deployment.
- * Provides no functionality beyond being a marker for internal-use.
+ * Marker for interfaces that can be implemented by users and executed on clusters via User Code Deployment.
+ * Provides no functionality beyond being a marker for internal-use. Namely, this marker indicates that
+ * the class can safely be deserialized in member-to-member communication, with Namespace awareness.
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
