@@ -21,6 +21,7 @@ import com.hazelcast.collection.QueueStoreFactory;
 import com.hazelcast.config.QueueStoreConfig;
 import com.hazelcast.internal.diagnostics.Diagnostics;
 import com.hazelcast.internal.diagnostics.StoreLatencyPlugin;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.SerializationService;
@@ -55,8 +56,13 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
     private QueueStore store;
     private SerializationService serializationService;
 
-    private QueueStoreWrapper(String name) {
+    private final String namespace;
+    private final NodeEngine nodeEngine;
+
+    private QueueStoreWrapper(@Nonnull NodeEngine nodeEngine, @Nonnull String name, @Nullable String namespace) {
         this.name = name;
+        this.nodeEngine = nodeEngine;
+        this.namespace = namespace;
     }
 
     /**
@@ -67,14 +73,16 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
      * @param serializationService serialization service.
      * @return returns a new instance of {@link QueueStoreWrapper}
      */
-    public static QueueStoreWrapper create(@Nonnull String name,
+    public static QueueStoreWrapper create(@Nonnull NodeEngine nodeEngine,
+                                           @Nonnull String name,
                                            @Nullable QueueStoreConfig storeConfig,
                                            @Nonnull SerializationService serializationService,
-                                           @Nullable ClassLoader classLoader) {
+                                           @Nullable ClassLoader classLoader,
+                                           @Nullable String namespace) {
         checkNotNull(name, "name should not be null");
         checkNotNull(serializationService, "serializationService should not be null");
 
-        QueueStoreWrapper storeWrapper = new QueueStoreWrapper(name);
+        QueueStoreWrapper storeWrapper = new QueueStoreWrapper(nodeEngine, name, namespace);
         storeWrapper.setSerializationService(serializationService);
         if (storeConfig == null || !storeConfig.isEnabled()) {
             return storeWrapper;
@@ -157,7 +165,7 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
         } else {
             actualValue = serializationService.toObject(value);
         }
-        store.store(key, actualValue);
+        NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> store.store(key, actualValue));
     }
 
     @Override
@@ -181,20 +189,20 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
                 objectMap.put(entry.getKey(), serializationService.toObject(entry.getValue()));
             }
         }
-        store.storeAll(objectMap);
+        NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> store.storeAll(objectMap));
     }
 
     @Override
     public void delete(Long key) {
         if (enabled) {
-            store.delete(key);
+            NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> store.delete(key));
         }
     }
 
     @Override
     public void deleteAll(Collection<Long> keys) {
         if (enabled) {
-            store.deleteAll(keys);
+            NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> store.deleteAll(keys));
         }
     }
 
@@ -204,7 +212,7 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
             return null;
         }
 
-        Object val = store.load(key);
+        Object val = NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> store.load(key));;
         if (binary) {
             byte[] dataBuffer = (byte[]) val;
             return new HeapData(Arrays.copyOf(dataBuffer, dataBuffer.length));
@@ -218,7 +226,7 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
             return null;
         }
 
-        Map<Long, ?> map = store.loadAll(keys);
+        Map<Long, ?> map = NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> store.loadAll(keys));
         if (map == null) {
             return Collections.emptyMap();
         }
@@ -240,7 +248,7 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
     @Override
     public Set<Long> loadAllKeys() {
         if (enabled) {
-            return store.loadAllKeys();
+            return NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> store.loadAllKeys());
         }
         return null;
     }

@@ -41,7 +41,7 @@ import static com.hazelcast.internal.util.Preconditions.checkNotNull;
  * Contains the configuration for an {@link IQueue}.
  */
 @SuppressWarnings("checkstyle:methodcount")
-public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Versioned {
+public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Versioned, NamespaceAwareConfig {
 
     /**
      * Default value for the maximum size of the Queue.
@@ -74,6 +74,7 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
     private String splitBrainProtectionName;
     private MergePolicyConfig mergePolicyConfig = new MergePolicyConfig();
     private String priorityComparatorClassName;
+    private String namespace = DEFAULT_NAMESPACE;
 
     public QueueConfig() {
     }
@@ -95,6 +96,7 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
         this.queueStoreConfig = config.queueStoreConfig != null ? new QueueStoreConfig(config.queueStoreConfig) : null;
         this.listenerConfigs = new ArrayList<>(config.getItemListenerConfigs());
         this.priorityComparatorClassName = config.priorityComparatorClassName;
+        this.namespace = config.namespace;
     }
 
     /**
@@ -369,6 +371,22 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
     public QueueConfig setPriorityComparatorClassName(@Nullable String priorityComparatorClassName) {
         this.priorityComparatorClassName = priorityComparatorClassName;
         return this;
+    }
+
+    /**
+     * TODO: Documentation
+     * @since 5.4
+     */
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /**
+     * TODO: Documentation
+     * @since 5.4
+     */
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     @Override

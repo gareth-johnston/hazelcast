@@ -32,6 +32,7 @@ import com.hazelcast.internal.metrics.DynamicMetricsProvider;
 import com.hazelcast.internal.metrics.MetricDescriptor;
 import com.hazelcast.internal.metrics.MetricsCollectionContext;
 import com.hazelcast.internal.monitor.impl.LocalQueueStatsImpl;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.partition.IPartition;
 import com.hazelcast.internal.partition.IPartitionService;
 import com.hazelcast.internal.partition.MigrationAwareService;
@@ -172,13 +173,16 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
             return container;
         }
 
-        container = new QueueContainer(name, nodeEngine.getConfig().findQueueConfig(name), nodeEngine, this);
+        QueueConfig queueConfig = nodeEngine.getConfig().findQueueConfig(name);
+        container = new QueueContainer(name, queueConfig, nodeEngine, this);
         QueueContainer existing = containerMap.putIfAbsent(name, container);
         if (existing != null) {
             container = existing;
         } else {
+            NamespaceUtil.setupNamespace(nodeEngine, queueConfig.getNamespace());
             container.init(fromBackup);
             container.getStore().instrument(nodeEngine);
+            NamespaceUtil.cleanupNamespace(nodeEngine, queueConfig.getNamespace());
         }
         return container;
     }

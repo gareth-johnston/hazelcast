@@ -21,12 +21,14 @@ import com.hazelcast.config.QueueConfig;
 import com.hazelcast.config.QueueStoreConfig;
 import com.hazelcast.core.HazelcastException;
 import com.hazelcast.internal.monitor.impl.LocalQueueStatsImpl;
+import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.internal.util.Clock;
 import com.hazelcast.internal.util.CollectionUtil;
 import com.hazelcast.internal.util.MapUtil;
+import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -1068,7 +1070,15 @@ public class QueueContainer implements IdentifiedDataSerializable {
             itemQueue = copy;
         }
 
-        this.store = QueueStoreWrapper.create(name, storeConfig, serializationService, classLoader);
+        // Use Namespace specific class loader if available
+        MapResourceClassLoader loader = nodeEngine.getNamespaceService()
+                                                  .getClassLoaderForNamespace(config.getNamespace());
+        if (loader != null) {
+            classLoader = loader;
+        }
+
+        this.store = QueueStoreWrapper.create(nodeEngine, name, storeConfig, serializationService,
+                classLoader, config.getNamespace());
 
         if (isPriorityQueue && store.isEnabled() && store.getMemoryLimit() < Integer.MAX_VALUE) {
             logger.warning("The queue '" + name + "' has both a comparator class and a store memory limit set. "
