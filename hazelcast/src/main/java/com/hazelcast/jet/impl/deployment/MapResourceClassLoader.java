@@ -67,7 +67,6 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     // TODO Shouldn't this be a logging param?
     private static final boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
 
-    // TODO Should this be a supplier, or memoized? Currently it could be called more than once and recomputes every time
     // todo: consider alternative to IMap
     //  take into account potential deadlocks like https://hazelcast.atlassian.net/browse/HZ-3121
     protected final Supplier<? extends Map<String, byte[]>> resourcesSupplier;
