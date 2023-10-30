@@ -3231,13 +3231,12 @@ public class Config {
         return new DataConnectionConfigReadOnly(getDataConnectionConfig("default"));
     }
 
+    /**
+     * @return the namespaces configuration object
+     * @since 5.4.0
+     */
     public NamespacesConfig getNamespacesConfig() {
         return namespacesConfig;
-    }
-
-    public Config setNamespacesConfig(NamespacesConfig namespacesConfig) {
-        this.namespacesConfig = namespacesConfig;
-        return this;
     }
 
     /**

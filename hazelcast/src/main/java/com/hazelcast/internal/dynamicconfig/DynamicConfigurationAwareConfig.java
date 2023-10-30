@@ -42,6 +42,7 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MemberAttributeConfig;
 import com.hazelcast.config.MetricsConfig;
 import com.hazelcast.config.MultiMapConfig;
+import com.hazelcast.config.NamespacesConfig;
 import com.hazelcast.config.NativeMemoryConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.config.PNCounterConfig;
@@ -1259,6 +1260,11 @@ public class DynamicConfigurationAwareConfig extends Config {
     @Override
     public DataConnectionConfig getDataConnectionConfig(String name) {
         return getDataConnectionConfigInternal(name, name);
+    }
+
+    @Override
+    public NamespacesConfig getNamespacesConfig() {
+        return namespacesConfig;
     }
 
     private DataConnectionConfig getDataConnectionConfigInternal(String name, String fallbackName) {
