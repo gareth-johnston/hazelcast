@@ -312,11 +312,8 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         assertEquals("JDBC generally is working, but Driver Manager isn't - suggests Service Loader issue",
                 h2V202Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
-        
+
         // Now dynamically reconfigure to an alternative version of H2
-        
-        // TODO UNable to test this currently
-         
         hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(namespace.getName());
         
         namespace = new NamespaceConfig(namespace.getName())
@@ -530,7 +527,12 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     }
 
     private String executeMapLoader(HazelcastInstance hazelcastInstance, String mapName) {
-        return hazelcastInstance.<String, String>getMap(mapName).get(getClass().getSimpleName());
+        IMap<String, String> map = hazelcastInstance.<String, String> getMap(mapName);
+
+        // Ensure MapLoader is executed
+        map.clear();
+
+        return map.get(getClass().getSimpleName());
     }
 
     /**
