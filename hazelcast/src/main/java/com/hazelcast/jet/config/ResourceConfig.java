@@ -22,6 +22,7 @@ import com.hazelcast.jet.impl.util.ReflectionUtils;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.spi.annotation.PrivateApi;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,10 +37,11 @@ import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 /**
  * Describes a single resource to deploy to the Jet cluster.
- * TODO - agreed will be exposed, but migrated to an {@code internal} package
  *
  * @since Jet 3.0
- */public class ResourceConfig implements IdentifiedDataSerializable {
+ */
+@PrivateApi
+public class ResourceConfig implements IdentifiedDataSerializable {
 
     private URL url;
     private String id;
