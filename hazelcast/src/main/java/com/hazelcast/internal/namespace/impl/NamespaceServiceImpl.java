@@ -50,7 +50,6 @@ import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 public final class NamespaceServiceImpl implements NamespaceService {
-    private static final ILogger LOGGER = Logger.getLogger(NamespaceServiceImpl.class);
 
     final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
 
@@ -178,7 +177,7 @@ public final class NamespaceServiceImpl implements NamespaceService {
 
     // Resource/classloader handling functions
 
-    void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
+    static void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
         switch (resource.type()) {
             case JAR:
                 handleJar(resource.id(), resource.payload(), resourceMap);
@@ -241,56 +240,11 @@ public final class NamespaceServiceImpl implements NamespaceService {
     }
 
     private static void initializeClassLoader(String nsName, MapResourceClassLoader classLoader) {
-        initializeJdbcDrivers(nsName, classLoader);
+        NamespaceAwareDriverManagerInterface.initializeJdbcDrivers(nsName, classLoader);
     }
 
     private static void cleanUpClassLoader(String nsName, MapResourceClassLoader removedClassLoader) {
-        cleanupJdbcDrivers(nsName, removedClassLoader);
-    }
-
-    private static void initializeJdbcDrivers(String nsName, MapResourceClassLoader classLoader) {
-        ServiceLoader<? extends Driver> driverLoader = ServiceLoader.load(Driver.class, classLoader);
-
-        LoggingUtil.logFinest(LOGGER, "Initializing driverLoader=%s in namespace %s", driverLoader, nsName);
-
-        for (Driver d : driverLoader) {
-            if (d.getClass().getClassLoader() == classLoader) {
-                LoggingUtil.logFinest(LOGGER, "Registering driver %s from classloader for namespace %s", d.getClass(), nsName);
-
-                try {
-                    DriverManager.registerDriver(d);
-                } catch (SQLException e) {
-                    LOGGER.warning("Failed to register driver " + d + " in namespace " + nsName, e);
-                }
-            } else {
-                LoggingUtil.logFinest(LOGGER, "Skipping %s because it's classloader (%s) differs from classloader (%s)",
-                        d.getClass(), d.getClass().getClassLoader(), classLoader);
-            }
-        }
-    }
-
-    /** cleanup any JDBC drivers that were registered from that classloader */
-    private static void cleanupJdbcDrivers(String nsName, MapResourceClassLoader removedClassLoader) {
-        Enumeration<Driver> registeredDrivers = DriverManager.getDrivers();
-
-        LoggingUtil.logFinest(LOGGER, "Cleaning up registeredDrivers=%s, in namespace %s", registeredDrivers, nsName);
-
-        while (registeredDrivers.hasMoreElements()) {
-            Driver d = registeredDrivers.nextElement();
-
-            if (d.getClass().getClassLoader() == removedClassLoader) {
-                try {
-                    LoggingUtil.logFinest(LOGGER, "Deregistering %s from removed classloader for namespace %s", d.getClass(),
-                            nsName);
-                    DriverManager.deregisterDriver(d);
-                } catch (SQLException e) {
-                    LOGGER.warning("Failed to deregister driver " + d + " in namespace " + nsName, e);
-                }
-            } else {
-                LoggingUtil.logFinest(LOGGER, "Skipping %s because it's classloader (%s) differs from removedClassLoader (%s)",
-                        d.getClass(), d.getClass().getClassLoader(), removedClassLoader);
-            }
-        }
+        NamespaceAwareDriverManagerInterface.cleanupJdbcDrivers(nsName, removedClassLoader);
     }
 
     private static Collection<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {

@@ -16,7 +16,9 @@
 
 package com.hazelcast.jet.impl.deployment;
 
+import com.hazelcast.internal.namespace.impl.NamespaceServiceImpl;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.jet.impl.util.ReflectionUtils;
 import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -33,9 +35,13 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.InflaterInputStream;
 
 import static com.hazelcast.internal.util.StringUtil.isNullOrEmpty;
@@ -67,6 +73,9 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     // TODO Shouldn't this be a logging param?
     private static final boolean DEBUG_OUTPUT = Boolean.getBoolean(DEBUG_OUTPUT_PROPERTY);
 
+    // TODO a more effecient way to do this
+    protected final Map<String, byte[]> extraResources = new HashMap<>();
+    
     // todo: consider alternative to IMap
     //  take into account potential deadlocks like https://hazelcast.atlassian.net/browse/HZ-3121
     protected final Supplier<? extends Map<String, byte[]>> resourcesSupplier;
@@ -121,6 +130,12 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         }
     }
 
+    /** Allow direct addition of a class to ensure that this classloader can load it in addition */
+    public void addExtraClass(Class<?> clazz) throws IOException {
+        NamespaceServiceImpl.handleClass(ReflectionUtils.toClassResourceId(clazz),
+                ReflectionUtils.getClassContent(clazz.getName(), clazz.getClassLoader()), extraResources);
+    }
+
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         if (isNullOrEmpty(name)) {
@@ -158,12 +173,9 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
         if (checkShutdown(name) || isNullOrEmpty(name)) {
             return null;
         }
-        String resourceKey = classKeyName(name);
-        if (!resourcesSupplier.get().containsKey(resourceKey)) {
-            resourceKey = fileKeyName(name);
-            if (!resourcesSupplier.get().containsKey(resourceKey)) {
-                return null;
-            }
+
+        if (!getResourceMap().containsKey(classKeyName(name)) && !getResourceMap().containsKey(fileKeyName(name))) {
+            return null;
         }
 
         try {
@@ -172,6 +184,11 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
             // this should never happen with custom URLStreamHandler
             throw new RuntimeException(e);
         }
+    }
+    
+    private Map<String, byte[]> getResourceMap() {
+        return Stream.of(resourcesSupplier.get(), extraResources).flatMap(m -> m.entrySet().stream())
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
     @Override
@@ -188,7 +205,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
     // argument is used in overridden implementation
     @SuppressWarnings("java:S1172")
-    boolean checkShutdown(String resource) {
+    boolean checkShutdown(@SuppressWarnings("unused") String resource) {
         return isShutdown;
     }
 
@@ -218,9 +235,9 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
     @Nullable
     private byte[] getBytes(String name) {
-        byte[] classData = resourcesSupplier.get().get(classKeyName(name));
+        byte[] classData = getResourceMap().get(classKeyName(name));
         if (classData == null) {
-            classData = resourcesSupplier.get().get(fileKeyName(name));
+            classData = getResourceMap().get(fileKeyName(name));
             if (classData == null) {
                 return null;
             }
@@ -231,7 +248,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     ClassNotFoundException newClassNotFoundException(String name) {
         if (DEBUG_OUTPUT) {
             String message = "For name " + name + " no resource could be identified. List of resources:\n"
-                    + resourcesSupplier.get().keySet();
+                    + getResourceMap().keySet();
             return new ClassNotFoundException(message);
         }
         return new ClassNotFoundException(name);
