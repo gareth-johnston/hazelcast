@@ -50,20 +50,25 @@ import static com.hazelcast.jet.impl.JobRepository.fileKeyName;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 /**
- * Abstract class loader that can be customized with:
+ * Class loader that can be customized with:
  * <ul>
- *     <li>A resources supplier. For now it's a {@code Supplier<? extends Map<String, byte[]>>}. In the concrete
- *     {@code JetClassLoader} case, it is backed by an {@code IMap<String, byte[]>}.</li>
+ *     <li>A resources supplier {@code Supplier<? extends Map<String, byte[]>>}.</li>
  *     <li>Choice of whether it looks up classes and resources in child-first order (so this ClassLoader's resources are
- *     first search, then, if not found, the parent ClassLoader is queries). If not child-first, then the common parent-first
+ *     first search, then, if not found, the parent ClassLoader is queried). If not child-first, then the common parent-first
  *     hierarchical ClassLoader model is followed.</li>
  * </ul>
- * todo: specify resource MAP key & value format. Currently following JetClassLoader conventions:
+ * Resources in the {@code <? extends Map<String, byte[]>>} supplied by the resource supplier are expected to follow
+ * these conventions:
  *  <ul>
- *      <li>key if "c." + classname as file path + ".class". See also JobRepository class for other key prefixes</li>
- *      <li>value is deflated class definition</li>
+ *      <li>the {@code byte[]} value is the {@link IOUtil#compress(byte[]) deflated} payload of the resource</li>
+ *      <li>key of classes is composed with a {@code "c."} prefix, followed by the classname as file path and the
+ *      {@code ".class"} suffix. Assuming {@code className} is the binary name of the class, the key is formatted
+ *      as {@code classKeyName(toClassResourceId(className))}. See
+ *      {@link com.hazelcast.jet.impl.JobRepository#classKeyName(String)} and
+ *      {@link com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId(String)}.</li>
+ *      <li>key of other classpath resources if composed of the {@code "f."} prefix and the path of the resource.
+ *      See also {@link com.hazelcast.jet.impl.JobRepository#fileKeyName(String)}.</li>
  *  </ul>
- *  todo: consider if we need to override java9+ methods for running on the modulepath use case
  */
 public class MapResourceClassLoader extends JetDelegatingClassLoader {
     public static final String DEBUG_OUTPUT_PROPERTY = "hazelcast.classloading.debug";
@@ -75,9 +80,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
     // TODO a more effecient way to do this
     protected final Map<String, byte[]> extraResources = new HashMap<>();
-    
-    // todo: consider alternative to IMap
-    //  take into account potential deadlocks like https://hazelcast.atlassian.net/browse/HZ-3121
+
     protected final Supplier<? extends Map<String, byte[]>> resourcesSupplier;
     /**
      * When {@code true}, if the requested class/resource is not found in this ClassLoader's resources, then parent
@@ -185,7 +188,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
             throw new RuntimeException(e);
         }
     }
-    
+
     private Map<String, byte[]> getResourceMap() {
         return Stream.of(resourcesSupplier.get(), extraResources).flatMap(m -> m.entrySet().stream())
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
@@ -246,7 +249,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     }
 
     ClassNotFoundException newClassNotFoundException(String name) {
-        if (DEBUG_OUTPUT) {
+        if (DEBUG_OUTPUT){
             String message = "For name " + name + " no resource could be identified. List of resources:\n"
                     + getResourceMap().keySet();
             return new ClassNotFoundException(message);
