@@ -510,11 +510,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
     private static String correctResourcePath(Path root, Path path) {
         String classKeyName = classKeyName(root.relativize(path).toString());
-        // TODO is there a platform-independant way of solving this using File.seperator?
-        if (OsHelper.isWindows()) {
-            classKeyName = classKeyName.replace('\\', '/');
-        }
-        return classKeyName;
+        return OsHelper.ensureUnixSeparators(classKeyName);
     }
 
     Class<?> tryLoadClass(String namespace, String className) throws Exception {
