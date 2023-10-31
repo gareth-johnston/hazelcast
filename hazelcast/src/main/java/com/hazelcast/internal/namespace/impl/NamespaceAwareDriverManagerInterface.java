@@ -44,7 +44,13 @@ public class NamespaceAwareDriverManagerInterface {
         }
     }
 
-    /** cleanup any JDBC drivers that were registered from that classloader */
+    /**
+     * cleanup any JDBC drivers that were registered from that classloader
+     * <p>
+     * Reloads this class inside the supplied {@code classLoader}, so that when {@link #cleanupJdbcDrivers(String)} calls
+     * {@link DriverManager#deregisterDriver(Driver)}, it's called from within the required {@link ClassLoader} that allows it
+     * to operate correctly.
+     */
     public static void cleanupJdbcDrivers(String nsName, MapResourceClassLoader classLoader) {
         try {
             classLoader.addExtraClass(NamespaceAwareDriverManagerInterface.class);
@@ -60,6 +66,7 @@ public class NamespaceAwareDriverManagerInterface {
         }
     }
 
+    /** Public only to allow easy reflection call - not actually sensible to call externally */
     public void cleanupJdbcDrivers(String nsName) {
         Enumeration<Driver> registeredDrivers = DriverManager.getDrivers();
 
