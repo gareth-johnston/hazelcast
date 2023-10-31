@@ -228,6 +228,8 @@ public interface MapServiceContext extends MapServiceContextInterceptorSupport,
 
     boolean globalIndexEnabled();
 
+    boolean isForciblyEnabledGlobalIndex();
+
     ValueComparator getValueComparatorOf(InMemoryFormat inMemoryFormat);
 
     NodeWideUsedCapacityCounter getNodeWideUsedCapacityCounter();

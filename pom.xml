@@ -91,7 +91,7 @@
         <!--<affinity.version>3.2.3</affinity.version>-->
         <antlr4.version>4.9.3</antlr4.version>
         <avro.version>1.11.3</avro.version>
-        <aws.sdk.version>1.12.574</aws.sdk.version>
+        <aws.sdk.version>1.12.576</aws.sdk.version>
         <calcite.version>1.35.0</calcite.version>
         <classgraph.version>4.8.163</classgraph.version>
         <debezium.version>1.9.7.Final</debezium.version>
@@ -103,7 +103,7 @@
         <jackson.version>2.14.2</jackson.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jaxb.version>2.3.1</jaxb.version>
-        <jline.version>3.23.0</jline.version>
+        <jline.version>3.24.0</jline.version>
         <jms.api.version>3.1.0</jms.api.version>
         <json-surfer.version>0.11</json-surfer.version>
         <jsr107.api.version>1.1.1</jsr107.api.version> <!-- JCache -->
@@ -111,7 +111,7 @@
         <kafka.version>3.4.1</kafka.version>
         <kotlin.version>1.9.10</kotlin.version>
         <reload4j.version>1.2.25</reload4j.version>
-        <mssql.version>12.4.1.jre11</mssql.version>
+        <mssql.version>12.4.2.jre11</mssql.version>
         <mysql.connector.version>8.2.0</mysql.connector.version>
         <netty.version>4.1.100.Final</netty.version>
         <objenesis.version>3.3</objenesis.version>
@@ -137,7 +137,7 @@
         <mongodb.version>4.10.2</mongodb.version>
 
         <!-- test dependencies -->
-        <activemq-artemis.version>2.31.0</activemq-artemis.version>
+        <activemq-artemis.version>2.31.2</activemq-artemis.version>
         <activemq.version>5.15.11</activemq.version>
         <assertj.version>3.24.2</assertj.version>
         <atomikos.version>3.9.3</atomikos.version>
@@ -159,7 +159,7 @@
         <archunit.version>1.1.0</archunit.version>
         <errorprone.version>2.23.0</errorprone.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <kubernetes-server-mock.version>6.9.0</kubernetes-server-mock.version>
+        <kubernetes-server-mock.version>6.9.1</kubernetes-server-mock.version>
         <hikari.version>4.0.3</hikari.version>
 
         <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
@@ -1934,7 +1934,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.5-6</version>
+                <version>1.5.5-7</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>

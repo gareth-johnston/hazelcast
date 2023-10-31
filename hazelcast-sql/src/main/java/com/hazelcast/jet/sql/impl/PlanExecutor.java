@@ -235,7 +235,7 @@ public class PlanExecutor {
 
     SqlResult execute(CreateIndexPlan plan) {
         MapContainer mapContainer = getMapContainer(hazelcastInstance.getMap(plan.mapName()));
-        if (!mapContainer.isGlobalIndexEnabled()) {
+        if (!mapContainer.shouldUseGlobalIndex()) {
             // for partitioned indexes checking existence is more complicated
             // and SQL cannot yet use partitioned indexes
             throw QueryException.error(SqlErrorCode.INDEX_INVALID, "Cannot create index \"" + plan.indexName()
@@ -549,7 +549,9 @@ public class PlanExecutor {
         assert oldValue == null : oldValue;
         try {
             sqlJobInvocationObservers.forEach(observer -> observer.onJobInvocation(plan.getDag(), jobConfig));
-            Job job = jet.newLightJob(jobId, plan.getDag(), jobConfig, ssc.subject());
+            Job job = plan.isAnalyzed()
+                    ? jet.newJob(jobId, plan.getDag(), jobConfig, ssc.subject())
+                    : jet.newLightJob(jobId, plan.getDag(), jobConfig, ssc.subject());
 
             job.getFuture().whenComplete((r, t) -> {
                 // make sure the queryResultProducer is cleaned up after the job completes. This normally
@@ -589,7 +591,9 @@ public class PlanExecutor {
 
         AbstractJetInstance<?> jet = (AbstractJetInstance<?>) hazelcastInstance.getJet();
         sqlJobInvocationObservers.forEach(observer -> observer.onJobInvocation(plan.getDag(), jobConfig));
-        Job job = jet.newLightJob(plan.getDag(), jobConfig, ssc.subject());
+        Job job = plan.isAnalyzed()
+                ? jet.newJob(plan.getDag(), jobConfig, ssc.subject())
+                : jet.newLightJob(plan.getDag(), jobConfig, ssc.subject());
         job.join();
 
         return UpdateSqlResultImpl.createUpdateCountResult(0);
