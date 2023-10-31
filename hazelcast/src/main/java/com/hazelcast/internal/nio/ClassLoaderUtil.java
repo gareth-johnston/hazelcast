@@ -19,6 +19,7 @@ package com.hazelcast.internal.nio;
 import com.hazelcast.internal.usercodedeployment.impl.ClassSource;
 import com.hazelcast.internal.util.ConcurrentReferenceHashMap;
 import com.hazelcast.internal.util.ExceptionUtil;
+import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nullable;
 
@@ -442,7 +443,7 @@ public final class ClassLoaderUtil {
         }
     }
 
-    private static boolean shouldBypassCache(Class clazz) {
+    private static boolean shouldBypassCache(Class<?> clazz) {
         // dynamically loaded class should not be cached here, as they are already
         // cached in the DistributedLoadingService (when cache is enabled)
         return (clazz.getClassLoader() instanceof ClassSource
