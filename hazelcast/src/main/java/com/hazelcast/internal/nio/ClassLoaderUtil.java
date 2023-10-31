@@ -445,7 +445,8 @@ public final class ClassLoaderUtil {
     private static boolean shouldBypassCache(Class clazz) {
         // dynamically loaded class should not be cached here, as they are already
         // cached in the DistributedLoadingService (when cache is enabled)
-        return (clazz.getClassLoader() instanceof ClassSource);
+        return (clazz.getClassLoader() instanceof ClassSource
+                || clazz.getClassLoader() instanceof MapResourceClassLoader);
     }
 
     private static final class IrresolvableConstructor {
