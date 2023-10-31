@@ -53,7 +53,7 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
     private static Path classRoot = Paths.get("src/test/class");
     protected static MapResourceClassLoader mapResourceClassLoader;
     private static String namespaceName = UCDMilestone2DemoTest.class.getSimpleName();
-    private static Object KEY = Void.TYPE;
+    private static String KEY = namespaceName;
     private static String VALUE = WordUtils.capitalizeFully(StringUtils.substringAfterLast(MobyNames.getRandomName(0), "_"));
     private static PrintStream out = System.out;
 
