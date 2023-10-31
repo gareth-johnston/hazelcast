@@ -245,7 +245,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         // And re-run the test expecting success
         processor.createExecuteAssertOnMap(this, hazelcastInstance);
-        
+
         // And able to roll back by removing it again
         hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace.getName());
         assertThrows(Exception.class, () -> processor.createExecuteAssertOnMap(this, hazelcastInstance));
