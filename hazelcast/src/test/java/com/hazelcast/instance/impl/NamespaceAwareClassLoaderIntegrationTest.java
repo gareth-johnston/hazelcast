@@ -313,8 +313,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 h2V202Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
 
         // Now dynamically reconfigure to an alternative version of H2
-        hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(namespace.getName());
-        
         namespace = new NamespaceConfig(namespace.getName())
                 .addJar(MavenInterface.locateArtifact(h2V204Artifact).toUri().toURL());
 
