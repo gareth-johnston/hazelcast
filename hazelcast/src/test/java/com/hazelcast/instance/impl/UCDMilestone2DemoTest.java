@@ -117,7 +117,6 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
 
     @Test
     public void testMilestone2TestCase2() throws Exception {
-        // TODO Doesnt work
         String clazz = "usercodedeployment.H2WithDriverManagerBuildVersionMapLoader";
         instance.getConfig().getMapConfig(mapName).getMapStoreConfig().setEnabled(true).setClassName(clazz);
 
@@ -129,7 +128,8 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
     }
 
     private void configureNamespace(String className, URL h2URL) throws Exception {
-        out.println(MessageFormat.format("Adding H2 from \"{0}\" to namespace...", h2URL));
+        out.println();
+        out.println(MessageFormat.format("Creating namespace using H2 from \"{0}\" to namespace...", h2URL));
         NamespaceConfig namespace =
                 new NamespaceConfig(namespaceName).addClass(mapResourceClassLoader.loadClass(className)).addJar(h2URL);
         instance.getConfig().getNamespacesConfig().addNamespaceConfig(namespace);
@@ -144,6 +144,7 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
         map.loadAll(false);
 
         out.println(MessageFormat.format("MapLoader returned \"{0}\"", map.get(KEY)));
+        out.println();
     }
 
     /** Find & load all {@code .class} files in the scope of this test */
