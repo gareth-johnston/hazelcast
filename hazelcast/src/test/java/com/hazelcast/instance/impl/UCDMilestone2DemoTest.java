@@ -16,7 +16,6 @@
 
 package com.hazelcast.instance.impl;
 
-import com.google.common.base.CaseFormat;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
@@ -31,7 +30,6 @@ import com.hazelcast.test.HazelcastTestSupport;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,17 +37,16 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Map;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
-import static org.junit.Assert.assertEquals;
 
 // TODO Delete after demo
 public class UCDMilestone2DemoTest extends HazelcastTestSupport {
@@ -60,9 +57,7 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
     private static String VALUE = WordUtils.capitalizeFully(StringUtils.substringAfterLast(MobyNames.getRandomName(0), "_"));
     private static PrintStream out = System.out;
 
-    protected Config config;
-    private ClassLoader nodeClassLoader;
-    private HazelcastInstance hazelcastInstance;
+    private HazelcastInstance instance;
     private String mapName;
 
     @BeforeClass
@@ -72,26 +67,20 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
 
     @Before
     public void setUp() {
-        config = new Config();
+        Config config = new Config();
         config.getNamespacesConfig().setEnabled(true);
         mapName = randomMapName();
+
+        instance = createHazelcastInstance(config);
+        instance.getConfig().getMapConfig(mapName).setNamespace(namespaceName);
     }
 
-    /**
-     * "As a Java developer, I can dynamically configure namespaces and their resources. A new data structure config I add at
-     * runtime, can reference a namespace I dynamically added and resources will be looked up in the configured namespace."
-     */
     @Test
     public void testMilestone2TestCase1() throws Exception {
-        hazelcastInstance = createHazelcastInstance(config);
-        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
-
         String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
 
         Exception e = assertThrows(Exception.class, () -> mapWorker(className));
         out.println(MessageFormat.format("Ooops, forgot to setup the namespace! {0}", e.getMessage()));
-
-        hazelcastInstance.getConfig().getMapConfig(mapName).setNamespace(namespaceName);
 
         configureNamespace(className, "UpperCaseValueEntryProcessor");
         mapWorker(className);
@@ -106,11 +95,11 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
         namespace
                 .addClass(generateMapResourceClassLoaderForDirectory(classRoot.resolve("usercodedeployment").resolve(directory))
                         .loadClass(className));
-        hazelcastInstance.getConfig().getNamespacesConfig().addNamespaceConfig(namespace);
+        instance.getConfig().getNamespacesConfig().addNamespaceConfig(namespace);
     }
 
     private void mapWorker(String className) throws Exception {
-        IMap<Object, String> map = hazelcastInstance.getMap(mapName);
+        IMap<Object, String> map = instance.getMap(mapName);
 
         map.put(KEY, VALUE);
 
@@ -126,33 +115,35 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
         out.println();
     }
 
-    /**
-     * "As a Java developer, I can replace the resources in a namespace at runtime and they will be picked up the next time a
-     * user customization is instantiated. Can be tested e.g. with an EntryProcessor that is executed with on implementation,
-     * then namespace is updated with a new implementation and execute the EntryProcessor again to observe updated behaviour."
-     *
-     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3413">HZ-3413 - Test cases for Milestone 2</a>
-     */
     @Test
-    public void testMilestone2TestCase2() {
-        CaseValueProcessor processor = CaseValueProcessor.LOWER_CASE_VALUE_ENTRY_PROCESSOR;
-        CaseValueProcessor otherProcessor = CaseValueProcessor.UPPER_CASE_VALUE_ENTRY_PROCESSOR;
+    public void testMilestone2TestCase2() throws Exception {
+        // TODO Doesnt work
+        String clazz = "usercodedeployment.H2WithDataSourceBuildVersionMapLoader";
+        instance.getConfig().getMapConfig(mapName).getMapStoreConfig().setEnabled(true).setClassName(clazz);
 
-        processor.addNamespaceToConfig(config);
+        configureNamespace(clazz, new URL("https://repo1.maven.org/maven2/com/h2database/h2/2.0.202/h2-2.0.202.jar"));
+        executeMapLoader();
 
-        HazelcastInstance hazelcastInstance = createHazelcastInstance(config);
-        nodeClassLoader = Accessors.getNode(hazelcastInstance).getConfigClassLoader();
+        configureNamespace(clazz, new URL("https://repo1.maven.org/maven2/com/h2database/h2/2.0.204/h2-2.0.204.jar"));
+        executeMapLoader();
+    }
 
-        // Assert the basic functionality
-        processor.createExecuteAssertOnMap(this, hazelcastInstance);
+    private void configureNamespace(String className, URL h2URL) throws Exception {
+        out.println(MessageFormat.format("Adding H2 from \"{0}\" to namespace...", h2URL));
+        NamespaceConfig namespace =
+                new NamespaceConfig(namespaceName).addClass(mapResourceClassLoader.loadClass(className)).addJar(h2URL);
+        instance.getConfig().getNamespacesConfig().addNamespaceConfig(namespace);
+    }
 
-        // Now swap the class in the namespace
-        String namespaceName = processor.namespace.getName();
-        hazelcastInstance.getConfig().getNamespacesConfig()
-                .addNamespaceConfig(new NamespaceConfig(namespaceName).addClass(otherProcessor.clazz));
+    private void executeMapLoader() {
+        instance.getMap(mapName).destroy();
 
-        // Now assert the behavior has swapped, too
-        otherProcessor.createExecuteAssertOnMap(namespaceName, processor.mapName, this, hazelcastInstance);
+        IMap<String, String> map = instance.getMap(mapName);
+
+        // Ensure MapLoader is executed
+        map.loadAll(false);
+
+        out.println(MessageFormat.format("MapLoader returned \"{0}\"", map.get(KEY)));
     }
 
     /** Find & load all {@code .class} files in the scope of this test */
@@ -177,12 +168,12 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
         return OsHelper.ensureUnixSeparators(classKeyName);
     }
 
-    Class<?> tryLoadClass(String namespace, String className) throws Exception {
+    private Class<?> tryLoadClass(String namespace, String className) throws Exception {
         if (namespace != null) {
             NamespaceThreadLocalContext.onStartNsAware(namespace);
         }
         try {
-            return nodeClassLoader.loadClass(className);
+            return Accessors.getNode(instance).getConfigClassLoader().loadClass(className);
         } catch (ClassNotFoundException e) {
             throw new ClassNotFoundException(
                     MessageFormat.format("\"{0}\" class not found in \"{1}\" namespace", className, namespace), e);
@@ -191,78 +182,5 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
                 NamespaceThreadLocalContext.onCompleteNsAware(namespace);
             }
         }
-    }
-
-    /**
-     * References to {@link EntryProcessor}s - not on the classpath - that modify the case of a {@link String} value in a map
-     */
-    private enum CaseValueProcessor {
-        UPPER_CASE_VALUE_ENTRY_PROCESSOR(String::toUpperCase), LOWER_CASE_VALUE_ENTRY_PROCESSOR(String::toLowerCase);
-
-        /** Use the same class name to assert isolation */
-        private static final String className = "usercodedeployment.ModifyCaseValueEntryProcessor";
-        private static final Object KEY = Void.TYPE;
-        private static final String VALUE = "VaLuE";
-
-        /** The operation we expect the {@link EntryProcessor} to perform - for validation purposes */
-        private final UnaryOperator<String> expectedOperation;
-        private final Class<? extends EntryProcessor<Object, String, String>> clazz;
-        private final NamespaceConfig namespace;
-        private final String mapName = randomMapName();
-
-        /** @param expectedOperation {@link #expectedOperation} */
-        CaseValueProcessor(UnaryOperator<String> expectedOperation) {
-            this.expectedOperation = expectedOperation;
-
-            try {
-                clazz = (Class<? extends EntryProcessor<Object, String, String>>) generateMapResourceClassLoaderForDirectory(
-                        classRoot.resolve("usercodedeployment").resolve(toString())).loadClass(className);
-                namespace = new NamespaceConfig(toString()).addClass(clazz);
-            } catch (ClassNotFoundException | IOException e) {
-                throw new ExceptionInInitializerError(e);
-            }
-
-            assertClassNotAccessible(className);
-        }
-
-        private void addNamespaceToConfig(Config config) {
-            config.getNamespacesConfig().addNamespaceConfig(namespace);
-            config.getMapConfig(mapName).setNamespace(toString());
-        }
-
-        private IMap<Object, String> createExecuteAssertOnMap(UCDMilestone2DemoTest instance,
-                HazelcastInstance hazelcastInstance) {
-            return createExecuteAssertOnMap(toString(), mapName, instance, hazelcastInstance);
-        }
-
-        private IMap<Object, String> createExecuteAssertOnMap(String namespace, String mapName, UCDMilestone2DemoTest instance,
-                HazelcastInstance hazelcastInstance) {
-            // Create a map
-            IMap<Object, String> map = hazelcastInstance.getMap(mapName);
-            map.put(KEY, VALUE);
-
-            try {
-                // Execute the EntryProcessor
-                Class<? extends EntryProcessor<Object, String, String>> clazz =
-                        (Class<? extends EntryProcessor<Object, String, String>>) instance.tryLoadClass(namespace, className);
-                map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            assertEquals(expectedOperation.apply(VALUE), map.get(KEY));
-
-            return map;
-        }
-
-        @Override
-        public String toString() {
-            return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
-        }
-    }
-
-    private static void assertClassNotAccessible(String className) {
-        Assert.assertThrows("The test class should not be already accessible: " + className, ClassNotFoundException.class,
-                () -> Class.forName(className));
     }
 }
