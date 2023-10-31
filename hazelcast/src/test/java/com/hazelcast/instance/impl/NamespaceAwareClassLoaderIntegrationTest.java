@@ -99,7 +99,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     @Before
     public void setUp() {
         config = new Config();
-        config.setClassLoader(HazelcastInstance.class.getClassLoader());
         config.getNamespacesConfig().setEnabled(true);
     }
 
