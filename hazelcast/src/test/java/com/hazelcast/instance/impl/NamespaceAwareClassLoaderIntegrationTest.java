@@ -530,7 +530,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         IMap<String, String> map = hazelcastInstance.<String, String> getMap(mapName);
 
         // Ensure MapLoader is executed
-        map.clear();
+        map.loadAll(false);
 
         return map.get(getClass().getSimpleName());
     }
