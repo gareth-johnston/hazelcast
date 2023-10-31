@@ -320,11 +320,10 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         for (Pair<String, String> clazz : classes) {
             namespace.addClass(mapResourceClassLoader.loadClass(clazz.getLeft()));
+            // destroy maps so MapLoader will be instantiated again when IMap is recreated
+            hazelcastInstance.getMap(clazz.getRight()).destroy();
         }
 
-        // destroy maps so MapLoader will be instantiated again when IMap is recreated
-        hazelcastInstance.getMap(dataSource.getRight()).destroy();
-        hazelcastInstance.getMap(driverManager.getRight()).destroy();
         hazelcastInstance.getConfig().getNamespacesConfig().addNamespaceConfig(namespace);
 
         assertEquals("Worked with static configuration, but did not refresh when dynamically reconfigured", h2V204Artifact.getVersion(),
