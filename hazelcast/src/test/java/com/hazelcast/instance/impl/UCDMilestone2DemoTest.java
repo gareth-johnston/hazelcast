@@ -53,8 +53,8 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
     private static Path classRoot = Paths.get("src/test/class");
     protected static MapResourceClassLoader mapResourceClassLoader;
     private static String namespaceName = UCDMilestone2DemoTest.class.getSimpleName();
-    private static String KEY = namespaceName;
-    private static String VALUE = WordUtils.capitalizeFully(StringUtils.substringAfterLast(MobyNames.getRandomName(0), "_"));
+    private static String key = namespaceName;
+    private static String value = WordUtils.capitalizeFully(StringUtils.substringAfterLast(MobyNames.getRandomName(0), "_"));
     private static PrintStream out = System.out;
 
     private HazelcastInstance instance;
@@ -101,17 +101,17 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
     private void mapWorker(String className) throws Exception {
         IMap<Object, String> map = instance.getMap(mapName);
 
-        map.put(KEY, VALUE);
+        map.put(key, value);
 
         out.println();
         out.println("Executing EntryProcessor...");
-        out.println(MessageFormat.format("VALUE pre-EntryProcessor was \"{0}\"", map.get(KEY)));
+        out.println(MessageFormat.format("VALUE pre-EntryProcessor was \"{0}\"", map.get(key)));
 
         Class<? extends EntryProcessor<Object, String, String>> clazz =
                 (Class<? extends EntryProcessor<Object, String, String>>) tryLoadClass(namespaceName, className);
         map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
 
-        out.println(MessageFormat.format("VALUE post-EntryProcessor was \"{0}\"", map.get(KEY)));
+        out.println(MessageFormat.format("VALUE post-EntryProcessor was \"{0}\"", map.get(key)));
         out.println();
     }
 
@@ -143,7 +143,7 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
         // Ensure MapLoader is executed
         map.loadAll(false);
 
-        out.println(MessageFormat.format("MapLoader returned \"{0}\"", map.get(KEY)));
+        out.println(MessageFormat.format("MapLoader returned \"{0}\"", map.get(key)));
         out.println();
     }
 

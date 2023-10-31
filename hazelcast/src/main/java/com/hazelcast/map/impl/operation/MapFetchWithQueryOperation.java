@@ -17,7 +17,6 @@
 package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.config.InMemoryFormat;
-import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.impl.MapDataSerializerHook;
 import com.hazelcast.internal.iteration.IterationPointer;
 import com.hazelcast.map.impl.query.Query;

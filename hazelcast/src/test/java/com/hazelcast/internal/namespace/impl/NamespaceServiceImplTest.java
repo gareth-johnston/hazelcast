@@ -24,7 +24,6 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
-import com.hazelcast.internal.util.BiTuple;
 import com.hazelcast.internal.util.OsHelper;
 import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.spi.impl.NodeEngineImpl;
@@ -123,8 +122,8 @@ public class NamespaceServiceImplTest {
                 + "           xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
                 + "           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd\">\n" + "\n"
                 + "    <cluster-name>cluster</cluster-name>\n\n"
-                + "    <namespaces enabled=\"true\">\n" +
-                "        <namespace name=\"myNamespace\">\n"
+                + "    <namespaces enabled=\"true\">\n"
+                + "        <namespace name=\"myNamespace\">\n"
                 + "          <resource type=\"JAR\">\n"
                 + "              <url>file:///" + stringPath + "</url>\n"
                 + "          </resource>\n"

@@ -108,7 +108,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      * IMap. Namespace isolation: As a Java developer, I can configure N > 1 namespaces with simple Java class resources of same
      * name and different behavior. IMaps configured in the respective namespaces will correctly load and execute the respective
      * EntryProcessor defined in their namespace, without class name clashes."
-     * 
+     *
      * Asserts a basic user workflow:
      * <ol>
      * <li>Add classes to the {@link NamespaceConfig}
@@ -144,7 +144,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     /**
      * "As a Java developer, I can define a MapLoader with JDBC driver dependency in a namespace and IMap configured with that
      * namespace will correctly instantiate and use my MapLoader."
-     * 
+     *
      * Asserts a basic user workflow:
      * <ol>
      * <li>Creates a {@link NamespaceConfig} referencing a {@link MapLoader} {@code .class} and it's database dependency - which
@@ -185,7 +185,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     /**
      * "Isolation against Hazelcast member classpath: even when Hazelcast member classpath includes a clashing version of my
      * JDBC driver, my preferred JDBC driver version that is configured in namespace resources is used by my MapLoader."
-     * 
+     *
      * Asserts a basic user workflow:
      * <ol>
      * <li>Creates a {@link NamespaceConfig} referencing a {@link MapLoader} {@code .class} and it's database dependency - which
@@ -227,7 +227,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     /**
      * "As a Java developer, I can dynamically configure namespaces and their resources. A new data structure config I add at
      * runtime, can reference a namespace I dynamically added and resources will be looked up in the configured namespace."
-     * 
+     *
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3413">HZ-3413 - Test cases for Milestone 2</a>
      */
     @Test
@@ -255,7 +255,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
      * "As a Java developer, I can replace the resources in a namespace at runtime and they will be picked up the next time a
      * user customization is instantiated. Can be tested e.g. with an EntryProcessor that is executed with on implementation,
      * then namespace is updated with a new implementation and execute the EntryProcessor again to observe updated behaviour."
-     * 
+     *
      * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3413">HZ-3413 - Test cases for Milestone 2</a>
      */
     @Test
@@ -605,7 +605,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
         }
     }
-    
+
     private static void assertClassNotAccessible(String className) {
         Assert.assertThrows("The test class should not be already accessible: " + className,
                 ClassNotFoundException.class, () -> Class.forName(className));

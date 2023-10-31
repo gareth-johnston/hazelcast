@@ -23,7 +23,6 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.config.PartitioningStrategyConfig;
 import com.hazelcast.internal.eviction.ExpirationManager;
-import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.util.collection.PartitionIdSet;
