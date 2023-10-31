@@ -118,7 +118,7 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
     @Test
     public void testMilestone2TestCase2() throws Exception {
         // TODO Doesnt work
-        String clazz = "usercodedeployment.H2WithDataSourceBuildVersionMapLoader";
+        String clazz = "usercodedeployment.H2WithDriverManagerBuildVersionMapLoader";
         instance.getConfig().getMapConfig(mapName).getMapStoreConfig().setEnabled(true).setClassName(clazz);
 
         configureNamespace(clazz, new URL("https://repo1.maven.org/maven2/com/h2database/h2/2.0.202/h2-2.0.202.jar"));
