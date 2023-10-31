@@ -16,16 +16,11 @@
 
 package com.hazelcast.internal.namespace;
 
-import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
-import com.hazelcast.internal.util.ExceptionUtil;
 import com.hazelcast.spi.impl.NodeEngine;
-import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.Callable;
-
-import static com.hazelcast.internal.namespace.NamespaceService.DEFAULT_NAMESPACE_ID;
 
 /**
  * Utility to simplify accessing the NamespaceService and Namespace-aware wrapping

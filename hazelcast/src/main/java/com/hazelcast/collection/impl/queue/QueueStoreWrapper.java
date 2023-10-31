@@ -212,7 +212,7 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
             return null;
         }
 
-        Object val = NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> store.load(key));;
+        Object val = NamespaceUtil.callWithNamespace(nodeEngine, namespace, () -> store.load(key));
         if (binary) {
             byte[] dataBuffer = (byte[]) val;
             return new HeapData(Arrays.copyOf(dataBuffer, dataBuffer.length));

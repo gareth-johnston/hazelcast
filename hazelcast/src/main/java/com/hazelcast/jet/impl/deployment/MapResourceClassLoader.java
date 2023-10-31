@@ -249,7 +249,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     }
 
     ClassNotFoundException newClassNotFoundException(String name) {
-        if (DEBUG_OUTPUT){
+        if (DEBUG_OUTPUT) {
             String message = "For name " + name + " no resource could be identified. List of resources:\n"
                     + getResourceMap().keySet();
             return new ClassNotFoundException(message);

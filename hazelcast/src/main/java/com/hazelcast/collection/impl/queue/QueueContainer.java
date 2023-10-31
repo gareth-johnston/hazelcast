@@ -21,7 +21,6 @@ import com.hazelcast.config.QueueConfig;
 import com.hazelcast.config.QueueStoreConfig;
 import com.hazelcast.core.HazelcastException;
 import com.hazelcast.internal.monitor.impl.LocalQueueStatsImpl;
-import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.SerializationService;
