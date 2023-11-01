@@ -49,4 +49,9 @@ public class DynamicNamespacesConfig extends NamespacesConfig {
 
         return this;
     }
+
+    @Override
+    public NamespacesConfig setEnabled(boolean enabled) {
+        throw new UnsupportedOperationException("Cannot enable or disable NamespacesConfig at runtime.");
+    }
 }
