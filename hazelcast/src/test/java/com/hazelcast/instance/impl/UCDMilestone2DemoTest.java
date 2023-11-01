@@ -109,7 +109,7 @@ public class UCDMilestone2DemoTest extends HazelcastTestSupport {
 
         Class<? extends EntryProcessor<Object, String, String>> clazz =
                 (Class<? extends EntryProcessor<Object, String, String>>) tryLoadClass(namespaceName, className);
-        map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
+        map.executeOnKey(key, clazz.getDeclaredConstructor().newInstance());
 
         out.println(MessageFormat.format("VALUE post-EntryProcessor was \"{0}\"", map.get(key)));
         out.println();
