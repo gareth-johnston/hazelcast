@@ -24,6 +24,7 @@ import com.hazelcast.client.impl.protocol.codec.holder.AnchorDataListHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.CacheConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.DiscoveryConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.DiscoveryStrategyConfigHolder;
+import com.hazelcast.client.impl.protocol.codec.holder.NamespaceConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.PagingPredicateHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.WanBatchPublisherConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.WanConsumerConfigHolder;
@@ -58,7 +59,6 @@ import com.hazelcast.config.KubernetesConfig;
 import com.hazelcast.config.MemoryTierConfig;
 import com.hazelcast.config.MergePolicyConfig;
 import com.hazelcast.config.MerkleTreeConfig;
-import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.NearCachePreloaderConfig;
 import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.config.TieredStoreConfig;
@@ -723,7 +723,6 @@ public class ReferenceObjects {
     public static List<FieldDescriptor> aListOfFieldDescriptors = Collections.singletonList(aFieldDescriptor);
     public static Schema aSchema = CustomTypeFactory.createSchema(aString, aListOfFieldDescriptors);
     public static List<Schema> aListOfSchemas = Collections.singletonList(aSchema);
-    public static NamespaceConfig aNamespaceConfig;
 
     static {
         try {
@@ -991,4 +990,6 @@ public class ReferenceObjects {
                             aString
                     )
             );
+
+    public static NamespaceConfigHolder aNamespaceConfig;
 }
