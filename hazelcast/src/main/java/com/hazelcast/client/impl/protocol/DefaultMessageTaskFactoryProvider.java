@@ -1674,6 +1674,9 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
                 (cm, con) -> new AddDataConnectionConfigMessageTask(cm, node, con));
         factories.put(DynamicConfigAddWanReplicationConfigCodec.REQUEST_MESSAGE_TYPE,
                 (cm, con) -> new AddWanReplicationConfigTask(cm, node, con));
+        // TODO Doesn't exist... yet!
+//        factories.put(DynamicConfigAddNamespaceConfigCodec.REQUEST_MESSAGE_TYPE,
+//                (cm, con) -> new AddNamespaceConfigMessageTask(cm, node, con));
     }
 
     private void initializeFlakeIdGeneratorTaskFactories() {
