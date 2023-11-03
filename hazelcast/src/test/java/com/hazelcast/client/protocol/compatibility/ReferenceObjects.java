@@ -38,6 +38,7 @@ import com.hazelcast.client.impl.protocol.task.dynamicconfig.NearCacheConfigHold
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.PredicateConfigHolder;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.QueryCacheConfigHolder;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.QueueStoreConfigHolder;
+import com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.RingbufferStoreConfigHolder;
 import com.hazelcast.cluster.Address;
 import com.hazelcast.config.AttributeConfig;
@@ -991,5 +992,5 @@ public class ReferenceObjects {
                     )
             );
 
-    public static NamespaceConfigHolder aNamespaceConfig;
+    public static List<ResourceDefinitionHolder> aListOfResourceDefinitionHolders;
 }

@@ -17,37 +17,34 @@
 package com.hazelcast.client.impl.protocol.task.dynamicconfig;
 
 import com.hazelcast.client.impl.protocol.ClientMessage;
-import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddMapConfigCodec;
+import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddNamespaceConfigCodec;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.instance.impl.Node;
-import com.hazelcast.internal.dynamicconfig.DynamicConfigurationAwareConfig;
 import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.security.SecurityInterceptorConstants;
 
-// TODO Replace DynamicConfigAddMapConfigCodec with DynamicConfigAddNamespaceConfigCodec - but doesn't yet exist!
 public class AddNamespaceConfigMessageTask
-        extends AbstractAddConfigMessageTask<DynamicConfigAddMapConfigCodec.RequestParameters> {
+        extends AbstractAddConfigMessageTask<DynamicConfigAddNamespaceConfigCodec.RequestParameters> {
 
     public AddNamespaceConfigMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
         super(clientMessage, node, connection);
     }
 
     @Override
-    protected DynamicConfigAddMapConfigCodec.RequestParameters decodeClientMessage(ClientMessage clientMessage) {
-        return DynamicConfigAddMapConfigCodec.decodeRequest(clientMessage);
+    protected DynamicConfigAddNamespaceConfigCodec.RequestParameters decodeClientMessage(ClientMessage clientMessage) {
+        return DynamicConfigAddNamespaceConfigCodec.decodeRequest(clientMessage);
     }
 
     @Override
     protected ClientMessage encodeResponse(Object response) {
-        return DynamicConfigAddMapConfigCodec.encodeResponse();
+        return DynamicConfigAddNamespaceConfigCodec.encodeResponse();
     }
 
     @Override
-    @SuppressWarnings({"checkstyle:npathcomplexity", "checkstyle:cyclomaticcomplexity", "checkstyle:MethodLength"})
     protected IdentifiedDataSerializable getConfig() {
         NamespaceConfig config = new NamespaceConfig(parameters.name);
-        // TODO Need accesor for config.getResourceConfigs() - depends on how is implemented in codec
+        parameters.resourceMap.forEach(config::add);
         return config;
     }
 

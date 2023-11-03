@@ -16,6 +16,7 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.jet.config.ResourceType;
@@ -45,6 +46,12 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
                     "Could not open stream for resource id " + resourceConfig.getId() + " and URL " + resourceConfig.getUrl(),
                     e);
         }
+    }
+
+    public ResourceDefinitionImpl(ResourceDefinitionHolder holder) {
+        id = holder.getId();
+        payload = holder.getPayload();
+        type = ResourceType.getById(holder.getResourceType());
     }
 
     @Override
