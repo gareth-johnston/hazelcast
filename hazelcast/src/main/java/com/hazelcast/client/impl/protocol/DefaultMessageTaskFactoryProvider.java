@@ -121,6 +121,7 @@ import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddFlakeIdGenerator
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddListConfigCodec;
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddMapConfigCodec;
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddMultiMapConfigCodec;
+import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddNamespaceConfigCodec;
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddPNCounterConfigCodec;
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddQueueConfigCodec;
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddReliableTopicConfigCodec;
@@ -496,6 +497,7 @@ import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddFlakeIdGenerator
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddListConfigMessageTask;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddMapConfigMessageTask;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddMultiMapConfigMessageTask;
+import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddNamespaceConfigMessageTask;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddPNCounterConfigMessageTask;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddQueueConfigMessageTask;
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.AddReliableTopicConfigMessageTask;
@@ -1674,9 +1676,8 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
                 (cm, con) -> new AddDataConnectionConfigMessageTask(cm, node, con));
         factories.put(DynamicConfigAddWanReplicationConfigCodec.REQUEST_MESSAGE_TYPE,
                 (cm, con) -> new AddWanReplicationConfigTask(cm, node, con));
-        // TODO Doesn't exist... yet!
-//        factories.put(DynamicConfigAddNamespaceConfigCodec.REQUEST_MESSAGE_TYPE,
-//                (cm, con) -> new AddNamespaceConfigMessageTask(cm, node, con));
+        factories.put(DynamicConfigAddNamespaceConfigCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AddNamespaceConfigMessageTask(cm, node, con));
     }
 
     private void initializeFlakeIdGeneratorTaskFactories() {
