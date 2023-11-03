@@ -992,5 +992,6 @@ public class ReferenceObjects {
                     )
             );
 
-    public static List<ResourceDefinitionHolder> aListOfResourceDefinitionHolders;
+    public static List<ResourceDefinitionHolder> aListOfResourceDefinitionHolders =
+            Collections.singletonList(new ResourceDefinitionHolder(aString, 0, new byte[] {}));
 }
