@@ -131,9 +131,6 @@ public final class OperationExecutorImpl implements OperationExecutor, StaticMet
 
         this.adHocOperationRunner = runnerFactory.createAdHocRunner();
 
-        // Setup NodeEngine context for User Code Deployment Namespacing for operations
-        NodeEngineThreadLocalContext.declareNodeEngineReference(engine);
-
         this.partitionOperationRunners = initPartitionOperationRunners(properties, runnerFactory);
         if (!tpcServerBootstrap.isEnabled()) {
             this.partitionThreads = initClassicPartitionThreads(properties, hzName, nodeExtension, configClassLoader);
