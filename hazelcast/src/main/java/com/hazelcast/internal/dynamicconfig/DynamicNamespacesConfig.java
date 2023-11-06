@@ -26,7 +26,8 @@ public class DynamicNamespacesConfig extends NamespacesConfig {
     /** The configuration service can change at runtime, so we always need to grab a fresh copy */
     private final Supplier<ConfigurationService> configurationServiceAccessor;
 
-    public DynamicNamespacesConfig(Supplier<ConfigurationService> configurationServiceAccessor, NamespacesConfig namespacesConfig) {
+    public DynamicNamespacesConfig(Supplier<ConfigurationService> configurationServiceAccessor,
+            NamespacesConfig namespacesConfig) {
         super(namespacesConfig);
         this.configurationServiceAccessor = configurationServiceAccessor;
     }
