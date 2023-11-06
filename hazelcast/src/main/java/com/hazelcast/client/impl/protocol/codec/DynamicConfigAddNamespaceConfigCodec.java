@@ -37,7 +37,7 @@ import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCod
  * Adds a namespace configuration.
  */
 @SuppressWarnings("unused")
-@Generated("cf6bf789c8125a9ba612f50f8b1b7e8d")
+@Generated("0e46a906d07a8ec28ab1c1f8bd020c37")
 public final class DynamicConfigAddNamespaceConfigCodec {
     //hex: 0x1B1300
     public static final int REQUEST_MESSAGE_TYPE = 1774336;
@@ -60,10 +60,10 @@ public final class DynamicConfigAddNamespaceConfigCodec {
         /**
          * List of resource definitions.
          */
-        public java.util.List<com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder> resourceMap;
+        public java.util.List<com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder> resources;
     }
 
-    public static ClientMessage encodeRequest(java.lang.String name, java.util.List<com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder> resourceMap) {
+    public static ClientMessage encodeRequest(java.lang.String name, java.util.List<com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder> resources) {
         ClientMessage clientMessage = ClientMessage.createForEncode();
         clientMessage.setRetryable(false);
         clientMessage.setOperationName("DynamicConfig.AddNamespaceConfig");
@@ -72,7 +72,7 @@ public final class DynamicConfigAddNamespaceConfigCodec {
         encodeInt(initialFrame.content, PARTITION_ID_FIELD_OFFSET, -1);
         clientMessage.add(initialFrame);
         StringCodec.encode(clientMessage, name);
-        ListMultiFrameCodec.encode(clientMessage, resourceMap, ResourceDefinitionCodec::encode);
+        ListMultiFrameCodec.encode(clientMessage, resources, ResourceDefinitionCodec::encode);
         return clientMessage;
     }
 
@@ -82,7 +82,7 @@ public final class DynamicConfigAddNamespaceConfigCodec {
         //empty initial frame
         iterator.next();
         request.name = StringCodec.decode(iterator);
-        request.resourceMap = ListMultiFrameCodec.decode(iterator, ResourceDefinitionCodec::decode);
+        request.resources = ListMultiFrameCodec.decode(iterator, ResourceDefinitionCodec::decode);
         return request;
     }
 

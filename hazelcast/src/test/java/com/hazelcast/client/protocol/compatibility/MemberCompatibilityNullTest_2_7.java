@@ -6893,7 +6893,7 @@ public class MemberCompatibilityNullTest_2_7 {
         ClientMessage fromFile = clientMessages.get(fileClientMessageIndex);
         DynamicConfigAddNamespaceConfigCodec.RequestParameters parameters = DynamicConfigAddNamespaceConfigCodec.decodeRequest(fromFile);
         assertTrue(isEqual(aString, parameters.name));
-        assertTrue(isEqual(aListOfResourceDefinitionHolders, parameters.resourceMap));
+        assertTrue(isEqual(aListOfResourceDefinitionHolders, parameters.resources));
     }
 
     @Test

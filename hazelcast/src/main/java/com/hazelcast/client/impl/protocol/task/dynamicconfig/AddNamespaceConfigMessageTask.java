@@ -44,7 +44,7 @@ public class AddNamespaceConfigMessageTask
     @Override
     protected IdentifiedDataSerializable getConfig() {
         NamespaceConfig config = new NamespaceConfig(parameters.name);
-        parameters.resourceMap.forEach(config::add);
+        parameters.resources.forEach(config::add);
         return config;
     }
 
