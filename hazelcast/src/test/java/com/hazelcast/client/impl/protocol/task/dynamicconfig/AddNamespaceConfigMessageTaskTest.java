@@ -20,7 +20,11 @@ import com.hazelcast.client.impl.ClientEndpoint;
 import com.hazelcast.client.impl.ClientEndpointManager;
 import com.hazelcast.client.impl.ClientEngine;
 import com.hazelcast.client.impl.protocol.ClientExceptionFactory;
+import com.hazelcast.client.impl.protocol.ClientMessage;
+import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddNamespaceConfigCodec;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.MapConfig;
+import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.instance.impl.NodeExtension;
 import com.hazelcast.internal.dynamicconfig.ClusterWideConfigurationService;
@@ -42,7 +46,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static com.hazelcast.cluster.Address.createUnresolvedAddress;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -74,27 +82,32 @@ public class AddNamespaceConfigMessageTaskTest {
         when(mockNode.getNodeEngine()).thenReturn(mockNodeEngineImpl);
 
         when(mockClientEngine.getEndpointManager()).thenReturn(mockClientEndpointManager);
-        when(mockClientEngine.getExceptionFactory()).thenReturn(new ClientExceptionFactory(false,
-                new Config().getClassLoader()));
+        when(mockClientEngine.getExceptionFactory())
+                .thenReturn(new ClientExceptionFactory(false, new Config().getClassLoader()));
 
         when(mockClientEndpoint.getClientType()).thenReturn(ConnectionType.JAVA_CLIENT);
         when(mockClientEndpoint.isAuthenticated()).thenReturn(true);
         when(mockClientEndpointManager.getEndpoint(mockConnection)).thenReturn(mockClientEndpoint);
 
-        when(mockNodeEngineImpl.getConfig()).thenReturn(new DynamicConfigurationAwareConfig(
-                new Config(),
-                new HazelcastProperties(new Config()))
-        );
+        when(mockNodeEngineImpl.getConfig())
+                .thenReturn(new DynamicConfigurationAwareConfig(new Config(), new HazelcastProperties(new Config())));
         when(mockNodeEngineImpl.getService(ConfigurationService.SERVICE_NAME)).thenReturn(mockConfigurationService);
 
-        when(mockConfigurationService.broadcastConfigAsync(any(IdentifiedDataSerializable.class)))
-                .thenReturn(mockFuture);
+        when(mockConfigurationService.broadcastConfigAsync(any(IdentifiedDataSerializable.class))).thenReturn(mockFuture);
         when(mockNodeExtension.isStartCompleted()).thenReturn(true);
         when(mockConnection.getRemoteAddress()).thenReturn(createUnresolvedAddress("127.0.0.1", 5701));
     }
 
     @Test
-    public void testAnything() {
-        // TODO blocked by client config codec
+    public void test() {
+        NamespaceConfig config = new NamespaceConfig("my-namepsace");
+
+        AddNamespaceConfigMessageTask task = new AddNamespaceConfigMessageTask(
+                DynamicConfigAddNamespaceConfigCodec.encodeRequest(config.getName(),
+                        config.getResourceConfigs().stream().map(ResourceDefinitionHolder::new).collect(Collectors.toList())),
+                mockNode, mockConnection);
+        task.run();
+
+        assertEquals(config, task.getConfig());
     }
 }

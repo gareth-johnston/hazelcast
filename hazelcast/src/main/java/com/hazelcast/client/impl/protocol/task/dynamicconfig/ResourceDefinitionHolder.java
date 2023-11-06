@@ -16,10 +16,18 @@
 
 package com.hazelcast.client.impl.protocol.task.dynamicconfig;
 
+import com.hazelcast.internal.namespace.ResourceDefinition;
+
 public class ResourceDefinitionHolder {
     private final String id;
     private final int resourceType;
     private final byte[] payload;
+
+    public ResourceDefinitionHolder(ResourceDefinition resourceDefinition) {
+        this.id = resourceDefinition.id();
+        this.resourceType = resourceDefinition.type().ordinal();
+        this.payload = resourceDefinition.payload();
+    }
 
     public ResourceDefinitionHolder(String id, int resourceType, byte[] payload) {
         this.id = id;

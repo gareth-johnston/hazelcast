@@ -98,6 +98,7 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
         return this;
     }
 
+    // TODO this returns a Collection, but the client-protocl declares this as a List - I don't think it supports Collections.
     public Collection<ResourceDefinition> getResourceConfigs() {
         return Set.copyOf(resourceDefinitions.values());
     }
