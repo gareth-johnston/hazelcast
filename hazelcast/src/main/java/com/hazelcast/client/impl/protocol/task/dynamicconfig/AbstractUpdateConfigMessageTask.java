@@ -81,7 +81,7 @@ public abstract class AbstractUpdateConfigMessageTask<P> extends AbstractMessage
             return null;
         } else {
             return listenerConfigHolders.stream()
-                    .<ListenerConfig> map(listenerConfigHolder -> listenerConfigHolder.asListenerConfig(serializationService))
+                    .<ListenerConfig>map(listenerConfigHolder -> listenerConfigHolder.asListenerConfig(serializationService))
                     .collect(Collectors.toCollection(ArrayList::new));
         }
     }
