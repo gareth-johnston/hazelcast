@@ -55,7 +55,7 @@ import static org.mockito.Mockito.when;
 // TODO if https://github.com/hazelcast/hazelcast/pull/25893 is merged, apply the changes here, too
 @RunWith(HazelcastSerialClassRunner.class)
 @Category({QuickTest.class, ParallelJVMTest.class})
-public class AddNamespaceConfigMessageTaskTest {
+public class RemoveNamespaceConfigMessageTaskTest {
     private Node mockNode;
     private Connection mockConnection;
 
@@ -74,7 +74,7 @@ public class AddNamespaceConfigMessageTaskTest {
 
         when(mockNode.getClientEngine()).thenReturn(mockClientEngine);
         when(mockNode.getConfig()).thenReturn(new Config());
-        when(mockNode.getLogger(any(Class.class))).thenReturn(Logger.getLogger(AddNamespaceConfigMessageTaskTest.class));
+        when(mockNode.getLogger(any(Class.class))).thenReturn(Logger.getLogger(RemoveNamespaceConfigMessageTaskTest.class));
         when(mockNode.getNodeExtension()).thenReturn(mockNodeExtension);
         when(mockNode.getNodeEngine()).thenReturn(mockNodeEngineImpl);
 
@@ -99,7 +99,7 @@ public class AddNamespaceConfigMessageTaskTest {
     public void test() {
         NamespaceConfig config = new NamespaceConfig("my-namepsace");
 
-        AddNamespaceConfigMessageTask task = new AddNamespaceConfigMessageTask(
+        RemoveNamespaceConfigMessageTask task = new RemoveNamespaceConfigMessageTask(
                 DynamicConfigAddNamespaceConfigCodec.encodeRequest(config.getName(),
                         config.getResourceConfigs().stream().map(ResourceDefinitionHolder::new).collect(Collectors.toList())),
                 mockNode, mockConnection);

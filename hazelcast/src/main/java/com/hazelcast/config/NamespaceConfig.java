@@ -98,7 +98,8 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
         return this;
     }
 
-    // TODO this returns a Collection, but the client-protocl declares this as a List - I don't think it supports Collections.
+    // TODO this returns a Collection, but the client-protocl declares this as a List - I don't think it supports Collections -
+    // https://github.com/hazelcast/hazelcast-client-protocol/issues/486
     public Collection<ResourceDefinition> getResourceConfigs() {
         return Set.copyOf(resourceDefinitions.values());
     }

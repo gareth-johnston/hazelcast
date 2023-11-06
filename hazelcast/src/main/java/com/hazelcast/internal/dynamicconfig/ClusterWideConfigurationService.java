@@ -219,7 +219,7 @@ public class ClusterWideConfigurationService implements
 
     @Override
     public void unbroadcastConfig(IdentifiedDataSerializable config) {
-        broadcastConfigAsync(config, RemoveDynamicConfigOperationSupplier::new).joinInternal();
+        unbroadcastConfigAsync(config).joinInternal();
     }
 
     @Override
@@ -239,6 +239,10 @@ public class ClusterWideConfigurationService implements
 
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config) {
         return broadcastConfigAsync(config, AddDynamicConfigOperationSupplier::new);
+    }
+
+    public InternalCompletableFuture<Object> unbroadcastConfigAsync(IdentifiedDataSerializable config) {
+        return broadcastConfigAsync(config, RemoveDynamicConfigOperationSupplier::new);
     }
 
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config,
