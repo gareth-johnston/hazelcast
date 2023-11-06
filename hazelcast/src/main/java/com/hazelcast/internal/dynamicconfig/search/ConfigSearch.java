@@ -19,6 +19,7 @@ package com.hazelcast.internal.dynamicconfig.search;
 import com.hazelcast.config.CacheSimpleConfig;
 import com.hazelcast.config.CardinalityEstimatorConfig;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.ConfigPatternMatcher;
 import com.hazelcast.config.DurableExecutorConfig;
 import com.hazelcast.config.ExecutorConfig;
@@ -27,6 +28,7 @@ import com.hazelcast.config.FlakeIdGeneratorConfig;
 import com.hazelcast.config.ListConfig;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MultiMapConfig;
+import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.config.PNCounterConfig;
 import com.hazelcast.config.QueueConfig;
 import com.hazelcast.config.ReliableTopicConfig;
@@ -42,8 +44,8 @@ import com.hazelcast.spi.properties.ClusterProperty;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Config search factory, which allows to build searchers for the given config types.
@@ -53,7 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @SuppressWarnings({"checkstyle:methodcount", "checkstyle:executablestatementcount"})
 public final class ConfigSearch {
-    private static final Map<Class, ConfigSupplier> CONFIG_SUPPLIERS = new ConcurrentHashMap<Class, ConfigSupplier>();
+    private static final Map<Class, ConfigSupplier> CONFIG_SUPPLIERS = new HashMap<>();
 
     private ConfigSearch() {
     }
@@ -357,6 +359,24 @@ public final class ConfigSearch {
                 return staticConfig.getWanReplicationConfigs();
             }
         });
+
+        CONFIG_SUPPLIERS.put(NamespaceConfig.class, new ConfigSupplier<NamespaceConfig>() {
+            @Override
+            public NamespaceConfig getDynamicConfig(@Nonnull ConfigurationService configurationService,
+                                                         @Nonnull String name) {
+                return configurationService.findNamespaceConfig(name);
+            }
+
+            @Override
+            public NamespaceConfig getStaticConfig(@Nonnull Config staticConfig, @Nonnull String name) {
+                return getStaticConfigs(staticConfig).get(name);
+            }
+
+            @Override
+            public Map<String, NamespaceConfig> getStaticConfigs(@Nonnull Config staticConfig) {
+                return ConfigAccessor.getNamespaceConfigs(staticConfig);
+            }
+        });
     }
 
     /**
@@ -390,7 +410,7 @@ public final class ConfigSearch {
                             @Nonnull final ConfigurationService configurationService,
                             @Nonnull final ConfigPatternMatcher configPatternMatcher, boolean isStaticFirst) {
         return isStaticFirst
-                ? new StaticFirstSearcher<T>(configurationService, staticConfig, configPatternMatcher)
-                : new DynamicFirstSearcher<T>(configurationService, staticConfig, configPatternMatcher);
+                ? new StaticFirstSearcher<>(configurationService, staticConfig, configPatternMatcher)
+                : new DynamicFirstSearcher<>(configurationService, staticConfig, configPatternMatcher);
     }
 }
