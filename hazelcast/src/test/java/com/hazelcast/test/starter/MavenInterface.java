@@ -29,7 +29,7 @@ import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.h2.util.StringUtils;
 
-import com.hazelcast.internal.util.OsHelper;
+import com.hazelcast.internal.tpcengine.util.OS;
 import com.hazelcast.internal.util.StringUtil;
 
 import java.io.IOException;
@@ -90,7 +90,7 @@ public class MavenInterface {
     }
 
     private static String getMvn() {
-        return OsHelper.isWindows() ? "mvn.cmd" : "mvn";
+        return OS.isWindows() ? "mvn.cmd" : "mvn";
     }
 
     private static void downloadArtifact(Artifact artifact, String... remoteRepositories) {
