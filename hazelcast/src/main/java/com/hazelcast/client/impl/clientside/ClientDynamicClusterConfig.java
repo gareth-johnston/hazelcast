@@ -73,6 +73,7 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MemberAttributeConfig;
 import com.hazelcast.config.MetricsConfig;
 import com.hazelcast.config.MultiMapConfig;
+import com.hazelcast.config.NamespacesConfig;
 import com.hazelcast.config.NativeMemoryConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.config.PNCounterConfig;
@@ -1190,6 +1191,12 @@ public class ClientDynamicClusterConfig extends Config {
     @Nonnull
     @Override
     public Config setTpcConfig(@Nonnull TpcConfig tpcConfig) {
+        throw new UnsupportedOperationException(UNSUPPORTED_ERROR_MESSAGE);
+    }
+
+    @Override
+    public NamespacesConfig getNamespacesConfig() {
+        //  TODO I think this actually should be supported
         throw new UnsupportedOperationException(UNSUPPORTED_ERROR_MESSAGE);
     }
 
