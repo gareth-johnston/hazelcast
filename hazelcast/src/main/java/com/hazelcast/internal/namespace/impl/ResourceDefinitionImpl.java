@@ -33,6 +33,9 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
     private byte[] payload;
     private ResourceType type;
 
+    public ResourceDefinitionImpl() {
+    }
+
     public ResourceDefinitionImpl(String id, byte[] payload, ResourceType type) {
         this.id = id;
         this.payload = payload;

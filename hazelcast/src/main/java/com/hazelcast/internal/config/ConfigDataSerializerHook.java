@@ -84,6 +84,7 @@ import com.hazelcast.config.WanSyncConfig;
 import com.hazelcast.internal.dynamicconfig.AddDynamicConfigOperation;
 import com.hazelcast.internal.dynamicconfig.DynamicConfigPreJoinOperation;
 import com.hazelcast.internal.dynamicconfig.RemoveDynamicConfigOperation;
+import com.hazelcast.internal.namespace.impl.ResourceDefinitionImpl;
 import com.hazelcast.internal.serialization.DataSerializerHook;
 import com.hazelcast.internal.serialization.impl.ArrayDataSerializableFactory;
 import com.hazelcast.internal.serialization.impl.FactoryIdHelper;
@@ -259,6 +260,7 @@ public final class ConfigDataSerializerHook implements DataSerializerHook {
         constructors[PARTITION_ATTRIBUTE_CONFIG] = PartitioningAttributeConfig::new;
         constructors[NAMESPACE_CONFIG] = NamespaceConfig::new;
         constructors[REMOVE_DYNAMIC_CONFIG_OP] = RemoveDynamicConfigOperation::new;
+        constructors[RESOURCE_DEFINITION] = ResourceDefinitionImpl::new;
 
         return new ArrayDataSerializableFactory(constructors);
     }
