@@ -59,6 +59,9 @@ public class AddReliableTopicConfigMessageTask
             config.setMessageListenerConfigs(
                     (List<ListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs));
         }
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
+        }
         return config;
     }
 
@@ -71,7 +74,7 @@ public class AddReliableTopicConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         ReliableTopicConfig reliableTopicConfig = (ReliableTopicConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getReliableTopicConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getReliableTopicConfigs(),
                 reliableTopicConfig.getName(), reliableTopicConfig);
     }
 }

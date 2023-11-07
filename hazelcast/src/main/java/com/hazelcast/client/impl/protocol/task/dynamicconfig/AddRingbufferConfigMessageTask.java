@@ -59,6 +59,9 @@ public class AddRingbufferConfigMessageTask
         }
         MergePolicyConfig mergePolicyConfig = mergePolicyConfig(parameters.mergePolicy, parameters.mergeBatchSize);
         config.setMergePolicyConfig(mergePolicyConfig);
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
+        }
         return config;
     }
 
@@ -71,7 +74,7 @@ public class AddRingbufferConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         RingbufferConfig ringbufferConfig = (RingbufferConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getRingbufferConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getRingbufferConfigs(),
                 ringbufferConfig.getName(), ringbufferConfig);
     }
 }

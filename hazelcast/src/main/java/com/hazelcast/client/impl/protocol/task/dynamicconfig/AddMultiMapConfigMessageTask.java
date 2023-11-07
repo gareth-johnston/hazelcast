@@ -61,6 +61,9 @@ public class AddMultiMapConfigMessageTask extends
         }
         MergePolicyConfig mergePolicyConfig = mergePolicyConfig(parameters.mergePolicy, parameters.mergeBatchSize);
         multiMapConfig.setMergePolicyConfig(mergePolicyConfig);
+        if (parameters.isNamespaceNameExists) {
+            multiMapConfig.setNamespace(parameters.namespaceName);
+        }
         return multiMapConfig;
     }
 
@@ -73,7 +76,7 @@ public class AddMultiMapConfigMessageTask extends
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         MultiMapConfig multiMapConfig = (MultiMapConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getMultiMapConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getMultiMapConfigs(),
                 multiMapConfig.getName(), multiMapConfig);
     }
 }

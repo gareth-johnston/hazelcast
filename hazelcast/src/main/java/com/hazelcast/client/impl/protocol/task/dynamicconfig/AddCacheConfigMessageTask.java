@@ -102,6 +102,9 @@ public class AddCacheConfigMessageTask
         if (parameters.isDataPersistenceConfigExists) {
             config.setDataPersistenceConfig(parameters.dataPersistenceConfig);
         }
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
+        }
         return config;
     }
 
@@ -114,7 +117,7 @@ public class AddCacheConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         CacheSimpleConfig cacheConfig = (CacheSimpleConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getCacheConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getCacheConfigs(),
                 cacheConfig.getName(), cacheConfig);
     }
 }

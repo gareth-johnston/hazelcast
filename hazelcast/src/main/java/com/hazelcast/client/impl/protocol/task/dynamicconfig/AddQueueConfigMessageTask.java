@@ -70,6 +70,9 @@ public class AddQueueConfigMessageTask
         if (parameters.isPriorityComparatorClassNameExists) {
             config.setPriorityComparatorClassName(parameters.priorityComparatorClassName);
         }
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
+        }
         return config;
     }
 
@@ -82,7 +85,7 @@ public class AddQueueConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         QueueConfig queueConfig = (QueueConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getQueueConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getQueueConfigs(),
                 queueConfig.getName(), queueConfig);
     }
 }

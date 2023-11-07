@@ -55,6 +55,9 @@ public class AddTopicConfigMessageTask
             config.setMessageListenerConfigs(
                     (List<ListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs));
         }
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
+        }
         return config;
     }
 
@@ -67,7 +70,7 @@ public class AddTopicConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         TopicConfig topicConfig = (TopicConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getTopicConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getTopicConfigs(),
                 topicConfig.getName(), topicConfig);
     }
 }

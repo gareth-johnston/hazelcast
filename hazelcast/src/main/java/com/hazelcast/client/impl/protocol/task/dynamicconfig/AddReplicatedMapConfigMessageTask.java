@@ -20,7 +20,6 @@ import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigAddReplicatedMapConfigCodec;
 import com.hazelcast.config.EntryListenerConfig;
 import com.hazelcast.config.InMemoryFormat;
-import com.hazelcast.config.ListenerConfig;
 import com.hazelcast.config.MergePolicyConfig;
 import com.hazelcast.config.ReplicatedMapConfig;
 import com.hazelcast.instance.impl.Node;
@@ -61,7 +60,10 @@ public class AddReplicatedMapConfigMessageTask
                 config.addEntryListenerConfig((EntryListenerConfig) holder.asListenerConfig(serializationService));
             }
         } else {
-            config.setListenerConfigs(new ArrayList<ListenerConfig>());
+            config.setListenerConfigs(new ArrayList<>());
+        }
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
         }
         return config;
     }
@@ -75,7 +77,7 @@ public class AddReplicatedMapConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         ReplicatedMapConfig replicatedMapConfig = (ReplicatedMapConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getReplicatedMapConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getReplicatedMapConfigs(),
                 replicatedMapConfig.getName(), replicatedMapConfig);
     }
 }
