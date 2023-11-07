@@ -24,7 +24,6 @@ import com.hazelcast.client.impl.protocol.codec.holder.AnchorDataListHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.CacheConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.DiscoveryConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.DiscoveryStrategyConfigHolder;
-import com.hazelcast.client.impl.protocol.codec.holder.NamespaceConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.PagingPredicateHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.WanBatchPublisherConfigHolder;
 import com.hazelcast.client.impl.protocol.codec.holder.WanConsumerConfigHolder;
