@@ -228,22 +228,51 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig, Ver
     }
 
     @Override
-    public boolean equals(Object o) {
+    @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:npathcomplexity"})
+    public final boolean equals(Object o) {
         if (this == o) {
             return true;
         }
         if (!(o instanceof TopicConfig)) {
             return false;
         }
-        TopicConfig other = (TopicConfig) o;
-        return (globalOrderingEnabled == other.globalOrderingEnabled) && Objects.equals(listenerConfigs, other.listenerConfigs)
-                && (multiThreadingEnabled == other.multiThreadingEnabled) && Objects.equals(name, other.name)
-                && Objects.equals(namespace, other.namespace) && (statisticsEnabled == other.statisticsEnabled);
+
+        TopicConfig that = (TopicConfig) o;
+
+        if (globalOrderingEnabled != that.globalOrderingEnabled) {
+            return false;
+        }
+        if (statisticsEnabled != that.statisticsEnabled) {
+            return false;
+        }
+        if (multiThreadingEnabled != that.multiThreadingEnabled) {
+            return false;
+        }
+        if (listenerConfigs != null && that.listenerConfigs != null && !listenerConfigs.equals(that.listenerConfigs)) {
+            return false;
+        }
+        if (listenerConfigs != null && that.listenerConfigs == null && !listenerConfigs.isEmpty()) {
+            return false;
+        }
+        if (listenerConfigs == null && that.listenerConfigs != null && !that.listenerConfigs.isEmpty()) {
+            return false;
+        }
+        if (!Objects.equals(namespace, that.namespace)) {
+            return false;
+        }
+        return name != null ? name.equals(that.name) : that.name == null;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(globalOrderingEnabled, listenerConfigs, multiThreadingEnabled, name, namespace, statisticsEnabled);
+    @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:npathcomplexity"})
+    public final int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (globalOrderingEnabled ? 1 : 0);
+        result = 31 * result + (statisticsEnabled ? 1 : 0);
+        result = 31 * result + (multiThreadingEnabled ? 1 : 0);
+        result = 31 * result + (listenerConfigs != null ? listenerConfigs.hashCode() : 0);
+        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
+        return result;
     }
 
     @Override
