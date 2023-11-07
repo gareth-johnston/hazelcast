@@ -77,7 +77,7 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig, Ver
         this.name = config.name;
         this.globalOrderingEnabled = config.globalOrderingEnabled;
         this.multiThreadingEnabled = config.multiThreadingEnabled;
-        this.listenerConfigs = new ArrayList<ListenerConfig>(config.getMessageListenerConfigs());
+        this.listenerConfigs = new ArrayList<>(config.getMessageListenerConfigs());
         this.namespace = config.namespace;
     }
 
@@ -86,6 +86,7 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig, Ver
      *
      * @return the name of the topic
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -97,6 +98,7 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig, Ver
      * @return the updated {@link TopicConfig}
      * @throws IllegalArgumentException if name is {@code null} or an empty string
      */
+    @Override
     public TopicConfig setName(String name) {
         this.name = checkHasText(name, "name must contain text");
         return this;
@@ -178,7 +180,7 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig, Ver
      */
     public List<ListenerConfig> getMessageListenerConfigs() {
         if (listenerConfigs == null) {
-            listenerConfigs = new ArrayList<ListenerConfig>();
+            listenerConfigs = new ArrayList<>();
         }
         return listenerConfigs;
     }
@@ -226,53 +228,25 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig, Ver
     }
 
     @Override
-    @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:npathcomplexity"})
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (o == null || !(o instanceof TopicConfig)) {
+        if (!(o instanceof TopicConfig)) {
             return false;
         }
-
-        TopicConfig that = (TopicConfig) o;
-
-        if (globalOrderingEnabled != that.globalOrderingEnabled) {
-            return false;
-        }
-        if (statisticsEnabled != that.statisticsEnabled) {
-            return false;
-        }
-        if (multiThreadingEnabled != that.multiThreadingEnabled) {
-            return false;
-        }
-        if (listenerConfigs != null && that.listenerConfigs != null && !listenerConfigs.equals(that.listenerConfigs)) {
-            return false;
-        }
-        if (listenerConfigs != null && that.listenerConfigs == null && !listenerConfigs.isEmpty()) {
-            return false;
-        }
-        if (listenerConfigs == null && that.listenerConfigs != null && !that.listenerConfigs.isEmpty()) {
-            return false;
-        }
-        if (Objects.equals(namespace, that.namespace)) {
-            return false;
-        }
-        return name != null ? name.equals(that.name) : that.name == null;
+        TopicConfig other = (TopicConfig) o;
+        return (globalOrderingEnabled == other.globalOrderingEnabled) && Objects.equals(listenerConfigs, other.listenerConfigs)
+                && (multiThreadingEnabled == other.multiThreadingEnabled) && Objects.equals(name, other.name)
+                && Objects.equals(namespace, other.namespace) && (statisticsEnabled == other.statisticsEnabled);
     }
 
     @Override
-    @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:npathcomplexity"})
-    public final int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (globalOrderingEnabled ? 1 : 0);
-        result = 31 * result + (statisticsEnabled ? 1 : 0);
-        result = 31 * result + (multiThreadingEnabled ? 1 : 0);
-        result = 31 * result + (listenerConfigs != null ? listenerConfigs.hashCode() : 0);
-        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
-        return result;
+    public int hashCode() {
+        return Objects.hash(globalOrderingEnabled, listenerConfigs, multiThreadingEnabled, name, namespace, statisticsEnabled);
     }
 
+    @Override
     public String toString() {
         return "TopicConfig [name=" + name
                 + ", globalOrderingEnabled=" + globalOrderingEnabled
