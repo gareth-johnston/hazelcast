@@ -18,6 +18,7 @@ package com.hazelcast.map.impl.query;
 
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.core.MemberLeftException;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.partition.IPartition;
 import com.hazelcast.internal.util.ConcurrencyUtil;
 import com.hazelcast.map.impl.MapContainer;
@@ -265,6 +266,8 @@ public class QueryOperation extends AbstractNamedOperation implements ReadonlyOp
             }
 
             String mapName = query.getMapName();
+            String namespace = MapServiceContext.lookupMapNamespace(getNodeEngine(), mapName);
+            NamespaceUtil.setupNamespace(getNodeEngine(), namespace);
             queryRunner.beforeOperation(partitionId, mapName);
             try {
                 Result result
@@ -274,6 +277,7 @@ public class QueryOperation extends AbstractNamedOperation implements ReadonlyOp
                 future.completeExceptionally(ex);
             } finally {
                 queryRunner.afterOperation(partitionId, mapName);
+                NamespaceUtil.cleanupNamespace(getNodeEngine(), namespace);
             }
         }
     }
