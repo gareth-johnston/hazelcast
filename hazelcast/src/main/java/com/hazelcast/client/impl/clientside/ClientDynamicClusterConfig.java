@@ -1193,6 +1193,14 @@ public class ClientDynamicClusterConfig extends Config {
         throw new UnsupportedOperationException(UNSUPPORTED_ERROR_MESSAGE);
     }
 
+    // S1185:S1612 A test (testDecorateAllPublicMethodsFromTest) forces this class to implement all of the parent methods, but
+    // as we are overriding "namespaceConfig" with our own version, the parent implementation is sufficient
+    @SuppressWarnings("squid:S1185")
+    @Override
+    public NamespacesConfig getNamespacesConfig() {
+        return super.getNamespacesConfig();
+    }
+
     @Override
     public String toString() {
         return "DynamicClusterConfig{instance=" + instance + "}";
