@@ -174,7 +174,7 @@ public class ClientDynamicClusterConfig extends Config {
                 queryCacheConfigHolders, partitioningStrategyClassName, partitioningStrategy, mapConfig.getHotRestartConfig(),
                 mapConfig.getEventJournalConfig(), mapConfig.getMerkleTreeConfig(), mapConfig.getMetadataPolicy().getId(),
                 mapConfig.isPerEntryStatsEnabled(), mapConfig.getDataPersistenceConfig(), mapConfig.getTieredStoreConfig(),
-                mapConfig.getPartitioningAttributeConfigs());
+                mapConfig.getPartitioningAttributeConfigs(), mapConfig.getNamespace());
         invoke(request);
         return this;
     }

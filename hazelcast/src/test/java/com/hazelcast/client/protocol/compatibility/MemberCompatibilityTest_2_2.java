@@ -6630,6 +6630,7 @@ public class MemberCompatibilityTest_2_2 {
         assertFalse(parameters.isDataPersistenceConfigExists);
         assertFalse(parameters.isTieredStoreConfigExists);
         assertFalse(parameters.isPartitioningAttributeConfigsExists);
+        assertFalse(parameters.isNamespaceNameExists);
     }
 
     @Test

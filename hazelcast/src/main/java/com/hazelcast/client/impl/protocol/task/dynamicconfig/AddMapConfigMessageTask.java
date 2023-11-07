@@ -101,7 +101,7 @@ public class AddMapConfigMessageTask
         }
         config.setSplitBrainProtectionName(parameters.splitBrainProtectionName);
         if (parameters.queryCacheConfigs != null && !parameters.queryCacheConfigs.isEmpty()) {
-            List<QueryCacheConfig> queryCacheConfigs = new ArrayList<QueryCacheConfig>(parameters.queryCacheConfigs.size());
+            List<QueryCacheConfig> queryCacheConfigs = new ArrayList<>(parameters.queryCacheConfigs.size());
             for (QueryCacheConfigHolder holder : parameters.queryCacheConfigs) {
                 queryCacheConfigs.add(holder.asQueryCacheConfig(serializationService));
             }
@@ -118,6 +118,9 @@ public class AddMapConfigMessageTask
         if (parameters.isPartitioningAttributeConfigsExists) {
             config.setPartitioningAttributeConfigs(parameters.partitioningAttributeConfigs);
         }
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
+        }
         return config;
     }
 
@@ -125,7 +128,7 @@ public class AddMapConfigMessageTask
         if (parameters.partitioningStrategyClassName != null) {
             return new PartitioningStrategyConfig(parameters.partitioningStrategyClassName);
         } else if (parameters.partitioningStrategyImplementation != null) {
-            PartitioningStrategy partitioningStrategy =
+            PartitioningStrategy<?> partitioningStrategy =
                     serializationService.toObject(parameters.partitioningStrategyImplementation);
             return new PartitioningStrategyConfig(partitioningStrategy);
         } else {
@@ -142,7 +145,7 @@ public class AddMapConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         MapConfig mapConfig = (MapConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(
                 nodeConfig.getStaticConfig().getMapConfigs(),
                 mapConfig.getName(), mapConfig);
     }

@@ -439,8 +439,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         }
     }
 
-    // TODO
-    @Ignore("Milestone 3 - Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added")
     @Test
     public void testDynamicConfigMapLoaderDeserialization_2Node() throws ReflectiveOperationException {
         testMemberToMemberMLDeserialization(2,
@@ -448,8 +446,6 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 "usercodedeployment.KeyBecomesValueMapLoader");
     }
 
-    // TODO
-    @Ignore("Milestone 3 - Fails due to client-side impl missing (ClientDynamicClusterConfig) - should pass once added")
     @Test
     public void testDynamicConfigMapLoaderDeserialization_5Node() throws ReflectiveOperationException {
         testMemberToMemberMLDeserialization(5,

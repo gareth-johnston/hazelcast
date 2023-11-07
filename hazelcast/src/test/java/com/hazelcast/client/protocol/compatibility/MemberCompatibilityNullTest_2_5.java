@@ -6695,6 +6695,7 @@ public class MemberCompatibilityNullTest_2_5 {
         assertTrue(parameters.isTieredStoreConfigExists);
         assertTrue(isEqual(aTieredStoreConfig, parameters.tieredStoreConfig));
         assertFalse(parameters.isPartitioningAttributeConfigsExists);
+        assertFalse(parameters.isNamespaceNameExists);
     }
 
     @Test

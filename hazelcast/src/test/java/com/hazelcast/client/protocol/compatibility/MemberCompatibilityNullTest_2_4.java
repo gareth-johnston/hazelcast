@@ -6647,6 +6647,7 @@ public class MemberCompatibilityNullTest_2_4 {
         assertFalse(parameters.isDataPersistenceConfigExists);
         assertFalse(parameters.isTieredStoreConfigExists);
         assertFalse(parameters.isPartitioningAttributeConfigsExists);
+        assertFalse(parameters.isNamespaceNameExists);
     }
 
     @Test

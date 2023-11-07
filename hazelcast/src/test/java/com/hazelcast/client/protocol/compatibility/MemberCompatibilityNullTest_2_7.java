@@ -6730,6 +6730,8 @@ public class MemberCompatibilityNullTest_2_7 {
         assertTrue(isEqual(aTieredStoreConfig, parameters.tieredStoreConfig));
         assertTrue(parameters.isPartitioningAttributeConfigsExists);
         assertTrue(isEqual(null, parameters.partitioningAttributeConfigs));
+        assertTrue(parameters.isNamespaceNameExists);
+        assertTrue(isEqual(null, parameters.namespaceName));
     }
 
     @Test
