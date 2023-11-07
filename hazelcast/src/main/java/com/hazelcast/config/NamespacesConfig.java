@@ -52,8 +52,8 @@ public class NamespacesConfig {
         return this;
     }
 
-    public NamespacesConfig removeNamespaceConfig(String namespaceName) {
-        namespaceConfigs.remove(namespaceName);
+    public NamespacesConfig removeNamespaceConfig(NamespaceConfig namespaceConfig) {
+        namespaceConfigs.remove(namespaceConfig.getName(), namespaceConfig);
         return this;
     }
 

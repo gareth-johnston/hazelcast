@@ -34,7 +34,6 @@ import com.hazelcast.map.MapLoader;
 import com.hazelcast.test.Accessors;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
-import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.NamespaceTest;
 import com.hazelcast.test.annotation.SlowTest;
 import com.hazelcast.test.starter.MavenInterface;
@@ -251,7 +250,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         processor.createExecuteAssertOnMap(this, hazelcastInstance);
 
         // And able to roll back by removing it again
-        hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace.getName());
+        hazelcastInstance.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace);
         assertThrows(Exception.class, () -> processor.createExecuteAssertOnMap(this, hazelcastInstance));
     }
 
@@ -336,35 +335,27 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     }
 
     // TODO Should this be somewhere else?
-    @Ignore("WIP!")
     @Test
     public void testConfigPropagation() {
-        TestHazelcastInstanceFactory factory = createHazelcastInstanceFactory();
-        HazelcastInstance hz1 = factory.newHazelcastInstance(config);
-        HazelcastInstance hz2 = factory.newHazelcastInstance(config);
+        TestHazelcastFactory factory = new TestHazelcastFactory();
 
-        // Add
-        CaseValueProcessor processor = CaseValueProcessor.LOWER_CASE_VALUE_ENTRY_PROCESSOR;
-        processor.addNamespaceToConfig(hz1.getConfig());
+        try {
+            HazelcastInstance member = factory.newHazelcastInstance(config);
+            HazelcastInstance client = factory.newHazelcastClient();
+            CaseValueProcessor processor = CaseValueProcessor.LOWER_CASE_VALUE_ENTRY_PROCESSOR;
 
-        Map<?, ?> hz1Configs = ConfigAccessor.getNamespaceConfigs(hz1.getConfig());
-        assertFalse("Namespace has not been configured on first member", hz1Configs.isEmpty());
+            // Add
+            client.getConfig().getNamespacesConfig().addNamespaceConfig(processor.namespace);
+            assertTrue("Namespace configuration addition has not propagated to second member",
+                    Accessors.getNode(member).getNamespaceService().hasNamespace(processor.namespace.getName()));
 
-        Map<?, ?> hz2Configs = ConfigAccessor.getNamespaceConfigs(hz2.getConfig());
-        assertFalse("Namespace configuration addition has not propagated to second member", hz2Configs.isEmpty());
-
-        assertEquals(hz1Configs, hz2Configs);
-
-        // Remove
-        hz1.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace.getName());
-
-        hz1Configs = ConfigAccessor.getNamespaceConfigs(hz1.getConfig());
-        assertTrue("Namespace configuration has not been removed from first member", hz1Configs.isEmpty());
-
-        hz2Configs = ConfigAccessor.getNamespaceConfigs(hz2.getConfig());
-        assertTrue("Namespace configuration removal has not propagated to second member", hz2Configs.isEmpty());
-
-        assertEquals(hz1Configs, hz2Configs);
+            // Remove
+            client.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace);
+            assertFalse("Namespace configuration removal has not propagated to second member",
+                    Accessors.getNode(member).getNamespaceService().hasNamespace(processor.namespace.getName()));
+        } finally {
+            factory.shutdownAll();
+        }
     }
 
     @Test
@@ -604,12 +595,12 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         private void addNamespaceToConfig(Config config) {
             config.getNamespacesConfig().addNamespaceConfig(namespace);
-            config.getMapConfig(mapName).setNamespace(toString());
+            config.getMapConfig(mapName).setNamespace(namespace.getName());
         }
 
         private IMap<Object, String> createExecuteAssertOnMap(NamespaceAwareClassLoaderIntegrationTest instance,
                 HazelcastInstance hazelcastInstance)  {
-            return createExecuteAssertOnMap(toString(), mapName, instance, hazelcastInstance);
+            return createExecuteAssertOnMap(namespace.getName(), mapName, instance, hazelcastInstance);
         }
 
         private IMap<Object, String> createExecuteAssertOnMap(String namespace, String mapName, NamespaceAwareClassLoaderIntegrationTest instance,

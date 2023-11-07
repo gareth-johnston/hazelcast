@@ -94,8 +94,8 @@ import com.hazelcast.config.SqlConfig;
 import com.hazelcast.config.TopicConfig;
 import com.hazelcast.config.UserCodeDeploymentConfig;
 import com.hazelcast.config.WanReplicationConfig;
-import com.hazelcast.config.tpc.TpcConfig;
 import com.hazelcast.config.cp.CPSubsystemConfig;
+import com.hazelcast.config.tpc.TpcConfig;
 import com.hazelcast.core.ManagedContext;
 import com.hazelcast.internal.config.DataPersistenceAndHotRestartMerger;
 import com.hazelcast.internal.config.ServicesConfig;
@@ -123,7 +123,7 @@ import static com.hazelcast.internal.util.ExceptionUtil.rethrow;
  */
 @SuppressWarnings({"checkstyle:methodcount", "checkstyle:classfanoutcomplexity"})
 public class ClientDynamicClusterConfig extends Config {
-    private static final String UNSUPPORTED_ERROR_MESSAGE =
+    protected static final String UNSUPPORTED_ERROR_MESSAGE =
             "Client config object only supports adding new data structure configurations";
 
     private final HazelcastClientInstanceImpl instance;
@@ -132,6 +132,7 @@ public class ClientDynamicClusterConfig extends Config {
     public ClientDynamicClusterConfig(HazelcastClientInstanceImpl instance) {
         this.instance = instance;
         this.serializationService = instance.getSerializationService();
+        namespacesConfig = new ClientDynamicClusterNamespaceConfig(this);
     }
 
     @Override
@@ -1195,17 +1196,11 @@ public class ClientDynamicClusterConfig extends Config {
     }
 
     @Override
-    public NamespacesConfig getNamespacesConfig() {
-        //  TODO I think this actually should be supported
-        throw new UnsupportedOperationException(UNSUPPORTED_ERROR_MESSAGE);
-    }
-
-    @Override
     public String toString() {
         return "DynamicClusterConfig{instance=" + instance + "}";
     }
 
-    private void invoke(ClientMessage request) {
+    protected void invoke(ClientMessage request) {
         try {
             ClientInvocation invocation = new ClientInvocation(instance, request, null);
             ClientInvocationFuture future = invocation.invoke();
@@ -1225,5 +1220,4 @@ public class ClientDynamicClusterConfig extends Config {
         }
         return listenerConfigHolders;
     }
-
 }
