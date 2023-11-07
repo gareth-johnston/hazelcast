@@ -20,7 +20,6 @@ import com.google.common.base.CaseFormat;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.config.Config;
-import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
