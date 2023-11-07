@@ -66,4 +66,22 @@ public class NamespaceUtil {
     public static <V> V callWithNamespace(NodeEngine engine, @Nullable String namespace, Callable<V> callable) {
         return engine.getNamespaceService().callWithNamespace(namespace, callable);
     }
+
+    // Use namespace ClassLoader if it exists, otherwise fallback to config class loader
+    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, String namespace) {
+        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
+        return loader != null ? loader : getDefaultClassloader(engine);
+    }
+
+    // Use namespace CL if exists, otherwise fallback to config class loader
+    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, String namespace, ClassLoader defaultLoader) {
+        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
+        return loader != null ? loader : defaultLoader;
+    }
+
+    // Use default namespace CL if exists, otherwise fallback to config class loader
+    public static ClassLoader getDefaultClassloader(NodeEngine engine) {
+        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(NamespaceService.DEFAULT_NAMESPACE_ID);
+        return loader != null ? loader : engine.getConfigClassLoader();
+    }
 }

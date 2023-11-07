@@ -38,7 +38,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     private static final MethodHandle FIND_RESOURCE_METHOD_HANDLE;
     private static final MethodHandle FIND_RESOURCES_METHOD_HANDLE;
 
-    private final Node node;
+    private final NamespaceServiceImpl namespaceService;
     // Retain Parent for faster referencing (skips permission checks)
     private final ClassLoader parent;
 
@@ -60,7 +60,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     public NamespaceAwareClassLoader(ClassLoader parent, Node node) {
         super(parent);
         this.parent = parent;
-        this.node = node;
+        this.namespaceService = (NamespaceServiceImpl) node.getNamespaceService();
     }
 
     @Override
@@ -98,7 +98,7 @@ public class NamespaceAwareClassLoader extends ClassLoader {
         if (namespace == null) {
             return parent;
         } else {
-            ClassLoader candidate = node.getNamespaceService().getClassLoaderForNamespace(namespace);
+            ClassLoader candidate = namespaceService.getClassLoaderForExactNamespace(namespace);
             return candidate == null ? parent : candidate;
         }
     }

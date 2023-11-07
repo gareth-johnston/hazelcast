@@ -27,6 +27,12 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 
 public final class NoOpNamespaceService implements NamespaceService {
+    private final ClassLoader configClassLoader;
+
+    public NoOpNamespaceService(ClassLoader configClassLoader) {
+        this.configClassLoader = configClassLoader;
+    }
+
     @Override
     public void addNamespace(@Nonnull String nsName, @Nonnull Collection<ResourceDefinition> resources) {
         // No-op
@@ -77,7 +83,7 @@ public final class NoOpNamespaceService implements NamespaceService {
     }
 
     @Override
-    public MapResourceClassLoader getClassLoaderForNamespace(String namespace) {
-        return null;
+    public ClassLoader getClassLoaderForNamespace(String namespace) {
+        return configClassLoader;
     }
 }
