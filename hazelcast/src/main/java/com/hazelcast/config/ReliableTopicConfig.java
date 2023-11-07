@@ -20,6 +20,7 @@ import com.hazelcast.internal.config.ConfigDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.Versioned;
 import com.hazelcast.spi.impl.executionservice.ExecutionService;
 import com.hazelcast.topic.ITopic;
 import com.hazelcast.topic.TopicOverloadPolicy;
@@ -55,7 +56,8 @@ import static com.hazelcast.topic.TopicOverloadPolicy.BLOCK;
  * In the reliable topic, global order is always maintained, so all listeners
  * will observe exactly the same order of sequence of messages.
  */
-public class ReliableTopicConfig implements IdentifiedDataSerializable, NamedConfig, NamespaceAwareConfig {
+public class ReliableTopicConfig implements IdentifiedDataSerializable, NamedConfig, Versioned,
+                                            NamespaceAwareConfig {
 
     /**
      * The default read batch size.

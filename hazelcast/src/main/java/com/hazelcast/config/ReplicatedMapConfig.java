@@ -20,6 +20,7 @@ import com.hazelcast.internal.config.ConfigDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.Versioned;
 import com.hazelcast.replicatedmap.ReplicatedMap;
 
 import java.io.IOException;
@@ -36,7 +37,8 @@ import static com.hazelcast.internal.util.Preconditions.checkNotNull;
  * Contains the configuration for an {@link ReplicatedMap}
  */
 @SuppressWarnings("checkstyle:methodcount")
-public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedConfig, NamespaceAwareConfig {
+public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedConfig, Versioned,
+                                            NamespaceAwareConfig {
 
     /**
      * Default value of In-memory format

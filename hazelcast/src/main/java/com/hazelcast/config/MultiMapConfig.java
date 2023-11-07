@@ -21,6 +21,7 @@ import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.Versioned;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import static com.hazelcast.internal.util.Preconditions.checkNotNull;
  * Configuration for MultiMap.
  */
 @SuppressWarnings("checkstyle:methodcount")
-public class MultiMapConfig implements IdentifiedDataSerializable, NamedConfig, NamespaceAwareConfig {
+public class MultiMapConfig implements IdentifiedDataSerializable, NamedConfig, Versioned, NamespaceAwareConfig {
 
     /**
      * The default number of synchronous backups for this MultiMap.

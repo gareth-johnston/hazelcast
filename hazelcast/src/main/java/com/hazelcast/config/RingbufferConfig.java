@@ -20,6 +20,7 @@ import com.hazelcast.internal.config.ConfigDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.Versioned;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -41,7 +42,8 @@ import static com.hazelcast.internal.util.Preconditions.checkPositive;
  * content will be fully stored on a single member in the cluster and its
  * backup in another member in the cluster.
  */
-public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig, NamespaceAwareConfig {
+public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig, Versioned,
+                                         NamespaceAwareConfig {
 
     /**
      * Default value of capacity of the RingBuffer.
