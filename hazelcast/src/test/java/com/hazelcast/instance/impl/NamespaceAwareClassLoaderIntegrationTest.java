@@ -20,6 +20,7 @@ import com.google.common.base.CaseFormat;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
@@ -33,6 +34,7 @@ import com.hazelcast.map.MapLoader;
 import com.hazelcast.test.Accessors;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
+import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.NamespaceTest;
 import com.hazelcast.test.annotation.SlowTest;
 import com.hazelcast.test.starter.MavenInterface;
@@ -65,8 +67,10 @@ import java.util.stream.Stream;
 
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
 @RunWith(HazelcastSerialClassRunner.class)
@@ -329,6 +333,38 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         assertEquals("JDBC generally is working, but Driver Manager isn't - suggests dynamic configuration Service Loader issue",
                 h2V204Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
+    }
+
+    // TODO Should this be somewhere else?
+    @Ignore("WIP!")
+    @Test
+    public void testConfigPropagation() {
+        TestHazelcastInstanceFactory factory = createHazelcastInstanceFactory();
+        HazelcastInstance hz1 = factory.newHazelcastInstance(config);
+        HazelcastInstance hz2 = factory.newHazelcastInstance(config);
+
+        // Add
+        CaseValueProcessor processor = CaseValueProcessor.LOWER_CASE_VALUE_ENTRY_PROCESSOR;
+        processor.addNamespaceToConfig(hz1.getConfig());
+
+        Map<?, ?> hz1Configs = ConfigAccessor.getNamespaceConfigs(hz1.getConfig());
+        assertFalse("Namespace has not been configured on first member", hz1Configs.isEmpty());
+
+        Map<?, ?> hz2Configs = ConfigAccessor.getNamespaceConfigs(hz2.getConfig());
+        assertFalse("Namespace configuration addition has not propagated to second member", hz2Configs.isEmpty());
+
+        assertEquals(hz1Configs, hz2Configs);
+
+        // Remove
+        hz1.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace.getName());
+
+        hz1Configs = ConfigAccessor.getNamespaceConfigs(hz1.getConfig());
+        assertTrue("Namespace configuration has not been removed from first member", hz1Configs.isEmpty());
+
+        hz2Configs = ConfigAccessor.getNamespaceConfigs(hz2.getConfig());
+        assertTrue("Namespace configuration removal has not propagated to second member", hz2Configs.isEmpty());
+
+        assertEquals(hz1Configs, hz2Configs);
     }
 
     @Test
