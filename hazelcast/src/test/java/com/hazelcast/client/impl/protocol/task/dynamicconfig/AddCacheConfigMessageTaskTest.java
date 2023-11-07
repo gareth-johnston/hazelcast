@@ -130,11 +130,12 @@ public class AddCacheConfigMessageTaskTest {
                 null,
                 null,
                 null,
-                cacheConfig.getDataPersistenceConfig()
+                cacheConfig.getDataPersistenceConfig(),
+                cacheConfig.getNamespace()
         );
         AddCacheConfigMessageTask addCacheConfigMessageTask = new AddCacheConfigMessageTask(addMapConfigClientMessage, mockNode, mockConnection);
         addCacheConfigMessageTask.run();
-        CacheConfig transmittedCacheConfig = new CacheConfig((CacheSimpleConfig) addCacheConfigMessageTask.getConfig());
+        CacheConfig<Object, Object> transmittedCacheConfig = new CacheConfig<>((CacheSimpleConfig) addCacheConfigMessageTask.getConfig());
         assertEquals(cacheConfig, transmittedCacheConfig);
     }
 
@@ -173,11 +174,12 @@ public class AddCacheConfigMessageTaskTest {
                 null,
                 null,
                 null,
-                cacheConfig.getDataPersistenceConfig()
+                cacheConfig.getDataPersistenceConfig(),
+                cacheConfig.getNamespace()
         );
         AddCacheConfigMessageTask addCacheConfigMessageTask = new AddCacheConfigMessageTask(addMapConfigClientMessage, mockNode, mockConnection);
         addCacheConfigMessageTask.run();
-        CacheConfig transmittedCacheConfig = new CacheConfig((CacheSimpleConfig) addCacheConfigMessageTask.getConfig());
+        CacheConfig<Object, Object> transmittedCacheConfig = new CacheConfig<>((CacheSimpleConfig) addCacheConfigMessageTask.getConfig());
         assertEquals(cacheConfig, transmittedCacheConfig);
     }
 }
