@@ -18,15 +18,18 @@ package com.hazelcast.client.impl.protocol.task.dynamicconfig;
 
 import com.hazelcast.internal.namespace.ResourceDefinition;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class ResourceDefinitionHolder {
     private final String id;
     private final int resourceType;
     private final byte[] payload;
 
     public ResourceDefinitionHolder(ResourceDefinition resourceDefinition) {
-        this.id = resourceDefinition.id();
-        this.resourceType = resourceDefinition.type().ordinal();
-        this.payload = resourceDefinition.payload();
+        id = resourceDefinition.id();
+        resourceType = resourceDefinition.type().ordinal();
+        payload = resourceDefinition.payload();
     }
 
     public ResourceDefinitionHolder(String id, int resourceType, byte[] payload) {
@@ -45,5 +48,26 @@ public class ResourceDefinitionHolder {
 
     public byte[] getPayload() {
         return payload;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + Arrays.hashCode(payload);
+        result = (prime * result) + Objects.hash(id, resourceType);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        ResourceDefinitionHolder other = (ResourceDefinitionHolder) obj;
+        return Objects.equals(id, other.id) && Arrays.equals(payload, other.payload) && (resourceType == other.resourceType);
     }
 }
