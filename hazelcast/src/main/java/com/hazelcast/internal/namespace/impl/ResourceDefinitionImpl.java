@@ -17,18 +17,21 @@
 package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder;
+import com.hazelcast.internal.config.ConfigDataSerializerHook;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.jet.config.ResourceConfig;
 import com.hazelcast.jet.config.ResourceType;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
 public class ResourceDefinitionImpl implements ResourceDefinition {
-    private final String id;
-    private final byte[] payload;
-    private final ResourceType type;
+    private String id;
+    private byte[] payload;
+    private ResourceType type;
 
     public ResourceDefinitionImpl(String id, byte[] payload, ResourceType type) {
         this.id = id;
@@ -67,6 +70,30 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
     @Override
     public byte[] payload() {
         return payload;
+    }
+
+    @Override
+    public int getFactoryId() {
+        return ConfigDataSerializerHook.F_ID;
+    }
+
+    @Override
+    public int getClassId() {
+        return ConfigDataSerializerHook.RESOURCE_DEFINITION;
+    }
+
+    @Override
+    public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeString(id);
+        out.writeByteArray(payload);
+        out.writeInt(type.getId());
+    }
+
+    @Override
+    public void readData(ObjectDataInput in) throws IOException {
+        id = in.readString();
+        payload = in.readByteArray();
+        type = ResourceType.getById(in.readInt());
     }
 
     @Override

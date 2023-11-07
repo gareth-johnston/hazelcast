@@ -175,8 +175,9 @@ public final class ConfigDataSerializerHook implements DataSerializerHook {
     public static final int PARTITION_ATTRIBUTE_CONFIG = 69;
     public static final int NAMESPACE_CONFIG = 70;
     public static final int REMOVE_DYNAMIC_CONFIG_OP = 71;
+    public static final int RESOURCE_DEFINITION = 72;
 
-    private static final int LEN = REMOVE_DYNAMIC_CONFIG_OP + 1;
+    private static final int LEN = RESOURCE_DEFINITION + 1;
 
     @Override
     public int getFactoryId() {
