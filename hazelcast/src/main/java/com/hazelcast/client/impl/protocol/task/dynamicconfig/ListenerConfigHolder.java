@@ -24,6 +24,8 @@ import com.hazelcast.config.ItemListenerConfig;
 import com.hazelcast.config.ListenerConfig;
 import com.hazelcast.config.MapPartitionLostListenerConfig;
 import com.hazelcast.config.SplitBrainProtectionListenerConfig;
+import com.hazelcast.internal.namespace.NamespaceService;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.map.listener.MapListener;
 import com.hazelcast.map.listener.MapPartitionLostListener;
@@ -138,6 +140,7 @@ public class ListenerConfigHolder {
         validate();
         ListenerConfig listenerConfig = null;
         if (className != null) {
+            // TODO: Check NS awareness needs for all below
             switch (listenerType) {
                 case GENERIC:
                     listenerConfig = new ListenerConfig(className);
@@ -163,7 +166,9 @@ public class ListenerConfigHolder {
                     // make checkstyle happy.
             }
         } else {
-            EventListener eventListener = serializationService.toObject(listenerImplementation);
+            // TODO: Handle structure-specific Namespace for below where supported
+            EventListener eventListener = NamespaceUtil.callWithNamespace(NamespaceService.DEFAULT_NAMESPACE_ID,
+                    () -> serializationService.toObject(listenerImplementation));
             switch (listenerType) {
                 case GENERIC:
                     listenerConfig = new ListenerConfig(eventListener);

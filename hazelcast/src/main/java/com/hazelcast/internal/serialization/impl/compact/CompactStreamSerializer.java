@@ -328,6 +328,7 @@ public class CompactStreamSerializer implements StreamSerializer<Object> {
         for (String className : serializerClassNames) {
             CompactSerializer serializer;
             try {
+                // TODO: Do we need Namespace awareness here? No, I don't think so?
                 serializer = ClassLoaderUtil.newInstance(classLoader, className);
             } catch (Exception e) {
                 throw new InvalidConfigurationException("Cannot create an instance "

@@ -41,6 +41,7 @@ import com.hazelcast.collection.impl.collection.operations.CollectionSizeOperati
 import com.hazelcast.config.CollectionConfig;
 import com.hazelcast.config.ItemListenerConfig;
 import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.SerializationService;
@@ -78,11 +79,13 @@ public abstract class AbstractCollectionProxyImpl<S extends RemoteService, E> ex
         checkCollectionConfig(config, nodeEngine.getSplitBrainMergePolicyProvider());
 
         final List<ItemListenerConfig> itemListenerConfigs = config.getItemListenerConfigs();
+        final ClassLoader classLoader = NamespaceUtil.getClassLoaderForNamespace(nodeEngine, config.getNamespace());
+
         for (ItemListenerConfig itemListenerConfig : itemListenerConfigs) {
             ItemListener listener = itemListenerConfig.getImplementation();
             if (listener == null && itemListenerConfig.getClassName() != null) {
                 try {
-                    listener = ClassLoaderUtil.newInstance(nodeEngine.getConfigClassLoader(), itemListenerConfig.getClassName());
+                    listener = ClassLoaderUtil.newInstance(classLoader, itemListenerConfig.getClassName());
                 } catch (Exception e) {
                     throw ExceptionUtil.rethrow(e);
                 }

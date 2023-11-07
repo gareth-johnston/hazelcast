@@ -119,10 +119,13 @@ final class BasicMapStoreContext implements MapStoreContext {
         final PartitioningStrategy partitioningStrategy = mapContainer.getPartitioningStrategy();
         final MapConfig mapConfig = mapContainer.getMapConfig();
         final MapStoreConfig mapStoreConfig = mapConfig.getMapStoreConfig();
-        final ClassLoader configClassLoader = nodeEngine.getConfigClassLoader();
+        final ClassLoader classLoader = NamespaceUtil.getClassLoaderForNamespace(nodeEngine, mapConfig.getNamespace());
         // create store.
+        // Despite passing the Namespace aware class loader, we still need to wrap the entire call in
+        //  Namespace awareness separately as the class loader is only for instantiation, and execution
+        //  of the implementation takes place in this call as well.
         final Object store = NamespaceUtil.callWithNamespace(nodeEngine, mapConfig.getNamespace(),
-                () -> createStore(mapName, mapStoreConfig, configClassLoader));
+                () -> createStore(mapName, mapStoreConfig, classLoader));
         final MapStoreWrapper storeWrapper = new MapStoreWrapper(nodeEngine, mapName, store, mapConfig.getNamespace());
         storeWrapper.instrument(nodeEngine);
 

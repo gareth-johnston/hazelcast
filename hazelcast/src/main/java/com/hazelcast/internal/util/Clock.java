@@ -61,6 +61,7 @@ public final class Clock {
         String clockImplClassName = System.getProperty(ClockProperties.HAZELCAST_CLOCK_IMPL);
         if (clockImplClassName != null) {
             try {
+                // TODO: Do we need Namespace awareness here? No, I don't think so?
                 return ClassLoaderUtil.newInstance(null, clockImplClassName);
             } catch (Exception e) {
                 throw rethrow(e);

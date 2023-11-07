@@ -208,6 +208,7 @@ public class DelegatingSerializationService extends AbstractSerializationService
         ClassLoader classLoader = currentThread().getContextClassLoader();
         Map<Class<?>, ? extends Serializer> serializers = new HashMap<>();
         for (Entry<String, String> entry : serializerConfigs.entrySet()) {
+            // TODO: Do we need Namespace awareness here? No, I don't think so?
             serializers.put(loadClass(classLoader, entry.getKey()), newInstance(classLoader, entry.getValue()));
         }
         return new DelegatingSerializationService(serializers, (AbstractSerializationService) serializationService);

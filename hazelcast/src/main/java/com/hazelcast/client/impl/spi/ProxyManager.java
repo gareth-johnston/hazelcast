@@ -145,6 +145,7 @@ public final class ProxyManager {
                 ClientProxyFactory clientProxyFactory = proxyFactoryConfig.getFactoryImpl();
                 if (clientProxyFactory == null) {
                     String className = proxyFactoryConfig.getClassName();
+                    // TODO: Do we need Namespace awareness here?
                     clientProxyFactory = ClassLoaderUtil.newInstance(classLoader, className);
                 }
                 register(proxyFactoryConfig.getService(), clientProxyFactory);

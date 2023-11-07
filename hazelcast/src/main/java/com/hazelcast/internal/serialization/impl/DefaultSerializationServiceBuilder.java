@@ -248,6 +248,7 @@ public class DefaultSerializationServiceBuilder implements SerializationServiceB
                 Serializer serializer = globalSerializerConfig.getImplementation();
                 if (serializer == null) {
                     try {
+                        // TODO: Do we need Namespace awareness here? No, I don't think so?
                         serializer = ClassLoaderUtil.newInstance(classLoader, globalSerializerConfig.getClassName());
                     } catch (Exception e) {
                         throw new HazelcastSerializationException(e);
@@ -407,6 +408,7 @@ public class DefaultSerializationServiceBuilder implements SerializationServiceB
             }
             DataSerializableFactory factory;
             try {
+                // TODO: Do we need Namespace awareness here? No, I don't think so?
                 factory = ClassLoaderUtil.newInstance(cl, factoryClassName);
             } catch (Exception e) {
                 throw new HazelcastSerializationException(e);
@@ -461,6 +463,7 @@ public class DefaultSerializationServiceBuilder implements SerializationServiceB
                 }
                 PortableFactory factory;
                 try {
+                    // TODO: Do we need Namespace awareness here? No, I don't think so?
                     factory = ClassLoaderUtil.newInstance(cl, factoryClassName);
                 } catch (Exception e) {
                     throw new HazelcastSerializationException(e);

@@ -76,6 +76,7 @@ public final class LifecycleServiceImpl implements LifecycleService {
                 EventListener implementation = listenerConfig.getImplementation();
                 if (implementation == null) {
                     try {
+                        // TODO: Do we need Namespace awareness here? Client-side? Client-side?
                         implementation = ClassLoaderUtil.newInstance(classLoader, listenerConfig.getClassName());
                     } catch (Exception e) {
                         getLogger().severe(e);

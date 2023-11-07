@@ -69,6 +69,7 @@ import com.hazelcast.internal.management.ManagementCenterService;
 import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.hazelcast.internal.metrics.impl.MetricsConfigHelper;
 import com.hazelcast.internal.namespace.NamespaceService;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader;
 import com.hazelcast.internal.namespace.impl.NamespaceServiceImpl;
 import com.hazelcast.internal.namespace.impl.NoOpNamespaceService;
@@ -331,7 +332,7 @@ public class Node {
     private ClassLoader generateConfigClassloader(Config config) {
         ClassLoader parent = getLegacyUCDClassLoader(config);
         if (!config.getNamespacesConfig().isEnabled()) {
-            namespaceService = new NoOpNamespaceService();
+            namespaceService = new NoOpNamespaceService(parent);
             return parent;
         }
         Map<String, NamespaceConfig> staticNsConfig = ConfigAccessor.getNamespaceConfigs(config);
@@ -396,7 +397,8 @@ public class Node {
             Object listener = listenerCfg.getImplementation();
             if (listener == null) {
                 try {
-                    listener = ClassLoaderUtil.newInstance(configClassLoader, listenerCfg.getClassName());
+                    listener = ClassLoaderUtil.newInstance(NamespaceUtil.getDefaultClassloader(getNodeEngine()),
+                            listenerCfg.getClassName());
                 } catch (Exception e) {
                     logger.severe(e);
                 }

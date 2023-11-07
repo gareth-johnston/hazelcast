@@ -31,6 +31,7 @@ import com.hazelcast.internal.metrics.DynamicMetricsProvider;
 import com.hazelcast.internal.metrics.MetricDescriptor;
 import com.hazelcast.internal.metrics.MetricsCollectionContext;
 import com.hazelcast.internal.monitor.impl.LocalReplicatedMapStatsImpl;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.partition.InternalPartition;
 import com.hazelcast.internal.partition.MigrationAwareService;
@@ -279,15 +280,16 @@ public class ReplicatedMapService implements ManagedService, RemoteService, Even
     }
 
     public void initializeListeners(String name) {
-        List<ListenerConfig> listenerConfigs = getReplicatedMapConfig(name).getListenerConfigs();
+        ReplicatedMapConfig mapConfig = getReplicatedMapConfig(name);
+        List<ListenerConfig> listenerConfigs = mapConfig.getListenerConfigs();
         for (ListenerConfig listenerConfig : listenerConfigs) {
             EntryListener listener = null;
             if (listenerConfig.getImplementation() != null) {
                 listener = (EntryListener) listenerConfig.getImplementation();
             } else if (listenerConfig.getClassName() != null) {
                 try {
-                    listener = ClassLoaderUtil.newInstance(nodeEngine.getConfigClassLoader(),
-                            listenerConfig.getClassName());
+                    ClassLoader loader = NamespaceUtil.getClassLoaderForNamespace(nodeEngine, mapConfig.getNamespace());
+                    listener = ClassLoaderUtil.newInstance(loader, listenerConfig.getClassName());
                 } catch (Exception e) {
                     throw rethrow(e);
                 }

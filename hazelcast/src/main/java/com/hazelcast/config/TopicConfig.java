@@ -25,7 +25,9 @@ import com.hazelcast.topic.ITopic;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import static com.hazelcast.internal.cluster.Versions.V5_4;
 import static com.hazelcast.internal.serialization.impl.SerializationUtil.readNullableList;
 import static com.hazelcast.internal.serialization.impl.SerializationUtil.writeNullableList;
 import static com.hazelcast.internal.util.Preconditions.checkHasText;
@@ -34,7 +36,7 @@ import static com.hazelcast.internal.util.Preconditions.isNotNull;
 /**
  * Contains the configuration for a {@link ITopic}.
  */
-public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
+public class TopicConfig implements IdentifiedDataSerializable, NamedConfig, NamespaceAwareConfig {
 
     /**
      * Default global ordering configuration.
@@ -46,6 +48,7 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
     private boolean statisticsEnabled = true;
     private boolean multiThreadingEnabled;
     private List<ListenerConfig> listenerConfigs;
+    private String namespace = DEFAULT_NAMESPACE;
 
     /**
      * Creates a TopicConfig.
@@ -73,6 +76,7 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
         this.globalOrderingEnabled = config.globalOrderingEnabled;
         this.multiThreadingEnabled = config.multiThreadingEnabled;
         this.listenerConfigs = new ArrayList<ListenerConfig>(config.getMessageListenerConfigs());
+        this.namespace = config.namespace;
     }
 
     /**
@@ -208,6 +212,17 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
         return this;
     }
 
+    /** @since 5.4 */
+    @Override
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /** @since 5.4 */
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     @Override
     @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:npathcomplexity"})
     public final boolean equals(Object o) {
@@ -238,6 +253,9 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
         if (listenerConfigs == null && that.listenerConfigs != null && !that.listenerConfigs.isEmpty()) {
             return false;
         }
+        if (Objects.equals(namespace, that.namespace)) {
+            return false;
+        }
         return name != null ? name.equals(that.name) : that.name == null;
     }
 
@@ -249,13 +267,17 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
         result = 31 * result + (statisticsEnabled ? 1 : 0);
         result = 31 * result + (multiThreadingEnabled ? 1 : 0);
         result = 31 * result + (listenerConfigs != null ? listenerConfigs.hashCode() : 0);
+        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
         return result;
     }
 
     public String toString() {
-        return "TopicConfig [name=" + name + ", globalOrderingEnabled=" + globalOrderingEnabled
-                + ", multiThreadingEnabled=" + multiThreadingEnabled + ", statisticsEnabled="
-                + statisticsEnabled + "]";
+        return "TopicConfig [name=" + name
+                + ", globalOrderingEnabled=" + globalOrderingEnabled
+                + ", multiThreadingEnabled=" + multiThreadingEnabled
+                + ", statisticsEnabled=" + statisticsEnabled
+                + ", namespace=" + namespace
+                + "]";
     }
 
     @Override
@@ -275,6 +297,11 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
         out.writeBoolean(statisticsEnabled);
         out.writeBoolean(multiThreadingEnabled);
         writeNullableList(listenerConfigs, out);
+
+        // RU_COMPAT_5_4
+        if (out.getVersion().isGreaterOrEqual(V5_4)) {
+            out.writeString(namespace);
+        }
     }
 
     @Override
@@ -284,5 +311,10 @@ public class TopicConfig implements IdentifiedDataSerializable, NamedConfig {
         statisticsEnabled = in.readBoolean();
         multiThreadingEnabled = in.readBoolean();
         listenerConfigs = readNullableList(in);
+
+        // RU_COMPAT_5_4
+        if (in.getVersion().isGreaterOrEqual(V5_4)) {
+            namespace = in.readString();
+        }
     }
 }

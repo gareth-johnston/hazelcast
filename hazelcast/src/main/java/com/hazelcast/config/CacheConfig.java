@@ -52,6 +52,7 @@ import java.util.Set;
 import static com.hazelcast.config.CacheSimpleConfig.DEFAULT_BACKUP_COUNT;
 import static com.hazelcast.config.CacheSimpleConfig.DEFAULT_IN_MEMORY_FORMAT;
 import static com.hazelcast.config.CacheSimpleConfig.MIN_BACKUP_COUNT;
+import static com.hazelcast.internal.cluster.Versions.V5_4;
 import static com.hazelcast.internal.util.Preconditions.checkAsyncBackupCount;
 import static com.hazelcast.internal.util.Preconditions.checkBackupCount;
 import static com.hazelcast.internal.util.Preconditions.checkNotNull;
@@ -63,7 +64,7 @@ import static com.hazelcast.internal.util.Preconditions.isNotNull;
  * @param <K> the key type
  * @param <V> the value type
  */
-public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Versioned {
+public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Versioned, NamespaceAwareConfig {
 
     private String name;
     private String managerPrefix;
@@ -87,6 +88,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
      * Full-flush invalidation means the invalidation of events for all entries when clear is called.
      */
     private boolean disablePerEntryInvalidationEvents;
+    private String namespace = DEFAULT_NAMESPACE;
 
     public CacheConfig() {
     }
@@ -125,6 +127,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
             this.disablePerEntryInvalidationEvents = config.disablePerEntryInvalidationEvents;
             this.serializationService = config.serializationService;
             this.classLoader = config.classLoader;
+            this.namespace = config.namespace;
         }
     }
 
@@ -161,6 +164,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
         this.dataPersistenceConfig = new DataPersistenceConfig(simpleConfig.getDataPersistenceConfig());
         this.eventJournalConfig = new EventJournalConfig(simpleConfig.getEventJournalConfig());
         this.disablePerEntryInvalidationEvents = simpleConfig.isDisablePerEntryInvalidationEvents();
+        this.namespace = simpleConfig.getNamespace();
     }
 
     private void initExpiryPolicyFactoryConfig(CacheSimpleConfig simpleConfig) throws Exception {
@@ -507,6 +511,20 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
         return this;
     }
 
+
+
+    /** @since 5.4 */
+    @Override
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /** @since 5.4 */
+    public CacheConfig<K, V> setNamespace(String namespace) {
+        this.namespace = namespace;
+        return this;
+    }
+
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeString(name);
@@ -545,6 +563,11 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
 
         out.writeObject(merkleTreeConfig);
         out.writeObject(dataPersistenceConfig);
+
+        // RU_COMPAT_5_4
+        if (out.getVersion().isGreaterOrEqual(V5_4)) {
+            out.writeString(namespace);
+        }
     }
 
     private void writePartitionLostListenerConfigs(ObjectDataOutput out)
@@ -607,6 +630,11 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
 
         merkleTreeConfig = in.readObject();
         setDataPersistenceConfig(in.readObject());
+
+        // RU_COMPAT_5_4
+        if (in.getVersion().isGreaterOrEqual(V5_4)) {
+            namespace = in.readString();
+        }
     }
 
     private void readPartitionLostListenerConfigs(ObjectDataInput in)
@@ -626,6 +654,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (managerPrefix != null ? managerPrefix.hashCode() : 0);
         result = 31 * result + (uriString != null ? uriString.hashCode() : 0);
+        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
         return result;
     }
 
@@ -648,6 +677,9 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
         if (!Objects.equals(uriString, that.uriString)) {
             return false;
         }
+        if (!Objects.equals(namespace, that.namespace)) {
+            return false;
+        }
 
         return super.equals(o);
     }
@@ -663,6 +695,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
                 + ", dataPersistenceConfig=" + dataPersistenceConfig
                 + ", wanReplicationRef=" + wanReplicationRef
                 + ", merkleTreeConfig=" + merkleTreeConfig
+                + ", namespace=" + namespace
                 + '}';
     }
 
@@ -761,6 +794,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
         target.setWriteThrough(isWriteThrough());
         target.setClassLoader(classLoader);
         target.serializationService = serializationService;
+        target.setNamespace(getNamespace());
         return target;
     }
 
@@ -770,9 +804,11 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
             Factory<? extends CacheEntryListener<? super K, ? super V>> listenerFactory = null;
             Factory<? extends CacheEntryEventFilter<? super K, ? super V>> filterFactory = null;
             if (simpleListener.getCacheEntryListenerFactory() != null) {
+                // TODO: Do we need Namespace awareness here? Yes I think so?
                 listenerFactory = ClassLoaderUtil.newInstance(null, simpleListener.getCacheEntryListenerFactory());
             }
             if (simpleListener.getCacheEntryEventFilterFactory() != null) {
+                // TODO: Do we need Namespace awareness here? Yes I think so?
                 filterFactory = ClassLoaderUtil.newInstance(null, simpleListener.getCacheEntryEventFilterFactory());
             }
             boolean isOldValueRequired = simpleListener.isOldValueRequired();

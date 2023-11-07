@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.hazelcast.internal.cluster.Versions.V5_4;
 import static com.hazelcast.internal.serialization.impl.SerializationUtil.readNullableList;
 import static com.hazelcast.internal.serialization.impl.SerializationUtil.writeNullableList;
 import static com.hazelcast.internal.util.Preconditions.checkNotNull;
@@ -35,7 +36,7 @@ import static com.hazelcast.internal.util.Preconditions.checkNotNull;
  * Contains the configuration for an {@link ReplicatedMap}
  */
 @SuppressWarnings("checkstyle:methodcount")
-public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedConfig {
+public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedConfig, NamespaceAwareConfig {
 
     /**
      * Default value of In-memory format
@@ -53,6 +54,7 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
     private List<ListenerConfig> listenerConfigs = new ArrayList<>();
     private InMemoryFormat inMemoryFormat = DEFAULT_IN_MEMORY_FORMAT;
     private MergePolicyConfig mergePolicyConfig = new MergePolicyConfig();
+    private String namespace = DEFAULT_NAMESPACE;
 
     public ReplicatedMapConfig() {
     }
@@ -75,6 +77,7 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
         this.statisticsEnabled = replicatedMapConfig.statisticsEnabled;
         this.mergePolicyConfig = new MergePolicyConfig(replicatedMapConfig.mergePolicyConfig);
         this.splitBrainProtectionName = replicatedMapConfig.splitBrainProtectionName;
+        this.namespace = replicatedMapConfig.namespace;
     }
 
     /**
@@ -235,6 +238,17 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
         return this;
     }
 
+    /** @since 5.4 */
+    @Override
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /** @since 5.4 */
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     @Override
     public String toString() {
         return "ReplicatedMapConfig{"
@@ -244,6 +258,7 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
                 + ", statisticsEnabled=" + statisticsEnabled
                 + ", splitBrainProtectionName='" + splitBrainProtectionName + '\''
                 + ", mergePolicyConfig='" + mergePolicyConfig + '\''
+                + ", namespace='" + namespace + '\''
                 + '}';
     }
 
@@ -266,6 +281,11 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
         writeNullableList(listenerConfigs, out);
         out.writeString(splitBrainProtectionName);
         out.writeObject(mergePolicyConfig);
+
+        // RU_COMPAT_5_4
+        if (out.getVersion().isGreaterOrEqual(V5_4)) {
+            out.writeString(namespace);
+        }
     }
 
     @Override
@@ -277,6 +297,11 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
         listenerConfigs = readNullableList(in);
         splitBrainProtectionName = in.readString();
         mergePolicyConfig = in.readObject();
+
+        // RU_COMPAT_5_4
+        if (in.getVersion().isGreaterOrEqual(V5_4)) {
+            namespace = in.readString();
+        }
     }
 
     @Override
@@ -308,6 +333,9 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
         if (!Objects.equals(mergePolicyConfig, that.mergePolicyConfig)) {
             return false;
         }
+        if (!Objects.equals(namespace, that.namespace)) {
+            return false;
+        }
         return Objects.equals(listenerConfigs, that.listenerConfigs);
     }
 
@@ -321,6 +349,7 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
         result = 31 * result + (listenerConfigs != null ? listenerConfigs.hashCode() : 0);
         result = 31 * result + (splitBrainProtectionName != null ? splitBrainProtectionName.hashCode() : 0);
         result = 31 * result + (mergePolicyConfig != null ? mergePolicyConfig.hashCode() : 0);
+        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
         return result;
     }
 }

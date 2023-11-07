@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Objects;
 
 import static com.hazelcast.config.InMemoryFormat.NATIVE;
+import static com.hazelcast.internal.cluster.Versions.V5_4;
 import static com.hazelcast.internal.util.Preconditions.checkAsyncBackupCount;
 import static com.hazelcast.internal.util.Preconditions.checkBackupCount;
 import static com.hazelcast.internal.util.Preconditions.checkFalse;
@@ -40,7 +41,7 @@ import static com.hazelcast.internal.util.Preconditions.checkPositive;
  * content will be fully stored on a single member in the cluster and its
  * backup in another member in the cluster.
  */
-public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig {
+public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig, NamespaceAwareConfig {
 
     /**
      * Default value of capacity of the RingBuffer.
@@ -72,6 +73,7 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
     private RingbufferStoreConfig ringbufferStoreConfig = new RingbufferStoreConfig().setEnabled(false);
     private String splitBrainProtectionName;
     private MergePolicyConfig mergePolicyConfig = new MergePolicyConfig();
+    private String namespace = DEFAULT_NAMESPACE;
 
     public RingbufferConfig() {
     }
@@ -105,6 +107,7 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
         }
         this.mergePolicyConfig = new MergePolicyConfig(config.mergePolicyConfig);
         this.splitBrainProtectionName = config.splitBrainProtectionName;
+        this.namespace = config.namespace;
     }
 
     /**
@@ -379,6 +382,17 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
         return this;
     }
 
+    /** @since 5.4 */
+    @Override
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /** @since 5.4 */
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     @Override
     public String toString() {
         return "RingbufferConfig{"
@@ -391,6 +405,7 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
                 + ", ringbufferStoreConfig=" + ringbufferStoreConfig
                 + ", splitBrainProtectionName=" + splitBrainProtectionName
                 + ", mergePolicyConfig=" + mergePolicyConfig
+                + ", namespace=" + namespace
                 + '}';
     }
 
@@ -415,6 +430,11 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
         out.writeObject(ringbufferStoreConfig);
         out.writeString(splitBrainProtectionName);
         out.writeObject(mergePolicyConfig);
+
+        // RU_COMPAT_5_4
+        if (out.getVersion().isGreaterOrEqual(V5_4)) {
+            out.writeString(namespace);
+        }
     }
 
     @Override
@@ -428,6 +448,11 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
         ringbufferStoreConfig = in.readObject();
         splitBrainProtectionName = in.readString();
         mergePolicyConfig = in.readObject();
+
+        // RU_COMPAT_5_4
+        if (in.getVersion().isGreaterOrEqual(V5_4)) {
+            namespace = in.readString();
+        }
     }
 
     @Override
@@ -448,12 +473,13 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
                 && inMemoryFormat == that.inMemoryFormat
                 && Objects.equals(ringbufferStoreConfig, that.ringbufferStoreConfig)
                 && Objects.equals(splitBrainProtectionName, that.splitBrainProtectionName)
-                && Objects.equals(mergePolicyConfig, that.mergePolicyConfig);
+                && Objects.equals(mergePolicyConfig, that.mergePolicyConfig)
+                && Objects.equals(namespace, that.namespace);
     }
 
     @Override
     public final int hashCode() {
         return Objects.hash(name, capacity, backupCount, asyncBackupCount, timeToLiveSeconds, inMemoryFormat,
-                ringbufferStoreConfig, splitBrainProtectionName, mergePolicyConfig);
+                ringbufferStoreConfig, splitBrainProtectionName, mergePolicyConfig, namespace);
     }
 }
