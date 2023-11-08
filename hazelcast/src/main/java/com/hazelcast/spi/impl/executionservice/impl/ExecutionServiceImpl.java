@@ -209,7 +209,7 @@ public final class ExecutionServiceImpl implements ExecutionService {
                 String hzName = nodeEngine.getHazelcastInstance().getName();
                 String internalName = name.startsWith("hz:") ? name.substring(BEGIN_INDEX) : name;
                 String threadNamePrefix = createThreadPoolName(hzName, internalName);
-                threadFactory = new PoolExecutorThreadFactory(threadNamePrefix, classLoader);
+                threadFactory = new PoolExecutorThreadFactory(threadNamePrefix, classLoader, nodeEngine);
             }
 
             NamedThreadPoolExecutor pool = new NamedThreadPoolExecutor(name, poolSize, poolSize,

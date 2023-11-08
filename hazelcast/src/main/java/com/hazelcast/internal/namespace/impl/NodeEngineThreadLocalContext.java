@@ -37,7 +37,9 @@ public final class NodeEngineThreadLocalContext {
     }
 
     public static void declareNodeEngineReference(NodeEngine nodeEngine) {
-        NE_THREAD_LOCAL.set(new NodeEngineThreadLocalContext(nodeEngine));
+        if (nodeEngine != null) {
+            NE_THREAD_LOCAL.set(new NodeEngineThreadLocalContext(nodeEngine));
+        }
     }
 
     public static void destroyNodeEngineReference() {
@@ -48,6 +50,15 @@ public final class NodeEngineThreadLocalContext {
         NodeEngineThreadLocalContext tlContext = NE_THREAD_LOCAL.get();
         if (tlContext == null) {
             throw new IllegalStateException("NodeEngine context is not available for Namespaces!");
+        } else {
+            return tlContext.nodeEngine;
+        }
+    }
+
+    public static NodeEngine getNamespaceThreadLocalContextOrNull() {
+        NodeEngineThreadLocalContext tlContext = NE_THREAD_LOCAL.get();
+        if (tlContext == null) {
+            return null;
         } else {
             return tlContext.nodeEngine;
         }

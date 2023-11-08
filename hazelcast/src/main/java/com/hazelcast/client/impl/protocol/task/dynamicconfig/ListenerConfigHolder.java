@@ -25,11 +25,13 @@ import com.hazelcast.config.ListenerConfig;
 import com.hazelcast.config.MapPartitionLostListenerConfig;
 import com.hazelcast.config.SplitBrainProtectionListenerConfig;
 import com.hazelcast.internal.namespace.NamespaceUtil;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.map.listener.MapListener;
 import com.hazelcast.map.listener.MapPartitionLostListener;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.nio.serialization.HazelcastSerializationException;
+import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.splitbrainprotection.SplitBrainProtectionListener;
 
 import java.util.EventListener;
@@ -135,7 +137,7 @@ public class ListenerConfigHolder {
         return local;
     }
 
-    public <T extends ListenerConfig> T asListenerConfig(SerializationService serializationService, String namepsace) {
+    public <T extends ListenerConfig> T asListenerConfig(SerializationService serializationService, String namespace) {
         validate();
         ListenerConfig listenerConfig = null;
         if (className != null) {
@@ -165,8 +167,13 @@ public class ListenerConfigHolder {
                     // make checkstyle happy.
             }
         } else {
-            EventListener eventListener = NamespaceUtil.callWithNamespace(namepsace,
-                    () -> serializationService.toObject(listenerImplementation));
+            // This method can be invoked by clients, in which case we don't need Namespace context
+            //  (and we don't have a NodeEngine instance available for use anyway)
+            NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContextOrNull();
+            EventListener eventListener = engine == null
+                    ? serializationService.toObject(listenerImplementation)
+                    : NamespaceUtil.callWithNamespace(namespace, () -> serializationService.toObject(listenerImplementation));
+
             switch (listenerType) {
                 case GENERIC:
                     listenerConfig = new ListenerConfig(eventListener);
