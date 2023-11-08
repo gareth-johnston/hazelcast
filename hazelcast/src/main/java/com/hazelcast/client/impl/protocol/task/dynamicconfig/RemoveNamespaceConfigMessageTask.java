@@ -23,6 +23,10 @@ import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.security.SecurityInterceptorConstants;
+import com.hazelcast.security.permission.ActionConstants;
+import com.hazelcast.security.permission.NamespacePermission;
+
+import java.security.Permission;
 
 public class RemoveNamespaceConfigMessageTask
         extends AbstractRemoveConfigMessageTask<DynamicConfigRemoveNamespaceConfigCodec.RequestParameters> {
@@ -51,5 +55,10 @@ public class RemoveNamespaceConfigMessageTask
     @Override
     public String getMethodName() {
         return SecurityInterceptorConstants.REMOVE_NAMESPACE_CONFIG;
+    }
+
+    @Override
+    public Permission getRequiredPermission() {
+        return new NamespacePermission(parameters.name, ActionConstants.ACTION_DESTROY);
     }
 }
