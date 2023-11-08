@@ -5769,7 +5769,7 @@ public class ClientCompatibilityTest_2_4 {
     @Test
     public void test_DynamicConfigAddListConfigCodec_encodeRequest() {
         int fileClientMessageIndex = 725;
-        ClientMessage encoded = DynamicConfigAddListConfigCodec.encodeRequest(aString, aListOfListenerConfigHolders, anInt, anInt, anInt, aBoolean, aString, aString, anInt);
+        ClientMessage encoded = DynamicConfigAddListConfigCodec.encodeRequest(aString, aListOfListenerConfigHolders, anInt, anInt, anInt, aBoolean, aString, aString, anInt, aString);
         ClientMessage fromFile = clientMessages.get(fileClientMessageIndex);
         compareClientMessages(fromFile, encoded);
     }
@@ -5782,7 +5782,7 @@ public class ClientCompatibilityTest_2_4 {
     @Test
     public void test_DynamicConfigAddSetConfigCodec_encodeRequest() {
         int fileClientMessageIndex = 727;
-        ClientMessage encoded = DynamicConfigAddSetConfigCodec.encodeRequest(aString, aListOfListenerConfigHolders, anInt, anInt, anInt, aBoolean, aString, aString, anInt);
+        ClientMessage encoded = DynamicConfigAddSetConfigCodec.encodeRequest(aString, aListOfListenerConfigHolders, anInt, anInt, anInt, aBoolean, aString, aString, anInt, aString);
         ClientMessage fromFile = clientMessages.get(fileClientMessageIndex);
         compareClientMessages(fromFile, encoded);
     }

@@ -60,6 +60,9 @@ public class AddSetConfigMessageTask
         }
         MergePolicyConfig mergePolicyConfig = mergePolicyConfig(parameters.mergePolicy, parameters.mergeBatchSize);
         config.setMergePolicyConfig(mergePolicyConfig);
+        if (parameters.isNamespaceNameExists) {
+            config.setNamespace(parameters.namespaceName);
+        }
         return config;
     }
 
@@ -72,7 +75,7 @@ public class AddSetConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         SetConfig setConfig = (SetConfig) config;
-        return nodeConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getSetConfigs(),
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getSetConfigs(),
                 setConfig.getName(), setConfig);
     }
 }

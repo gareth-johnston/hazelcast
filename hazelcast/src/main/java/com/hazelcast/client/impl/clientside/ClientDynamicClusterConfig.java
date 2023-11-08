@@ -231,7 +231,8 @@ public class ClientDynamicClusterConfig extends Config {
         ClientMessage request = DynamicConfigAddListConfigCodec.encodeRequest(listConfig.getName(), listenerConfigs,
                 listConfig.getBackupCount(), listConfig.getAsyncBackupCount(), listConfig.getMaxSize(),
                 listConfig.isStatisticsEnabled(), listConfig.getSplitBrainProtectionName(),
-                listConfig.getMergePolicyConfig().getPolicy(), listConfig.getMergePolicyConfig().getBatchSize());
+                listConfig.getMergePolicyConfig().getPolicy(), listConfig.getMergePolicyConfig().getBatchSize(),
+                listConfig.getNamespace());
         invoke(request);
         return this;
     }
@@ -239,10 +240,11 @@ public class ClientDynamicClusterConfig extends Config {
     @Override
     public Config addSetConfig(SetConfig setConfig) {
         List<ListenerConfigHolder> listenerConfigs = adaptListenerConfigs(setConfig.getItemListenerConfigs());
-        ClientMessage request = DynamicConfigAddSetConfigCodec.encodeRequest(setConfig.getName(), listenerConfigs,
-                setConfig.getBackupCount(), setConfig.getAsyncBackupCount(), setConfig.getMaxSize(),
-                setConfig.isStatisticsEnabled(), setConfig.getSplitBrainProtectionName(),
-                setConfig.getMergePolicyConfig().getPolicy(), setConfig.getMergePolicyConfig().getBatchSize());
+        ClientMessage request =
+                DynamicConfigAddSetConfigCodec.encodeRequest(setConfig.getName(), listenerConfigs, setConfig.getBackupCount(),
+                        setConfig.getAsyncBackupCount(), setConfig.getMaxSize(), setConfig.isStatisticsEnabled(),
+                        setConfig.getSplitBrainProtectionName(), setConfig.getMergePolicyConfig().getPolicy(),
+                        setConfig.getMergePolicyConfig().getBatchSize(), setConfig.getNamespace());
         invoke(request);
         return this;
     }
