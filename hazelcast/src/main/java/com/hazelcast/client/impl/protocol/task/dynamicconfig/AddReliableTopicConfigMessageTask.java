@@ -74,7 +74,7 @@ public class AddReliableTopicConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         ReliableTopicConfig reliableTopicConfig = (ReliableTopicConfig) config;
-        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getReliableTopicConfigs(),
-                reliableTopicConfig.getName(), reliableTopicConfig);
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(
+                nodeConfig.getStaticConfig().getReliableTopicConfigs(), reliableTopicConfig.getName(), reliableTopicConfig);
     }
 }

@@ -77,7 +77,7 @@ public class AddReplicatedMapConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         ReplicatedMapConfig replicatedMapConfig = (ReplicatedMapConfig) config;
-        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getReplicatedMapConfigs(),
-                replicatedMapConfig.getName(), replicatedMapConfig);
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(
+                nodeConfig.getStaticConfig().getReplicatedMapConfigs(), replicatedMapConfig.getName(), replicatedMapConfig);
     }
 }

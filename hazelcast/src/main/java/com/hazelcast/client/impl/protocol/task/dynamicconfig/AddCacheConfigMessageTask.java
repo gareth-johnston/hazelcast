@@ -31,7 +31,7 @@ import com.hazelcast.security.SecurityInterceptorConstants;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("checkstyle:npathcomplexity")
+@SuppressWarnings({"checkstyle:NPathComplexity", "checkstyle:CyclomaticComplexity"})
 public class AddCacheConfigMessageTask
         extends AbstractAddConfigMessageTask<DynamicConfigAddCacheConfigCodec.RequestParameters> {
 
