@@ -20,7 +20,15 @@ import com.hazelcast.spi.annotation.NamespacesSupported;
 
 import java.util.EventListener;
 
-
+/**
+ * Cluster membership listener.
+ *
+ * The MembershipListener will never be called concurrently and all MembershipListeners will receive the events
+ * in the same order.
+ *
+ * @see InitialMembershipListener
+ * @see Cluster#addMembershipListener(MembershipListener)
+ */
 @NamespacesSupported
 public interface MembershipListener extends EventListener {
 
