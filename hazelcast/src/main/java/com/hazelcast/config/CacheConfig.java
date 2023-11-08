@@ -28,6 +28,7 @@ import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.impl.Versioned;
+import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.SerializationServiceSupport;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -801,8 +802,10 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
     }
 
     private void copyListeners(CacheSimpleConfig simpleConfig) throws Exception {
-        ClassLoader loader = NamespaceUtil.getClassLoaderForNamespace(
-                NodeEngineThreadLocalContext.getNamespaceThreadLocalContext(), namespace);
+        // This method can be invoked by clients, in which case we don't need Namespace context
+        //  (and we don't have a NodeEngine instance available for use anyway)
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContextOrNull();
+        ClassLoader loader = engine != null ? NamespaceUtil.getClassLoaderForNamespace(engine, namespace) : null;
         for (CacheSimpleEntryListenerConfig simpleListener : simpleConfig.getCacheEntryListeners()) {
             Factory<? extends CacheEntryListener<? super K, ? super V>> listenerFactory = null;
             Factory<? extends CacheEntryEventFilter<? super K, ? super V>> filterFactory = null;
