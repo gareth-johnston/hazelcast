@@ -20,12 +20,14 @@ import com.hazelcast.internal.config.ConfigDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.Versioned;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.hazelcast.internal.cluster.Versions.V5_4;
 import static com.hazelcast.internal.serialization.impl.SerializationUtil.readNullableList;
 import static com.hazelcast.internal.serialization.impl.SerializationUtil.writeNullableList;
 import static com.hazelcast.internal.util.Preconditions.checkFalse;
@@ -41,7 +43,7 @@ import static com.hazelcast.internal.util.Preconditions.checkPositive;
  */
 
 @SuppressWarnings("checkstyle:methodcount")
-public class QueryCacheConfig implements IdentifiedDataSerializable {
+public class QueryCacheConfig implements IdentifiedDataSerializable, NamespaceAwareConfig, Versioned {
 
     /**
      * By default, after reaching this minimum size, node immediately sends buffered events to {@code QueryCache}.
@@ -140,6 +142,8 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
 
     private List<IndexConfig> indexConfigs;
 
+    private String namespace = DEFAULT_NAMESPACE;
+
     public QueryCacheConfig() {
     }
 
@@ -160,6 +164,7 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
         this.evictionConfig = other.evictionConfig;
         this.entryListenerConfigs = other.entryListenerConfigs;
         this.indexConfigs = other.indexConfigs;
+        this.namespace = other.namespace;
     }
 
     /**
@@ -456,6 +461,17 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
         return this;
     }
 
+    /** @since 5.4 **/
+    @Override
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /** @since 5.4 **/
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     @Override
     public int getFactoryId() {
         return ConfigDataSerializerHook.F_ID;
@@ -481,6 +497,11 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
         writeNullableList(entryListenerConfigs, out);
         writeNullableList(indexConfigs, out);
         out.writeBoolean(serializeKeys);
+
+        // RU_COMPAT_5_4
+        if (out.getVersion().isGreaterOrEqual(V5_4)) {
+            out.writeString(namespace);
+        }
     }
 
     @Override
@@ -498,6 +519,11 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
         entryListenerConfigs = readNullableList(in);
         indexConfigs = readNullableList(in);
         serializeKeys = in.readBoolean();
+
+        // RU_COMPAT_5_4
+        if (in.getVersion().isGreaterOrEqual(V5_4)) {
+            namespace = in.readString();
+        }
     }
 
     @Override
@@ -548,6 +574,9 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
         if (!Objects.equals(entryListenerConfigs, that.entryListenerConfigs)) {
             return false;
         }
+        if (!Objects.equals(namespace, that.namespace)) {
+            return false;
+        }
         return Objects.equals(indexConfigs, that.indexConfigs);
     }
 
@@ -567,6 +596,7 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
         result = 31 * result + (evictionConfig != null ? evictionConfig.hashCode() : 0);
         result = 31 * result + (entryListenerConfigs != null ? entryListenerConfigs.hashCode() : 0);
         result = 31 * result + (indexConfigs != null ? indexConfigs.hashCode() : 0);
+        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
         return result;
     }
 
@@ -586,6 +616,7 @@ public class QueryCacheConfig implements IdentifiedDataSerializable {
                 + ", evictionConfig=" + evictionConfig
                 + ", entryListenerConfigs=" + entryListenerConfigs
                 + ", indexConfigs=" + indexConfigs
+                + ", namespace=" + namespace
                 + '}';
     }
 }

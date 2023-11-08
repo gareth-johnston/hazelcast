@@ -34,6 +34,7 @@ import com.hazelcast.collection.impl.common.DataAwareItemEvent;
 import com.hazelcast.collection.impl.txncollection.operations.CollectionTransactionRollbackOperation;
 import com.hazelcast.core.ItemEventType;
 import com.hazelcast.internal.monitor.impl.AbstractLocalCollectionStats;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.partition.IPartitionService;
 import com.hazelcast.internal.partition.MigrationAwareService;
 import com.hazelcast.internal.partition.MigrationEndpoint;
@@ -115,11 +116,15 @@ public abstract class CollectionService implements ManagedService, RemoteService
             }
             return;
         }
-        if (event.getEventType().equals(ItemEventType.ADDED)) {
-            listener.itemAdded(itemEvent);
-        } else {
-            listener.itemRemoved(itemEvent);
-        }
+
+        String namespace = getNamespace(event.getName());
+        NamespaceUtil.runWithNamespace(nodeEngine, namespace, () -> {
+            if (event.getEventType().equals(ItemEventType.ADDED)) {
+                listener.itemAdded(itemEvent);
+            } else {
+                listener.itemRemoved(itemEvent);
+            }
+        });
     }
 
     @Override
@@ -245,4 +250,6 @@ public abstract class CollectionService implements ManagedService, RemoteService
             invoke(getServiceName(), operation, partitionId);
         }
     }
+
+    public abstract String getNamespace(String collectionName);
 }

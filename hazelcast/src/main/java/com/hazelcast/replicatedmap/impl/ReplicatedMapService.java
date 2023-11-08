@@ -389,6 +389,15 @@ public class ReplicatedMapService implements ManagedService, RemoteService, Even
         provide(descriptor, context, REPLICATED_MAP_PREFIX, getStats());
     }
 
+    public String getNamespace(String mapName) {
+        // No regular containers available, fallback to config
+        ReplicatedMapConfig config = getReplicatedMapConfig(mapName);
+        if (config != null) {
+            return config.getNamespace();
+        }
+        return null;
+    }
+
     private class AntiEntropyTask implements Runnable {
 
         @Override

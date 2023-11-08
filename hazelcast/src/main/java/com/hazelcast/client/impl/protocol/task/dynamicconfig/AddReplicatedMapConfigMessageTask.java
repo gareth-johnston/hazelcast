@@ -57,7 +57,7 @@ public class AddReplicatedMapConfigMessageTask
         config.setStatisticsEnabled(parameters.statisticsEnabled);
         if (parameters.listenerConfigs != null && !parameters.listenerConfigs.isEmpty()) {
             for (ListenerConfigHolder holder : parameters.listenerConfigs) {
-                config.addEntryListenerConfig((EntryListenerConfig) holder.asListenerConfig(serializationService));
+                config.addEntryListenerConfig(holder.asListenerConfig(serializationService, config.getNamespace()));
             }
         } else {
             config.setListenerConfigs(new ArrayList<>());

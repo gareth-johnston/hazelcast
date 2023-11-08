@@ -76,12 +76,14 @@ public abstract class AbstractUpdateConfigMessageTask<P> extends AbstractMessage
         return new MergePolicyConfig(mergePolicy, batchSize);
     }
 
-    protected List<? extends ListenerConfig> adaptListenerConfigs(List<ListenerConfigHolder> listenerConfigHolders) {
+    protected List<? extends ListenerConfig> adaptListenerConfigs(List<ListenerConfigHolder> listenerConfigHolders,
+                                                                  String namespace) {
         if (listenerConfigHolders == null || listenerConfigHolders.isEmpty()) {
             return null;
         } else {
             return listenerConfigHolders.stream()
-                    .<ListenerConfig>map(listenerConfigHolder -> listenerConfigHolder.asListenerConfig(serializationService))
+                    .<ListenerConfig>map(listenerConfigHolder ->
+                            listenerConfigHolder.asListenerConfig(serializationService, namespace))
                     .collect(Collectors.toCollection(ArrayList::new));
         }
     }

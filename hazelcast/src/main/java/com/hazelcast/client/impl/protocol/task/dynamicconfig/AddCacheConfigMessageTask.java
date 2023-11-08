@@ -85,7 +85,7 @@ public class AddCacheConfigMessageTask
         config.setName(parameters.name);
         if (parameters.partitionLostListenerConfigs != null && !parameters.partitionLostListenerConfigs.isEmpty()) {
             List<CachePartitionLostListenerConfig> listenerConfigs = (List<CachePartitionLostListenerConfig>)
-                    adaptListenerConfigs(parameters.partitionLostListenerConfigs);
+                    adaptListenerConfigs(parameters.partitionLostListenerConfigs, parameters.namespaceName);
             config.setPartitionLostListenerConfigs(listenerConfigs);
         } else {
             config.setPartitionLostListenerConfigs(new ArrayList<>());

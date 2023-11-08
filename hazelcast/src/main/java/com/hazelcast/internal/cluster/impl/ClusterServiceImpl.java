@@ -41,6 +41,8 @@ import com.hazelcast.internal.cluster.impl.operations.ShutdownNodeOp;
 import com.hazelcast.internal.cluster.impl.operations.TriggerExplicitSuspicionOp;
 import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.hazelcast.internal.metrics.Probe;
+import com.hazelcast.internal.namespace.NamespaceService;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.internal.nio.ConnectionListener;
 import com.hazelcast.internal.services.ManagedService;
@@ -789,16 +791,18 @@ public class ClusterServiceImpl implements ClusterService, ConnectionListener, M
     @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
     @Override
     public void dispatchEvent(MembershipEvent event, MembershipListener listener) {
-        switch (event.getEventType()) {
-            case MembershipEvent.MEMBER_ADDED:
-                listener.memberAdded(event);
-                break;
-            case MembershipEvent.MEMBER_REMOVED:
-                listener.memberRemoved(event);
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled event: " + event);
-        }
+        NamespaceUtil.runWithNamespace(nodeEngine, NamespaceService.DEFAULT_NAMESPACE_ID, () -> {
+            switch (event.getEventType()) {
+                case MembershipEvent.MEMBER_ADDED:
+                    listener.memberAdded(event);
+                    break;
+                case MembershipEvent.MEMBER_REMOVED:
+                    listener.memberRemoved(event);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unhandled event: " + event);
+            }
+        });
     }
 
     public String getMemberListString() {

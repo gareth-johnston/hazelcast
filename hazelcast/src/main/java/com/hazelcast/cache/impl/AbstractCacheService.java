@@ -557,6 +557,7 @@ public abstract class AbstractCacheService implements ICacheService,
 
     @Override
     public void dispatchEvent(Object event, CacheEventListener listener) {
+        // Internal event not used for UCD, no Namespace awareness needed
         listener.handleEvent(event);
     }
 

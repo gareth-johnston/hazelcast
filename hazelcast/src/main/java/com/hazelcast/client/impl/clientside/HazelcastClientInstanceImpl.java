@@ -332,7 +332,6 @@ public class HazelcastClientInstanceImpl implements HazelcastInstance, Serializa
         if (lb == null) {
             if (config.getLoadBalancerClassName() != null) {
                 try {
-                    // TODO: Do we need Namespace awareness here?
                     return ClassLoaderUtil.newInstance(config.getClassLoader(), config.getLoadBalancerClassName());
                 } catch (Exception e) {
                     rethrow(e);
@@ -926,7 +925,6 @@ public class HazelcastClientInstanceImpl implements HazelcastInstance, Serializa
             EventListener listener = listenerConfig.getImplementation();
             if (listener == null) {
                 try {
-                    // TODO: Do we need Namespace awareness here?
                     listener = ClassLoaderUtil.newInstance(config.getClassLoader(), listenerConfig.getClassName());
                 } catch (Exception e) {
                     getLoggingService().getLogger(HazelcastInstance.class).severe(e);

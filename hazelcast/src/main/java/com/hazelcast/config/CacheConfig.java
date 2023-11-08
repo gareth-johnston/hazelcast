@@ -21,6 +21,8 @@ import com.hazelcast.cache.impl.DeferredValue;
 import com.hazelcast.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.DurationConfig;
 import com.hazelcast.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.TimedExpiryPolicyFactoryConfig;
 import com.hazelcast.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.TimedExpiryPolicyFactoryConfig.ExpiryPolicyType;
+import com.hazelcast.internal.namespace.NamespaceUtil;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.nio.Bits;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.nio.ObjectDataInput;
@@ -798,18 +800,17 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
         return target;
     }
 
-    private void copyListeners(CacheSimpleConfig simpleConfig)
-            throws Exception {
+    private void copyListeners(CacheSimpleConfig simpleConfig) throws Exception {
+        ClassLoader loader = NamespaceUtil.getClassLoaderForNamespace(
+                NodeEngineThreadLocalContext.getNamespaceThreadLocalContext(), namespace);
         for (CacheSimpleEntryListenerConfig simpleListener : simpleConfig.getCacheEntryListeners()) {
             Factory<? extends CacheEntryListener<? super K, ? super V>> listenerFactory = null;
             Factory<? extends CacheEntryEventFilter<? super K, ? super V>> filterFactory = null;
             if (simpleListener.getCacheEntryListenerFactory() != null) {
-                // TODO: Do we need Namespace awareness here? Yes I think so?
-                listenerFactory = ClassLoaderUtil.newInstance(null, simpleListener.getCacheEntryListenerFactory());
+                listenerFactory = ClassLoaderUtil.newInstance(loader, simpleListener.getCacheEntryListenerFactory());
             }
             if (simpleListener.getCacheEntryEventFilterFactory() != null) {
-                // TODO: Do we need Namespace awareness here? Yes I think so?
-                filterFactory = ClassLoaderUtil.newInstance(null, simpleListener.getCacheEntryEventFilterFactory());
+                filterFactory = ClassLoaderUtil.newInstance(loader, simpleListener.getCacheEntryEventFilterFactory());
             }
             boolean isOldValueRequired = simpleListener.isOldValueRequired();
             boolean synchronous = simpleListener.isSynchronous();

@@ -163,4 +163,17 @@ public class ListService extends CollectionService implements DynamicMetricsProv
     public LocalListStatsImpl getLocalCollectionStats(String name) {
         return ConcurrencyUtil.getOrPutIfAbsent(statsMap, name, localCollectionStatsConstructorFunction);
     }
+
+    @Override
+    public String getNamespace(String collectionName) {
+        ListContainer container = containerMap.get(collectionName);
+        if (container != null) {
+            return container.getConfig().getNamespace();
+        }
+        ListConfig config = nodeEngine.getConfig().findListConfig(collectionName);
+        if (config != null) {
+            return config.getNamespace();
+        }
+        return null;
+    }
 }

@@ -270,11 +270,13 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
             return;
         }
 
-        if (event.eventType.equals(ItemEventType.ADDED)) {
-            listener.itemAdded(itemEvent);
-        } else {
-            listener.itemRemoved(itemEvent);
-        }
+        NamespaceUtil.runWithNamespace(nodeEngine, getNamespace(event.getName()), () -> {
+            if (event.eventType.equals(ItemEventType.ADDED)) {
+                listener.itemAdded(itemEvent);
+            } else {
+                listener.itemRemoved(itemEvent);
+            }
+        });
         getLocalQueueStatsImpl(event.name).incrementReceivedEvents();
     }
 
@@ -447,6 +449,18 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
         if (queueContainer != null) {
             queueContainer.resetAgeStats();
         }
+    }
+
+    public String getNamespace(String queueName) {
+        QueueContainer container = getExistingContainerOrNull(queueName);
+        if (container != null) {
+            return container.getConfig().getNamespace();
+        }
+        QueueConfig config = nodeEngine.getConfig().getQueueConfig(queueName);
+        if (config != null) {
+            return config.getNamespace();
+        }
+        return null;
     }
 
     private class Merger extends AbstractContainerMerger<QueueContainer, Collection<Object>, QueueMergeTypes<Object>> {

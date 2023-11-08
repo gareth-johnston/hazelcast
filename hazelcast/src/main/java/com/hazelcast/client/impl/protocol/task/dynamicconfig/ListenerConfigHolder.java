@@ -24,7 +24,6 @@ import com.hazelcast.config.ItemListenerConfig;
 import com.hazelcast.config.ListenerConfig;
 import com.hazelcast.config.MapPartitionLostListenerConfig;
 import com.hazelcast.config.SplitBrainProtectionListenerConfig;
-import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.map.listener.MapListener;
@@ -136,11 +135,11 @@ public class ListenerConfigHolder {
         return local;
     }
 
-    public <T extends ListenerConfig> T asListenerConfig(SerializationService serializationService) {
+    public <T extends ListenerConfig> T asListenerConfig(SerializationService serializationService, String namepsace) {
         validate();
         ListenerConfig listenerConfig = null;
         if (className != null) {
-            // TODO: Check NS awareness needs for all below
+            // TODO: Double-check NS awareness needs for all below
             switch (listenerType) {
                 case GENERIC:
                     listenerConfig = new ListenerConfig(className);
@@ -166,8 +165,7 @@ public class ListenerConfigHolder {
                     // make checkstyle happy.
             }
         } else {
-            // TODO: Handle structure-specific Namespace for below where supported
-            EventListener eventListener = NamespaceUtil.callWithNamespace(NamespaceService.DEFAULT_NAMESPACE_ID,
+            EventListener eventListener = NamespaceUtil.callWithNamespace(namepsace,
                     () -> serializationService.toObject(listenerImplementation));
             switch (listenerType) {
                 case GENERIC:
@@ -203,11 +201,13 @@ public class ListenerConfigHolder {
         }
     }
 
-    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService) {
+    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService, String namespace) {
         ListenerConfigType listenerType = listenerTypeOf(config);
         Data implementationData = null;
         if (config.getImplementation() != null) {
-            implementationData = serializationService.toData(config.getImplementation());
+            // TODO Do we need to have Namespace awareness for #toData? I think not?
+            implementationData = NamespaceUtil.callWithNamespace(namespace,
+                    () -> serializationService.toData(config.getImplementation()));
         }
         return new ListenerConfigHolder(listenerType, implementationData, config.getClassName(), config.isIncludeValue(),
                 config.isLocal());

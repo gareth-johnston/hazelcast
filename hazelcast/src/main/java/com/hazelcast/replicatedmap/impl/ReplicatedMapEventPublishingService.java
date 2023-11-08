@@ -23,6 +23,7 @@ import com.hazelcast.config.ReplicatedMapConfig;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryEventType;
 import com.hazelcast.core.EntryListener;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.map.MapEvent;
 import com.hazelcast.map.impl.DataAwareEntryEvent;
@@ -88,22 +89,25 @@ public class ReplicatedMapEventPublishingService
             Member member = getMember(entryEventData);
             EntryEvent entryEvent = createDataAwareEntryEvent(entryEventData, member);
             EntryListener entryListener = (EntryListener) listener;
-            switch (entryEvent.getEventType()) {
-                case ADDED:
-                    entryListener.entryAdded(entryEvent);
-                    break;
-                case EVICTED:
-                    entryListener.entryEvicted(entryEvent);
-                    break;
-                case UPDATED:
-                    entryListener.entryUpdated(entryEvent);
-                    break;
-                case REMOVED:
-                    entryListener.entryRemoved(entryEvent);
-                    break;
-                default:
-                    throw new IllegalArgumentException("event type " + entryEvent.getEventType() + " not supported");
-            }
+
+            runWithNamespaceAwareness(entryEventData.getMapName(), () -> {
+                switch (entryEvent.getEventType()) {
+                    case ADDED:
+                        entryListener.entryAdded(entryEvent);
+                        break;
+                    case EVICTED:
+                        entryListener.entryEvicted(entryEvent);
+                        break;
+                    case UPDATED:
+                        entryListener.entryUpdated(entryEvent);
+                        break;
+                    case REMOVED:
+                        entryListener.entryRemoved(entryEvent);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("event type " + entryEvent.getEventType() + " not supported");
+                }
+            });
 
             String mapName = ((EntryEventData) event).getMapName();
             Boolean statisticsEnabled = statisticsMap.computeIfAbsent(mapName, x -> {
@@ -127,11 +131,15 @@ public class ReplicatedMapEventPublishingService
             EntryListener entryListener = (EntryListener) listener;
             EntryEventType type = EntryEventType.getByType(mapEventData.getEventType());
             if (type == EntryEventType.CLEAR_ALL) {
-                entryListener.mapCleared(mapEvent);
+                runWithNamespaceAwareness(mapEventData.getMapName(), () -> entryListener.mapCleared(mapEvent));
             } else {
                 throw new IllegalArgumentException("Unsupported EntryEventType: " + type);
             }
         }
+    }
+
+    private void runWithNamespaceAwareness(String mapName, Runnable runnable) {
+        NamespaceUtil.runWithNamespace(nodeEngine, replicatedMapService.getNamespace(mapName), runnable);
     }
 
     public @Nonnull

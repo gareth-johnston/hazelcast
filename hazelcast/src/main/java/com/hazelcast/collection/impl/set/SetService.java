@@ -164,4 +164,17 @@ public class SetService extends CollectionService implements DynamicMetricsProvi
     public LocalSetStatsImpl getLocalCollectionStats(String name) {
         return ConcurrencyUtil.getOrPutIfAbsent(statsMap, name, localCollectionStatsConstructorFunction);
     }
+
+    @Override
+    public String getNamespace(String collectionName) {
+        SetContainer container = containerMap.get(collectionName);
+        if (container != null) {
+            return container.getConfig().getNamespace();
+        }
+        SetConfig config = nodeEngine.getConfig().findSetConfig(collectionName);
+        if (config != null) {
+            return config.getNamespace();
+        }
+        return null;
+    }
 }

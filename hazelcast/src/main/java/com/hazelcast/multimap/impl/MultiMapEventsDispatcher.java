@@ -18,6 +18,7 @@ package com.hazelcast.multimap.impl;
 
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.IMapEvent;
 import com.hazelcast.map.MapEvent;
 import com.hazelcast.cluster.Member;
@@ -25,6 +26,7 @@ import com.hazelcast.internal.cluster.ClusterService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.impl.DataAwareEntryEvent;
+import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.event.EntryEventData;
 import com.hazelcast.map.impl.event.EventData;
 import com.hazelcast.map.impl.event.MapEventData;
@@ -101,18 +103,24 @@ class MultiMapEventsDispatcher {
     }
 
     private void dispatch0(IMapEvent event, EntryListener listener) {
-        switch (event.getEventType()) {
-            case ADDED:
-                listener.entryAdded((EntryEvent) event);
-                break;
-            case REMOVED:
-                listener.entryRemoved((EntryEvent) event);
-                break;
-            case CLEAR_ALL:
-                listener.mapCleared((MapEvent) event);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid event type: " + event.getEventType());
+        String namespace = multiMapService.getNamespace(event.getName());
+        NamespaceUtil.setupNamespace(multiMapService.getNodeEngine(), namespace);
+        try {
+            switch (event.getEventType()) {
+                case ADDED:
+                    listener.entryAdded((EntryEvent) event);
+                    break;
+                case REMOVED:
+                    listener.entryRemoved((EntryEvent) event);
+                    break;
+                case CLEAR_ALL:
+                    listener.mapCleared((MapEvent) event);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid event type: " + event.getEventType());
+            }
+        } finally {
+            NamespaceUtil.cleanupNamespace(multiMapService.getNodeEngine(), namespace);
         }
     }
 }

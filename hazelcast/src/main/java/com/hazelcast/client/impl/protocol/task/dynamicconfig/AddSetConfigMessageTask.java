@@ -55,7 +55,7 @@ public class AddSetConfigMessageTask
         config.setStatisticsEnabled(parameters.statisticsEnabled);
         if (parameters.listenerConfigs != null && !parameters.listenerConfigs.isEmpty()) {
             List<ItemListenerConfig> itemListenerConfigs = (List<ItemListenerConfig>)
-                    adaptListenerConfigs(parameters.listenerConfigs);
+                    adaptListenerConfigs(parameters.listenerConfigs, parameters.namespaceName);
             config.setItemListenerConfigs(itemListenerConfigs);
         }
         MergePolicyConfig mergePolicyConfig = mergePolicyConfig(parameters.mergePolicy, parameters.mergeBatchSize);

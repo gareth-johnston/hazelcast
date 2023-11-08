@@ -139,7 +139,8 @@ public class ReliableTopicProxy<E> extends AbstractDistributedObject<ReliableTop
             }
 
             if (listenerConfig.getClassName() != null) {
-                Object object = ClassLoaderUtil.newInstance(nodeEngine.getConfigClassLoader(), listenerConfig.getClassName());
+                ClassLoader loader = nodeEngine.getNamespaceService().getClassLoaderForNamespace(getService().getNamespace(name));
+                Object object = ClassLoaderUtil.newInstance(loader, listenerConfig.getClassName());
 
                 if (!(object instanceof MessageListener)) {
                     throw new HazelcastException("class '"

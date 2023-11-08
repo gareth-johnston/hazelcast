@@ -114,4 +114,13 @@ public class ReliableTopicService implements ManagedService, RemoteService,
     public void provideDynamicMetrics(MetricDescriptor descriptor, MetricsCollectionContext context) {
         provide(descriptor, context, RELIABLE_TOPIC_PREFIX, getStats());
     }
+
+    public String getNamespace(String topicName) {
+        // No regular containers available, fallback to config
+        ReliableTopicConfig topicConfig = nodeEngine.getConfig().findReliableTopicConfig(topicName);
+        if (topicConfig != null) {
+            return topicConfig.getNamespace();
+        }
+        return null;
+    }
 }

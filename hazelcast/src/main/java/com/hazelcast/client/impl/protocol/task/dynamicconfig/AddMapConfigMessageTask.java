@@ -62,7 +62,7 @@ public class AddMapConfigMessageTask
         config.setCacheDeserializedValues(CacheDeserializedValues.valueOf(parameters.cacheDeserializedValues));
         if (parameters.listenerConfigs != null && !parameters.listenerConfigs.isEmpty()) {
             config.setEntryListenerConfigs(
-                    (List<EntryListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs));
+                    (List<EntryListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs, parameters.namespaceName));
         }
         if (parameters.merkleTreeConfig != null) {
             config.setMerkleTreeConfig(parameters.merkleTreeConfig);
@@ -97,7 +97,8 @@ public class AddMapConfigMessageTask
         config.setPartitioningStrategyConfig(getPartitioningStrategyConfig());
         if (parameters.partitionLostListenerConfigs != null && !parameters.partitionLostListenerConfigs.isEmpty()) {
             config.setPartitionLostListenerConfigs(
-                    (List<MapPartitionLostListenerConfig>) adaptListenerConfigs(parameters.partitionLostListenerConfigs));
+                    (List<MapPartitionLostListenerConfig>) adaptListenerConfigs(parameters.partitionLostListenerConfigs,
+                            parameters.namespaceName));
         }
         config.setSplitBrainProtectionName(parameters.splitBrainProtectionName);
         if (parameters.queryCacheConfigs != null && !parameters.queryCacheConfigs.isEmpty()) {

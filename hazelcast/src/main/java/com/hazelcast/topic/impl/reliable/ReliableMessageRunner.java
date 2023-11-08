@@ -18,8 +18,10 @@ package com.hazelcast.topic.impl.reliable;
 
 import com.hazelcast.cluster.Member;
 import com.hazelcast.internal.cluster.ClusterService;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.internal.serialization.SerializationService;
+import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.topic.ReliableMessageListener;
 
 import java.util.UUID;
@@ -30,6 +32,9 @@ public class ReliableMessageRunner<E> extends MessageRunner<E> {
     private final ClusterService clusterService;
     private final ReliableTopicProxy<E> proxy;
 
+    private final NodeEngine nodeEngine;
+    private final String namespace;
+
     ReliableMessageRunner(UUID id, ReliableMessageListener<E> listener,
                           SerializationService serializationService,
                           Executor executor, ILogger logger, ClusterService clusterService,
@@ -38,6 +43,13 @@ public class ReliableMessageRunner<E> extends MessageRunner<E> {
                 serializationService, executor, proxy.runnersMap, logger);
         this.clusterService = clusterService;
         this.proxy = proxy;
+        this.nodeEngine = proxy.getNodeEngine();
+        this.namespace = proxy.getService().getNamespace(proxy.getName());
+    }
+
+    @Override
+    protected void runWithNamespaceAwareness(Runnable runnable) {
+        NamespaceUtil.runWithNamespace(nodeEngine, namespace, runnable);
     }
 
     @Override

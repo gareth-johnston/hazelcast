@@ -311,6 +311,7 @@ public class SplitBrainProtectionServiceImpl implements EventPublishingService<S
 
     @Override
     public void dispatchEvent(SplitBrainProtectionEvent event, SplitBrainProtectionListener listener) {
+        // TODO: Do we need Namespace awareness here?
         listener.onChange(event);
     }
 

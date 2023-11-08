@@ -17,6 +17,7 @@
 package com.hazelcast.map.impl.event;
 
 import com.hazelcast.core.EntryEvent;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.spi.impl.eventservice.EventPublishingService;
 import com.hazelcast.map.IMapEvent;
 import com.hazelcast.map.MapEvent;
@@ -59,47 +60,48 @@ public class MapEventPublishingService implements EventPublishingService<Object,
     @Override
     @SuppressWarnings("checkstyle:npathcomplexity")
     public void dispatchEvent(Object eventData, ListenerAdapter listener) {
+        handleNamespaceAwareness(eventData, false);
+
         if (eventData instanceof QueryCacheEventData) {
             dispatchQueryCacheEventData((QueryCacheEventData) eventData, listener);
-            return;
-        }
-
-        if (eventData instanceof BatchEventData) {
+        } else if (eventData instanceof BatchEventData) {
             dispatchBatchEventData((BatchEventData) eventData, listener);
-            return;
-        }
-
-        if (eventData instanceof LocalEntryEventData) {
+        } else if (eventData instanceof LocalEntryEventData) {
             dispatchLocalEventData(((LocalEntryEventData) eventData), listener);
-            return;
-        }
-
-        if (eventData instanceof LocalCacheWideEventData) {
+        } else if (eventData instanceof LocalCacheWideEventData) {
             dispatchLocalEventData(((LocalCacheWideEventData) eventData), listener);
-            return;
-        }
-
-        if (eventData instanceof EntryEventData) {
+        } else if (eventData instanceof EntryEventData) {
             dispatchEntryEventData((EntryEventData) eventData, listener);
-            return;
-        }
-        if (eventData instanceof MapEventData) {
+        } else if (eventData instanceof MapEventData) {
             dispatchMapEventData((MapEventData) eventData, listener);
-            return;
-        }
-
-        if (eventData instanceof MapPartitionEventData) {
+        } else if (eventData instanceof MapPartitionEventData) {
             dispatchMapPartitionLostEventData((MapPartitionEventData) eventData, listener);
-            return;
-        }
-
-        if (eventData instanceof Invalidation) {
+        } else if (eventData instanceof Invalidation) {
             listener.onEvent(eventData);
             incrementEventStats(((Invalidation) eventData));
-            return;
+        } else {
+            throw new IllegalArgumentException("Unknown event data [" + eventData + ']');
         }
 
-        throw new IllegalArgumentException("Unknown event data [" + eventData + ']');
+        handleNamespaceAwareness(eventData, true);
+    }
+
+    private void handleNamespaceAwareness(Object eventData, boolean cleanup) {
+        String mapName;
+        if (eventData instanceof EventData) {
+            mapName = ((EventData) eventData).getMapName();
+        } else if (eventData instanceof IMapEvent) {
+            mapName = ((IMapEvent) eventData).getName();
+        } else {
+            throw new IllegalArgumentException("Unknown event data type: " + eventData.getClass());
+        }
+
+        String namespace = MapServiceContext.lookupMapNamespace(nodeEngine, mapName);
+        if (cleanup) {
+            NamespaceUtil.cleanupNamespace(nodeEngine, namespace);
+        } else {
+            NamespaceUtil.setupNamespace(nodeEngine, namespace);
+        }
     }
 
     private void incrementEventStats(Invalidation data) {

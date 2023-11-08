@@ -18,6 +18,7 @@ package com.hazelcast.multimap.impl;
 
 import com.hazelcast.cluster.Address;
 import com.hazelcast.config.MultiMapConfig;
+import com.hazelcast.config.ReliableTopicConfig;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.EntryEventType;
 import com.hazelcast.core.EntryListener;
@@ -559,6 +560,15 @@ public class MultiMapService implements ManagedService, RemoteService, ChunkedMi
     @Override
     public void provideDynamicMetrics(MetricDescriptor descriptor, MetricsCollectionContext context) {
         provide(descriptor, context, MULTIMAP_PREFIX, getStats());
+    }
+
+    public String getNamespace(String mapName) {
+        // No regular containers available, fallback to config
+        MultiMapConfig config = nodeEngine.getConfig().getMultiMapConfig(mapName);
+        if (config != null) {
+            return config.getNamespace();
+        }
+        return null;
     }
 
     private class Merger extends

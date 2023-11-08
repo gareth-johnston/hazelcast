@@ -92,7 +92,6 @@ final class SerializerHookLoader {
         try {
             String className = serializerConfig.getClassName();
             if (useDefaultConstructorOnly) {
-                // TODO: Do we need Namespace awareness here? No, I don't think so?
                 return ClassLoaderUtil.newInstance(classLoader, className);
             } else {
                 return createSerializerInstanceWithFallback(serializationType, className);
