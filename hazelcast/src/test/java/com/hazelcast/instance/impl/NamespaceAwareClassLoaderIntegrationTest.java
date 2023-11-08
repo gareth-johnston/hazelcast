@@ -333,9 +333,14 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                 h2V204Artifact.getVersion(), executeMapLoader(hazelcastInstance, driverManager.getRight()));
     }
 
-    // TODO Should this be somewhere else?
+    /**
+     * TODO Should this be somewhere else?
+     *
+     * @see <a href="https://hazelcast.atlassian.net/browse/HZ-3450">HZ-3450 - Implement message tasks for adding & removing
+     *      namespaces</a>
+     */
     @Test
-    public void testConfigPropagation() {
+    public void testClientToMemberConfigPropagation() {
         TestHazelcastFactory factory = new TestHazelcastFactory();
 
         try {
@@ -345,12 +350,12 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
             // Add
             client.getConfig().getNamespacesConfig().addNamespaceConfig(processor.namespace);
-            assertTrue("Namespace configuration addition has not propagated to second member",
+            assertTrue("Namespace configuration addition has not propagated from client to member",
                     Accessors.getNode(member).getNamespaceService().hasNamespace(processor.namespace.getName()));
 
             // Remove
             client.getConfig().getNamespacesConfig().removeNamespaceConfig(processor.namespace);
-            assertFalse("Namespace configuration removal has not propagated to second member",
+            assertFalse("Namespace configuration removal has not propagated from client to member",
                     Accessors.getNode(member).getNamespaceService().hasNamespace(processor.namespace.getName()));
         } finally {
             factory.shutdownAll();
