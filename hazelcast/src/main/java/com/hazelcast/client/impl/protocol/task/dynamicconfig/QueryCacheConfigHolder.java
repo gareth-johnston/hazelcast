@@ -232,7 +232,7 @@ public class QueryCacheConfigHolder {
             List<ListenerConfigHolder> listenerConfigHolders =
                     new ArrayList<>(config.getEntryListenerConfigs().size());
             for (EntryListenerConfig listenerConfig : config.getEntryListenerConfigs()) {
-                listenerConfigHolders.add(ListenerConfigHolder.of(listenerConfig, serializationService, config.getNamespace()));
+                listenerConfigHolders.add(ListenerConfigHolder.of(listenerConfig, serializationService));
             }
             holder.setListenerConfigs(listenerConfigHolders);
         }

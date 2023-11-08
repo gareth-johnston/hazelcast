@@ -201,13 +201,11 @@ public class ListenerConfigHolder {
         }
     }
 
-    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService, String namespace) {
+    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService) {
         ListenerConfigType listenerType = listenerTypeOf(config);
         Data implementationData = null;
         if (config.getImplementation() != null) {
-            // TODO Do we need to have Namespace awareness for #toData? I think not?
-            implementationData = NamespaceUtil.callWithNamespace(namespace,
-                    () -> serializationService.toData(config.getImplementation()));
+            implementationData = serializationService.toData(config.getImplementation());
         }
         return new ListenerConfigHolder(listenerType, implementationData, config.getClassName(), config.isIncludeValue(),
                 config.isLocal());
