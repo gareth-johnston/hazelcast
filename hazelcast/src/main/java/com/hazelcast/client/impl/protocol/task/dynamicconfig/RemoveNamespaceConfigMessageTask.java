@@ -59,6 +59,6 @@ public class RemoveNamespaceConfigMessageTask
 
     @Override
     public Permission[] getRequiredPermissions() {
-        return new Permission[] {new NamespacePermission(parameters.name, ActionConstants.ACTION_DESTROY)};
+        return extendPermissions(new NamespacePermission(parameters.name, ActionConstants.ACTION_DESTROY));
     }
 }
