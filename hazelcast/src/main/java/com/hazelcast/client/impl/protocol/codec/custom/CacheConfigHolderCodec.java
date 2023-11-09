@@ -73,7 +73,6 @@ public final class CacheConfigHolderCodec {
         ListMultiFrameCodec.encodeNullable(clientMessage, cacheConfigHolder.getCachePartitionLostListenerConfigs(), ListenerConfigHolderCodec::encode);
         CodecUtil.encodeNullable(clientMessage, cacheConfigHolder.getMerkleTreeConfig(), MerkleTreeConfigCodec::encode);
         DataPersistenceConfigCodec.encode(clientMessage, cacheConfigHolder.getDataPersistenceConfig());
-        CodecUtil.encodeNullable(clientMessage, cacheConfigHolder.getNamespace(), StringCodec::encode);
 
         clientMessage.add(END_FRAME.copy());
     }
@@ -121,10 +120,9 @@ public final class CacheConfigHolderCodec {
             dataPersistenceConfig = DataPersistenceConfigCodec.decode(iterator);
             isDataPersistenceConfigExists = true;
         }
-        java.lang.String namespace = StringCodec.decode(iterator);
 
         fastForwardToEndFrame(iterator);
 
-        return new com.hazelcast.client.impl.protocol.codec.holder.CacheConfigHolder(name, managerPrefix, uriString, backupCount, asyncBackupCount, inMemoryFormat, evictionConfigHolder, wanReplicationRef, keyClassName, valueClassName, cacheLoaderFactory, cacheWriterFactory, expiryPolicyFactory, readThrough, writeThrough, storeByValue, managementEnabled, statisticsEnabled, hotRestartConfig, eventJournalConfig, splitBrainProtectionName, listenerConfigurations, mergePolicyConfig, disablePerEntryInvalidationEvents, cachePartitionLostListenerConfigs, isMerkleTreeConfigExists, merkleTreeConfig, isDataPersistenceConfigExists, dataPersistenceConfig, namespace);
+        return new com.hazelcast.client.impl.protocol.codec.holder.CacheConfigHolder(name, managerPrefix, uriString, backupCount, asyncBackupCount, inMemoryFormat, evictionConfigHolder, wanReplicationRef, keyClassName, valueClassName, cacheLoaderFactory, cacheWriterFactory, expiryPolicyFactory, readThrough, writeThrough, storeByValue, managementEnabled, statisticsEnabled, hotRestartConfig, eventJournalConfig, splitBrainProtectionName, listenerConfigurations, mergePolicyConfig, disablePerEntryInvalidationEvents, cachePartitionLostListenerConfigs, isMerkleTreeConfigExists, merkleTreeConfig, isDataPersistenceConfigExists, dataPersistenceConfig);
     }
 }
