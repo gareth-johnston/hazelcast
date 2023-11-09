@@ -22,6 +22,7 @@ import com.hazelcast.test.HazelcastTestSupport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -56,6 +57,9 @@ public abstract class AbstractConfigBuilderTest extends HazelcastTestSupport {
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public abstract void testConfigurationURL() throws Exception;
@@ -728,6 +732,9 @@ public abstract class AbstractConfigBuilderTest extends HazelcastTestSupport {
 
     @Test
     public abstract void testPartitioningAttributeConfigs();
+
+    @Test
+    public abstract void testNamespaceConfigs() throws IOException;
 
     protected abstract Config buildAuditlogConfig();
 

@@ -18,7 +18,6 @@ package com.hazelcast.multimap.impl;
 
 import com.hazelcast.cluster.Address;
 import com.hazelcast.config.MultiMapConfig;
-import com.hazelcast.config.ReliableTopicConfig;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.EntryEventType;
 import com.hazelcast.core.EntryListener;

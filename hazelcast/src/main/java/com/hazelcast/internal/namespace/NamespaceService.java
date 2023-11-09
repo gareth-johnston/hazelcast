@@ -17,7 +17,6 @@
 package com.hazelcast.internal.namespace;
 
 import com.hazelcast.config.NamespaceConfig;
-import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

@@ -167,9 +167,9 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         // Add the latest Derby version that supports Java 11 (newer versions require Java 17)
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
                 .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derby", null, "10.15.2.0"))
-                        .toUri().toURL())
+                        .toUri().toURL(), null)
                 .addJar(MavenInterface.locateArtifact(new DefaultArtifact("org.apache.derby", "derbyshared", null, "10.15.2.0"))
-                        .toUri().toURL());
+                        .toUri().toURL(), null);
 
         config.getNamespacesConfig().addNamespaceConfig(namespace);
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
@@ -207,7 +207,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         // Deliberately use an older version
         NamespaceConfig namespace = new NamespaceConfig("ns1").addClass(mapResourceClassLoader.loadClass(className))
-                .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL());
+                .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL(), null);
         config.getNamespacesConfig().addNamespaceConfig(namespace);
 
         config.getMapConfig(mapName).setNamespace(namespace.getName()).getMapStoreConfig().setEnabled(true)
@@ -295,7 +295,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         Pair<String, String>[] classes = new Pair[] {driverManager, dataSource};
 
         NamespaceConfig namespace = new NamespaceConfig("ns1")
-                .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL());
+                .addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL(), null);
         config.getNamespacesConfig().addNamespaceConfig(namespace);
 
         for (Pair<String, String> clazz : classes) {
@@ -315,7 +315,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
 
         // Now dynamically reconfigure to an alternative version of H2
         namespace = new NamespaceConfig(namespace.getName())
-                .addJar(MavenInterface.locateArtifact(h2V204Artifact).toUri().toURL());
+                .addJar(MavenInterface.locateArtifact(h2V204Artifact).toUri().toURL(), null);
 
         for (Pair<String, String> clazz : classes) {
             namespace.addClass(mapResourceClassLoader.loadClass(clazz.getLeft()));

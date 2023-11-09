@@ -3240,6 +3240,16 @@ public class Config {
     }
 
     /**
+     * Sets the namespaces configuration .
+     *
+     * @since 5.4.0
+     */
+    public @Nonnull Config setNamespacesConfig(@Nonnull NamespacesConfig namespacesConfig) {
+        this.namespacesConfig = checkNotNull(namespacesConfig);
+        return this;
+    }
+
+    /**
      * Gets the TpcConfig. Can't return null.
      *
      * @return the TpcConfig.
@@ -3331,6 +3341,7 @@ public class Config {
                 + ", integrityCheckerConfig=" + integrityCheckerConfig
                 + ", dataConnectionConfigs=" + dataConnectionConfigs
                 + ", tpcConfig=" + tpcConfig
+                + ", namespacesConfig=" + namespacesConfig
                 + '}';
     }
 }

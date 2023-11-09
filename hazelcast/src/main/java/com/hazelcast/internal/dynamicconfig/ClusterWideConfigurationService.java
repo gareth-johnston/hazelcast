@@ -246,14 +246,15 @@ public class ClusterWideConfigurationService implements
     }
 
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config,
-            BiFunction<ClusterService, IdentifiedDataSerializable, DynamicConfigOperationSupplier> dynamicConfigOperationGenerator) {
+                                                                  BiFunction<ClusterService, IdentifiedDataSerializable,
+                                                                  DynamicConfigOperationSupplier> dynamicConfigOpGenerator) {
         checkConfigVersion(config);
         // we create a defensive copy as local operation execution might use a fast-path
         // and avoid config serialization altogether.
         // we certainly do not want the dynamic config service to reference object a user can mutate
         IdentifiedDataSerializable clonedConfig = cloneConfig(config);
         ClusterService clusterService = nodeEngine.getClusterService();
-        return invokeOnStableClusterSerial(nodeEngine, dynamicConfigOperationGenerator.apply(clusterService, clonedConfig),
+        return invokeOnStableClusterSerial(nodeEngine, dynamicConfigOpGenerator.apply(clusterService, clonedConfig),
                 CONFIG_PUBLISH_MAX_ATTEMPT_COUNT);
     }
 

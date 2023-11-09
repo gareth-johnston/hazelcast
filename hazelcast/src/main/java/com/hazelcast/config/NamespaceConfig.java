@@ -51,6 +51,11 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
         this.name = name;
     }
 
+    public NamespaceConfig(NamespaceConfig config) {
+        this.name = config.name;
+        this.resourceDefinitions.putAll(config.resourceDefinitions);
+    }
+
     @Override
     public NamespaceConfig setName(String name) {
         this.name = name;
@@ -69,12 +74,12 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
         return this;
     }
 
-    public NamespaceConfig addJar(@Nonnull URL url) {
-        return add(url, null, ResourceType.JAR);
+     public NamespaceConfig addJar(@Nonnull URL url, @Nullable String id) {
+        return add(url, id, ResourceType.JAR);
     }
 
-    public NamespaceConfig addJarsInZip(@Nonnull URL url) {
-        return add(url, null, ResourceType.JARS_IN_ZIP);
+    public NamespaceConfig addJarsInZip(@Nonnull URL url, @Nullable String id) {
+        return add(url, id, ResourceType.JARS_IN_ZIP);
     }
 
     private NamespaceConfig add(@Nonnull URL url, @Nullable String id, @Nonnull ResourceType resourceType) {

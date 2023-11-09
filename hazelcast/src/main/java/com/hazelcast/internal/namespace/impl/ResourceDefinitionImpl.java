@@ -32,14 +32,16 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
     private String id;
     private byte[] payload;
     private ResourceType type;
+    private String url;
 
     public ResourceDefinitionImpl() {
     }
 
-    public ResourceDefinitionImpl(String id, byte[] payload, ResourceType type) {
+    public ResourceDefinitionImpl(String id, byte[] payload, ResourceType type, String url) {
         this.id = id;
         this.payload = payload;
         this.type = type;
+        this.url = url;
     }
 
     public ResourceDefinitionImpl(ResourceConfig resourceConfig) {
@@ -47,6 +49,7 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
             id = resourceConfig.getId();
             payload = is.readAllBytes();
             type = resourceConfig.getResourceType();
+            url = resourceConfig.getUrl().toString();
         } catch (IOException e) {
             throw new IllegalArgumentException(
                     "Could not open stream for resource id " + resourceConfig.getId() + " and URL " + resourceConfig.getUrl(),
@@ -102,6 +105,11 @@ public class ResourceDefinitionImpl implements ResourceDefinition {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String url() {
+        return url;
     }
 
     @Override

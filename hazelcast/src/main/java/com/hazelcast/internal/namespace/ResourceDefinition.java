@@ -38,4 +38,10 @@ public interface ResourceDefinition extends IdentifiedDataSerializable {
      * todo byte[] or input stream? if the latter, what is its lifecycle?
      */
     byte[] payload();
+
+    /**
+     *
+     * @return the path of the resource
+     */
+    String url();
 }

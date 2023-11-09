@@ -151,7 +151,6 @@ import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.jet.config.EdgeConfig;
 import com.hazelcast.jet.config.InstanceConfig;
 import com.hazelcast.jet.config.JetConfig;
-import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.query.impl.IndexUtils;
@@ -2684,35 +2683,56 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
         config.getNamespacesConfig().setEnabled(enabled);
 
         if (enabled) {
-            for (Node n : childElements(node)) {
-                String nodeName = cleanNodeName(n);
-                if (matches(nodeName, "namespace")) {
-                    handleNamespace(n);
-                }
-            }
+            handleNamespacesNode(node);
         }
     }
 
-    protected void handleNamespace(Node node) {
-        Node attName = getNamedItemNode(node, "name");
-        String name = getTextContent(attName);
-        NamespaceConfig nsConfig = new NamespaceConfig(name);
-        handleNamespaceNode(node, nsConfig);
-    }
-
-    void handleNamespaceNode(Node node, final NamespaceConfig nsConfig) {
+    void handleNamespacesNode(Node node) {
         for (Node n : childElements(node)) {
             String nodeName = cleanNodeName(n);
-            if (matches(nodeName, "resource")) {
-                handleResourceNode(n, nsConfig);
+            if (matches(nodeName, "namespace")) {
+                Node attName = getNamedItemNode(n, "name");
+                String name = getTextContent(attName);
+                NamespaceConfig nsConfig = new NamespaceConfig(name);
+                handleResources(n, nsConfig);
+                config.getNamespacesConfig().addNamespaceConfig(nsConfig);
             }
         }
-        config.getNamespacesConfig().addNamespaceConfig(nsConfig);
     }
 
-    void handleResourceNode(Node node, final NamespaceConfig nsConfig) {
-        String type = getAttribute(node, "type");
-        ResourceType resourceType = ResourceType.valueOf(upperCaseInternal(type));
+    void handleResources(Node node, final NamespaceConfig nsConfig) {
+        for (Node n : childElements(node)) {
+            String nodeName = cleanNodeName(n);
+            if (matches(nodeName, "jar")) {
+                handleJarNode(n, nsConfig);
+            }
+            if (matches(nodeName, "jars-in-zip")) {
+                handleJarsInZipNode(n, nsConfig);
+            }
+        }
+    }
+
+    void handleJarNode(Node node, final NamespaceConfig nsConfig) {
+        URL url = getNamespaceResourceUrl(node);
+        String id = getAttribute(node, "id");
+        if (url != null) {
+            nsConfig.addJar(url, id);
+        } else {
+            throw new InvalidConfigurationException("Path for jars-in-zip is missing");
+        }
+    }
+
+    void handleJarsInZipNode(Node node, final NamespaceConfig nsConfig) {
+        URL url = getNamespaceResourceUrl(node);
+        String id = getAttribute(node, "id");
+        if (url != null) {
+            nsConfig.addJarsInZip(url, id);
+        } else {
+            throw new InvalidConfigurationException("Path for jars-in-zip is missing");
+        }
+    }
+
+    private URL getNamespaceResourceUrl(Node node) {
         URL url = null;
         for (Node n : childElements(node)) {
             String nodeName = cleanNodeName(n);
@@ -2725,17 +2745,8 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
                 }
             }
         }
-        switch (resourceType) {
-            case JAR:
-                nsConfig.addJar(url);
-                break;
-            case JARS_IN_ZIP:
-                nsConfig.addJarsInZip(url);
-                break;
-            // todo remaining cases
-        }
+        return url;
     }
-
 
     protected void handleReliableTopic(Node node) {
         Node attName = getNamedItemNode(node, "name");

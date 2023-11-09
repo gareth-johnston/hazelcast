@@ -1111,4 +1111,23 @@
         <eventloop-count>12</eventloop-count>
     </tpc>
 
+    <namespaces enabled="false">
+        <namespace name="ns1">
+            <jar id="jarId">
+                <url>file:///path/to/jar</url>
+            </jar>
+            <jars-in-zip id="jarsInZipId">
+                <url>file:///path/to/jarsInZip/jars.zip</url>
+            </jars-in-zip>
+        </namespace>
+        <namespace name="ns2">
+            <jar id="jarId2">
+                <url>file:///path/to/jar2</url>
+            </jar>
+            <jar id="jarId3">
+                <url>file:///path/to/jar3</url>
+            </jar>
+        </namespace>
+    </namespaces>
+
 </hazelcast>

@@ -149,14 +149,6 @@
         <property name="your-property">Value of the property</property>
     </properties>
 
-    <namespaces enabled="true">
-        <namespace name="ns1">
-            <resource type="JAR">
-                <url>file:///Users/vbekiaris/workspace/github/vbekiaris/hazelcast/hazelcast/src/test/class/ChildParent.jar</url>
-            </resource>
-        </namespace>
-    </namespaces>
-
 
     <!--
         ===== HAZELCAST WAN REPLICATION CONFIGURATION =====
@@ -4025,5 +4017,24 @@
         <!-- Configures the number of eventloops. It's equal to available processor count by default. -->
         <eventloop-count>12</eventloop-count>
     </tpc>
+
+    <namespaces enabled="false">
+        <namespace name="ns1">
+            <jar id="jarId">
+                <url>file:///path/to/jar</url>
+            </jar>
+            <jars-in-zip id="jarsInZipId">
+                <url>file:///path/to/jarsInZip/jars.zip</url>
+            </jars-in-zip>
+        </namespace>
+        <namespace name="ns2">
+            <jar id="jarId2">
+                <url>file:///path/to/jar2</url>
+            </jar>
+            <jar id="jarId3">
+                <url>file:///path/to/jar3</url>
+            </jar>
+        </namespace>
+    </namespaces>
 
 </hazelcast>

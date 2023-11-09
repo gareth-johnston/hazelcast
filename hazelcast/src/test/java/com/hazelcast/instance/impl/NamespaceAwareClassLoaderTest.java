@@ -124,7 +124,7 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
     @Test
     public void whenLoadInnerClassKnownToParent_thenIsLoaded() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("ns1").addJar(
-                urlFromFile(fileRelativeToBinariesFolder("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar"))));
+                urlFromFile(fileRelativeToBinariesFolder("/usercodedeployment/EntryProcessorWithAnonymousAndInner.jar")), null));
          populateConfigClassLoader();
 
         tryLoadClass("ns1", "usercodedeployment.EntryProcessorWithAnonymousAndInner");
@@ -144,7 +144,7 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
     @Test
     public void testServiceLoader_whenMultipleServicesOnClasspath() throws Exception {
         config.getNamespacesConfig().addNamespaceConfig(
-                new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL()));
+                new NamespaceConfig("ns1").addJar(MavenInterface.locateArtifact(h2V202Artifact).toUri().toURL(), null));
         populateConfigClassLoader();
         ClassLoader testClassLoader = NamespaceAwareClassLoaderTest.class.getClassLoader();
 

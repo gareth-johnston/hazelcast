@@ -94,14 +94,14 @@ public class NamespaceServiceImplTest {
     private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String idPath)
             throws IOException {
         final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(idPath));
-        return Collections.singleton(new ResourceDefinitionImpl(idPath, bytes, ResourceType.JAR));
+        return Collections.singleton(new ResourceDefinitionImpl(idPath, bytes, ResourceType.JAR, idPath));
     }
 
     private static Set<ResourceDefinition> classResourcesFromClassPath(String... classIdPaths) {
         return Arrays.stream(classIdPaths).map(idPath -> {
             try {
                 final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(idPath));
-                return new ResourceDefinitionImpl(idPath, bytes, ResourceType.CLASS);
+                return new ResourceDefinitionImpl(idPath, bytes, ResourceType.CLASS, idPath);
             } catch (final IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -120,13 +120,13 @@ public class NamespaceServiceImplTest {
                 + "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"\n"
                 + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
                 + "           xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
-                + "           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd\">\n" + "\n"
+                + "           http://www.hazelcast.com/schema/config/hazelcast-config-5.4.xsd\">\n" + "\n"
                 + "    <cluster-name>cluster</cluster-name>\n\n"
                 + "    <namespaces enabled=\"true\">\n"
                 + "        <namespace name=\"myNamespace\">\n"
-                + "          <resource type=\"JAR\">\n"
+                + "          <jar>\n"
                 + "              <url>file:///" + stringPath + "</url>\n"
-                + "          </resource>\n"
+                + "          </jar>\n"
                 + "      </namespace>\n"
                 + "    </namespaces>\n\n"
                 + "    <map name=\"myMap\">\n"

@@ -31,8 +31,10 @@ import com.hazelcast.config.security.RealmConfig;
 import com.hazelcast.config.security.SimpleAuthenticationConfig;
 import com.hazelcast.instance.EndpointQualifier;
 import com.hazelcast.internal.config.SchemaViolationConfigurationException;
+import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.internal.serialization.impl.compact.CompactTestUtil;
+import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.memory.Capacity;
 import com.hazelcast.memory.MemoryUnit;
 import com.hazelcast.splitbrainprotection.SplitBrainProtectionOn;
@@ -51,6 +53,8 @@ import org.junit.runner.RunWith;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -61,6 +65,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -86,6 +91,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -4640,6 +4646,71 @@ public class YamlConfigBuilderTest extends AbstractConfigBuilderTest {
                 new PartitioningAttributeConfig("attr1"),
                 new PartitioningAttributeConfig("attr2")
         );
+    }
+
+    @Override
+    public void testNamespaceConfigs() throws IOException {
+
+        File tempJar = tempFolder.newFile("tempJar.jar");
+        try (FileOutputStream out = new FileOutputStream(tempJar)) {
+            out.write(new byte[]{0x50, 0x4B, 0x03, 0x04});
+        }
+        File tempJarZip = tempFolder.newFile("tempZip.zip");
+
+        String yamlTestString = "hazelcast:\n"
+                + "  namespaces:\n"
+                + "    enabled: true\n"
+                + "    ns1:\n"
+                + "      - jar:\n"
+                + "          id: \"jarId\"\n"
+                + "          url: " + tempJar.toURI().toURL() + "\n"
+                + "      - jars-in-zip:\n"
+                + "          id: \"zipId\"\n"
+                + "          url: " + tempJarZip.toURI().toURL() + "\n"
+                + "    ns2:\n"
+                + "      - jar:\n"
+                + "          id: \"jarId2\"\n"
+                + "          url: " + tempJar.toURI().toURL() + "\n";
+
+
+        final NamespacesConfig namespacesConfig = buildConfig(yamlTestString).getNamespacesConfig();
+        assertThat(namespacesConfig.isEnabled()).isTrue();
+        assertThat(namespacesConfig.getNamespaceConfigs()).hasSize(2);
+        final NamespaceConfig namespaceConfig = namespacesConfig.getNamespaceConfigs().get("ns1");
+
+        assertNotNull(namespaceConfig);
+
+        assertThat(namespaceConfig.getName()).isEqualTo("ns1");
+        assertThat(namespaceConfig.getResourceConfigs()).hasSize(2);
+
+        //validate NS1 ResourceDefinition contents.
+        Collection<ResourceDefinition> ns1Resources = namespaceConfig.getResourceConfigs();
+        assertThat(ns1Resources).hasSize(2);
+        Optional<ResourceDefinition> jarIdResource = ns1Resources.stream().filter(r -> r.id().equals("jarId")).findFirst();
+        assertThat(jarIdResource).isPresent();
+        assertThat(jarIdResource.get().url()).isEqualTo(tempJar.toURI().toURL().toString());
+        assertEquals(ResourceType.JAR, jarIdResource.get().type());
+        //check the bytes[] are equal
+        assertArrayEquals(getTestFileBytes(tempJar), jarIdResource.get().payload());
+        Optional<ResourceDefinition> zipId = ns1Resources.stream().filter(r -> r.id().equals("zipId")).findFirst();
+        assertThat(zipId).isPresent();
+        assertThat(zipId.get().url()).isEqualTo(tempJarZip.toURI().toURL().toString());
+        assertEquals(ResourceType.JARS_IN_ZIP, zipId.get().type());
+        //check the bytes[] are equal
+        assertArrayEquals(getTestFileBytes(tempJarZip), zipId.get().payload());
+        //validate NS2 ResourceDefinition contents.
+        final NamespaceConfig namespaceConfig2 = namespacesConfig.getNamespaceConfigs().get("ns2");
+        assertNotNull(namespaceConfig2);
+        assertThat(namespaceConfig2.getName()).isEqualTo("ns2");
+        assertThat(namespaceConfig2.getResourceConfigs()).hasSize(1);
+        Collection<ResourceDefinition> ns2Resources = namespaceConfig2.getResourceConfigs();
+        assertThat(ns2Resources).hasSize(1);
+        Optional<ResourceDefinition> jarId2Resource = ns2Resources.stream().filter(r -> r.id().equals("jarId2")).findFirst();
+        assertThat(jarId2Resource).isPresent();
+        assertThat(jarId2Resource.get().url()).isEqualTo(tempJar.toURI().toURL().toString());
+        assertEquals(ResourceType.JAR, jarId2Resource.get().type());
+        //check the bytes[] are equal
+        assertArrayEquals(getTestFileBytes(tempJar), jarId2Resource.get().payload());
     }
 
     @Override

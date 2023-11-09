@@ -1,0 +1,69 @@
+{
+  "instance": {
+    "hazelcast": {
+      "namespaces": {
+        "namespace1": [
+          {
+            "jar": {
+              "id": "unique-jar-id",
+              "url": "wrong/path"
+            }
+          },
+          {
+            "jars-in-zip": {
+              "id": "unique-jarsinzip-id"
+            }
+          },
+          {
+            "jars-in-zip": {
+              "id": 123,
+              "url": "file://path"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/NamespacesConfig",
+    "pointerToViolation": "#/hazelcast/namespaces",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/definitions/NamespacesConfig",
+        "pointerToViolation": "#/hazelcast/namespaces",
+        "causingExceptions": [],
+        "keyword": "required",
+        "message": "required key [enabled] not found"
+      },
+      {
+        "schemaLocation": "#/definitions/NamespacesConfig/additionalProperties",
+        "pointerToViolation": "#/hazelcast/namespaces/namespace1",
+        "causingExceptions": [
+          {
+            "schemaLocation": "#/definitions/Resource",
+            "pointerToViolation": "#/hazelcast/namespaces/namespace1/1/jars-in-zip",
+            "causingExceptions": [],
+            "keyword": "required",
+            "message": "required key [url] not found"
+          },
+          {
+            "schemaLocation": "#/definitions/Resource/properties/id",
+            "pointerToViolation": "#/hazelcast/namespaces/namespace1/2/jars-in-zip/id",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: String, found: Integer"
+          },
+          {
+            "schemaLocation": "#/definitions/Resource/properties/url",
+            "pointerToViolation": "#/hazelcast/namespaces/namespace1/0/jar/url",
+            "causingExceptions": [],
+            "keyword": "format",
+            "message": "[wrong/path] is not a valid URI"
+          }
+        ],
+        "message": "3 schema violations found"
+      }
+    ],
+    "message": "4 schema violations found"
+  }
+}

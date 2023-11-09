@@ -19,7 +19,6 @@ package com.hazelcast.internal.namespace.impl;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.util.ExceptionUtil;
-import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
