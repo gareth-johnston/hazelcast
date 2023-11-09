@@ -53,7 +53,7 @@ public class QueryCacheConfigHolder {
                                   boolean populate, boolean coalesce, String inMemoryFormat, String name,
                                   PredicateConfigHolder predicateConfigHolder, EvictionConfigHolder evictionConfigHolder,
                                   List<ListenerConfigHolder> listenerConfigs, List<IndexConfig> indexConfigs,
-                                  boolean serializeKeysExist, boolean serializeKeys, boolean isNamespaceNameExists, 
+                                  boolean serializeKeysExist, boolean serializeKeys, boolean isNamespaceNameExists,
                                   String namespaceName) {
         this.batchSize = batchSize;
         this.bufferSize = bufferSize;
@@ -214,7 +214,7 @@ public class QueryCacheConfigHolder {
         if (serializeKeysExist) {
             config.setSerializeKeys(serializeKeys);
         }
-        if(isNamespaceNameExists) {
+        if (isNamespaceNameExists) {
             config.setNamespace(namespaceName);
         }
         return config;

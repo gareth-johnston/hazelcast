@@ -27,7 +27,7 @@ public interface SecureRequest {
      * <p>
      * Once {@link getRequiredPermission()} is ready for removal, the {@code default} implementation of
      * {@link getRequiredPermissions()} can also be removed.
-     * 
+     *
      * @deprecated use {@link #getDistributedObjectType()} instead
      */
     @Deprecated(since = "5.4")
