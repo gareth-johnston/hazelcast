@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.hazelcast.client.impl.protocol.ClientMessage.IS_FINAL_FLAG;
@@ -239,9 +240,10 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     private void checkPermissions(ClientEndpoint endpoint) {
         SecurityContext securityContext = clientEngine.getSecurityContext();
         if (securityContext != null) {
-            Permission permission = getRequiredPermission();
-            if (permission != null) {
-                securityContext.checkPermission(endpoint.getSubject(), permission);
+            Permission[] permissions = getRequiredPermissions();
+            if (permissions != null) {
+                Arrays.stream(permissions).filter(Objects::nonNull)
+                        .forEach(permission -> securityContext.checkPermission(endpoint.getSubject(), permission));
             }
         }
     }
