@@ -16,11 +16,28 @@
 
 package com.hazelcast.client.impl.client;
 
+import javax.annotation.Nullable;
+
 import java.security.Permission;
 
 public interface SecureRequest {
-
+    /**
+     * Although this method is {@link Deprecated}, to avoid changing <em>every</em> implementation of {@link SecureRequest}, an
+     * implementation is still required. This to enforce that at least one permission accessor is implemented.
+     * <p>
+     * Once {@link getRequiredPermission()} is ready for removal, the {@code default} implementation of
+     * {@link getRequiredPermissions()} can also be removed.
+     * 
+     * @deprecated use {@link #getDistributedObjectType()} instead
+     */
+    @Deprecated(since = "5.4")
+    @Nullable
     Permission getRequiredPermission();
+
+    @Nullable
+    default Permission[] getRequiredPermissions() {
+        return new Permission[] {getRequiredPermission()};
+    }
 
     /**
      * Used for {@link com.hazelcast.security.SecurityInterceptor}
