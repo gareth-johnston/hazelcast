@@ -1198,9 +1198,19 @@ public class ClientDynamicClusterConfig extends Config {
     // S1185:S1612 A test (testDecorateAllPublicMethodsFromTest) forces this class to implement all of the parent methods, but
     // as we are overriding "namespaceConfig" with our own version, the parent implementation is sufficient
     @SuppressWarnings("squid:S1185")
+    @Nonnull
     @Override
     public NamespacesConfig getNamespacesConfig() {
         return super.getNamespacesConfig();
+    }
+
+    // S1185:S1612 A test (testDecorateAllPublicMethodsFromTest) forces this class to implement all of the parent methods, but
+    // as we are overriding "namespaceConfig" with our own version, the parent implementation is sufficient
+    @SuppressWarnings("squid:S1185")
+    @Nonnull
+    @Override
+    public Config setNamespacesConfig(@Nonnull NamespacesConfig namespacesConfig) {
+        return super.setNamespacesConfig(namespacesConfig);
     }
 
     @Override
