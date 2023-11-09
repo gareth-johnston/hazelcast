@@ -65,7 +65,8 @@ public class CacheConfigHolder {
     private final List<ListenerConfigHolder> cachePartitionLostListenerConfigs;
     private final boolean isDataPersistenceConfigExists;
     private final DataPersistenceConfig dataPersistenceConfig;
-    private final String namespace;
+    private final boolean isNamespaceNameNameExists;
+    private final String namespaceName;
 
     public CacheConfigHolder(String name, String managerPrefix, String uriString, int backupCount, int asyncBackupCount,
                              String inMemoryFormat, EvictionConfigHolder evictionConfigHolder,
@@ -78,7 +79,8 @@ public class CacheConfigHolder {
                              boolean disablePerEntryInvalidationEvents,
                              List<ListenerConfigHolder> cachePartitionLostListenerConfigs, boolean merkleTreeConfigExists,
                              MerkleTreeConfig merkleTreeConfig, boolean isDataPersistenceConfigExist,
-                             DataPersistenceConfig dataPersistenceConfig, String namespace) {
+                             DataPersistenceConfig dataPersistenceConfig, boolean isNamespaceNameNameExists, 
+                             String namespaceName) {
         this.name = name;
         this.managerPrefix = managerPrefix;
         this.uriString = uriString;
@@ -108,7 +110,8 @@ public class CacheConfigHolder {
         this.merkleTreeConfig = merkleTreeConfig;
         this.isDataPersistenceConfigExists = isDataPersistenceConfigExist;
         this.dataPersistenceConfig = dataPersistenceConfig;
-        this.namespace = namespace;
+        this.isNamespaceNameNameExists = isNamespaceNameNameExists;
+        this.namespaceName = namespaceName;
     }
 
     public String getName() {
@@ -223,8 +226,8 @@ public class CacheConfigHolder {
         return merkleTreeConfigExists;
     }
 
-    public String getNamespace() {
-        return namespace;
+    public String getNamespaceName() {
+        return namespaceName;
     }
 
     public <K, V> CacheConfig<K, V> asCacheConfig(SerializationService serializationService) {
@@ -250,7 +253,6 @@ public class CacheConfigHolder {
         config.setHotRestartConfig(hotRestartConfig);
         config.setEventJournalConfig(eventJournalConfig);
         config.setSplitBrainProtectionName(splitBrainProtectionName);
-        config.setNamespace(namespace);
 
         if (listenerConfigurations != null && !listenerConfigurations.isEmpty()) {
             config.setListenerConfigurations();
@@ -268,11 +270,14 @@ public class CacheConfigHolder {
             List<CachePartitionLostListenerConfig> partitionLostListenerConfigs = new ArrayList<>(
                     cachePartitionLostListenerConfigs.size());
             cachePartitionLostListenerConfigs.forEach(listenerConfigHolder -> partitionLostListenerConfigs
-                    .add(listenerConfigHolder.asListenerConfig(serializationService, namespace)));
+                    .add(listenerConfigHolder.asListenerConfig(serializationService, namespaceName)));
             config.setPartitionLostListenerConfigs(partitionLostListenerConfigs);
         }
         if (isDataPersistenceConfigExists) {
             config.setDataPersistenceConfig(dataPersistenceConfig);
+        }
+        if (isNamespaceNameNameExists) {
+            config.setNamespace(namespaceName);
         }
         return config;
     }
@@ -310,7 +315,8 @@ public class CacheConfigHolder {
                 config.getEventJournalConfig(), config.getSplitBrainProtectionName(), listenerConfigurations,
                 config.getMergePolicyConfig(), config.isDisablePerEntryInvalidationEvents(),
                 cachePartitionLostListenerConfigs, config.getMerkleTreeConfig() != null, config.getMerkleTreeConfig(),
-                true, config.getDataPersistenceConfig(), config.getNamespace());
+                true, config.getDataPersistenceConfig(), config.getNamespace() != null, 
+                config.getNamespace());
     }
 
 }

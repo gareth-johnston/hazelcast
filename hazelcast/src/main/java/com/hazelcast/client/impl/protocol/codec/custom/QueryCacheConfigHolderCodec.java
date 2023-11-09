@@ -25,7 +25,7 @@ import static com.hazelcast.client.impl.protocol.ClientMessage.*;
 import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("72b59de25ad338eaae04a9578ea10f2f")
+@Generated("ab96c5ebd1516e505fddb299a21a510f")
 public final class QueryCacheConfigHolderCodec {
     private static final int BATCH_SIZE_FIELD_OFFSET = 0;
     private static final int BUFFER_SIZE_FIELD_OFFSET = BATCH_SIZE_FIELD_OFFSET + INT_SIZE_IN_BYTES;
@@ -58,6 +58,7 @@ public final class QueryCacheConfigHolderCodec {
         EvictionConfigHolderCodec.encode(clientMessage, queryCacheConfigHolder.getEvictionConfigHolder());
         ListMultiFrameCodec.encodeNullable(clientMessage, queryCacheConfigHolder.getListenerConfigs(), ListenerConfigHolderCodec::encode);
         ListMultiFrameCodec.encodeNullable(clientMessage, queryCacheConfigHolder.getIndexConfigs(), IndexConfigCodec::encode);
+        CodecUtil.encodeNullable(clientMessage, queryCacheConfigHolder.getNamespaceName(), StringCodec::encode);
 
         clientMessage.add(END_FRAME.copy());
     }
@@ -86,9 +87,15 @@ public final class QueryCacheConfigHolderCodec {
         com.hazelcast.client.impl.protocol.task.dynamicconfig.EvictionConfigHolder evictionConfigHolder = EvictionConfigHolderCodec.decode(iterator);
         java.util.List<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs = ListMultiFrameCodec.decodeNullable(iterator, ListenerConfigHolderCodec::decode);
         java.util.List<com.hazelcast.config.IndexConfig> indexConfigs = ListMultiFrameCodec.decodeNullable(iterator, IndexConfigCodec::decode);
+        boolean isNamespaceNameExists = false;
+        java.lang.String namespaceName = null;
+        if (!iterator.peekNext().isEndFrame()) {
+            namespaceName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
+            isNamespaceNameExists = true;
+        }
 
         fastForwardToEndFrame(iterator);
 
-        return new com.hazelcast.client.impl.protocol.task.dynamicconfig.QueryCacheConfigHolder(batchSize, bufferSize, delaySeconds, includeValue, populate, coalesce, inMemoryFormat, name, predicateConfigHolder, evictionConfigHolder, listenerConfigs, indexConfigs, isSerializeKeysExists, serializeKeys);
+        return new com.hazelcast.client.impl.protocol.task.dynamicconfig.QueryCacheConfigHolder(batchSize, bufferSize, delaySeconds, includeValue, populate, coalesce, inMemoryFormat, name, predicateConfigHolder, evictionConfigHolder, listenerConfigs, indexConfigs, isSerializeKeysExists, serializeKeys, isNamespaceNameExists, namespaceName);
     }
 }
