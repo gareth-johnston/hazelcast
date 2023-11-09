@@ -68,6 +68,7 @@ public final class ActionConstants {
     public static final String ACTION_AGGREGATE = "aggregate";
     public static final String ACTION_PROJECTION = "projection";
     public static final String ACTION_USER_CODE_DEPLOY = "deploy";
+    public static final String ACTION_USE = "use";
 
     public static final String ACTION_SUBMIT = "submit";
     public static final String ACTION_CANCEL = "cancel";
