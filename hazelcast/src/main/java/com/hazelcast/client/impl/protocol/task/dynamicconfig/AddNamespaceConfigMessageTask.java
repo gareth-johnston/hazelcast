@@ -58,8 +58,8 @@ public class AddNamespaceConfigMessageTask
     }
 
     @Override
-    public Permission getRequiredPermission() {
-        return new NamespacePermission(parameters.name, ActionConstants.ACTION_CREATE);
+    public Permission[] getRequiredPermissions() {
+        return new Permission[] {new NamespacePermission(parameters.name, ActionConstants.ACTION_CREATE)};
     }
 
     @Override
