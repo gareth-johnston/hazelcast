@@ -208,14 +208,25 @@ public class ListenerConfigHolder {
         }
     }
 
-    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService) {
+    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService, String namespace) {
         ListenerConfigType listenerType = listenerTypeOf(config);
         Data implementationData = null;
         if (config.getImplementation() != null) {
-            implementationData = serializationService.toData(config.getImplementation());
+            // We might be on the client right now, so check our NodeEngine context to determine Namespace awareness needs
+            NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContextOrNull();
+            if (engine != null) {
+                implementationData = NamespaceUtil.callWithNamespace(engine, namespace,
+                        () -> serializationService.toData(config.getImplementation()));
+            } else {
+                implementationData = serializationService.toData(config.getImplementation());
+            }
         }
         return new ListenerConfigHolder(listenerType, implementationData, config.getClassName(), config.isIncludeValue(),
                 config.isLocal());
+    }
+
+    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService) {
+        return of(config, serializationService, null);
     }
 
     private static ListenerConfigType listenerTypeOf(ListenerConfig config) {

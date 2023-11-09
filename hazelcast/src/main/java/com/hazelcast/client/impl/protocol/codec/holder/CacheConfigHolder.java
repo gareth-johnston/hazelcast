@@ -296,7 +296,8 @@ public class CacheConfigHolder {
             cachePartitionLostListenerConfigs = new ArrayList<>(partitionLostListenerConfigs.size());
             final List<ListenerConfigHolder> configs = cachePartitionLostListenerConfigs;
             partitionLostListenerConfigs
-                    .forEach(listenerConfig -> configs.add(ListenerConfigHolder.of(listenerConfig, serializationService)));
+                    .forEach(listenerConfig -> configs.add(ListenerConfigHolder.of(listenerConfig, serializationService,
+                            config.getNamespace())));
         }
 
         return new CacheConfigHolder(config.getName(), config.getManagerPrefix(), config.getUriString(), config.getBackupCount(),
