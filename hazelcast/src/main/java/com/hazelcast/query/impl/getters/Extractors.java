@@ -18,6 +18,7 @@ package com.hazelcast.query.impl.getters;
 
 import com.hazelcast.config.AttributeConfig;
 import com.hazelcast.core.HazelcastJsonValue;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.serialization.impl.compact.CompactGenericRecord;
@@ -56,19 +57,22 @@ public final class Extractors {
     private final Map<String, ValueExtractor> extractors;
     private final InternalSerializationService ss;
     private final DefaultArgumentParser argumentsParser;
+    private final String namespace;
 
     private Extractors(
             List<AttributeConfig> attributeConfigs,
             ClassLoader classLoader,
             InternalSerializationService ss,
-            Supplier<GetterCache> getterCacheSupplier
+            Supplier<GetterCache> getterCacheSupplier,
+            String namespace
     ) {
         this.extractors = attributeConfigs == null
                 ? Collections.<String, ValueExtractor>emptyMap()
-                : instantiateExtractors(attributeConfigs, classLoader);
+                : instantiateExtractors(attributeConfigs, classLoader, namespace);
         this.getterCache = getterCacheSupplier.get();
         this.argumentsParser = new DefaultArgumentParser();
         this.ss = ss;
+        this.namespace = namespace;
     }
 
     public Object extract(Object target, String attributeName, Object metadata) {
@@ -83,7 +87,8 @@ public final class Extractors {
             try {
                 // For CompactGetter and PortableGetter metadata is a boolean
                 // indicating whether lazy deserialization should be used or not.
-                return getter.getValue(targetObject, attributeName, metadata);
+                return NamespaceUtil.callWithOwnClassLoader(getter,
+                        () -> getter.getValue(targetObject, attributeName, metadata));
             } catch (Exception ex) {
                 throw new QueryException(ex);
             }
@@ -139,7 +144,7 @@ public final class Extractors {
         ValueExtractor valueExtractor = extractors.get(attributeNameWithoutArguments);
         if (valueExtractor != null) {
             Object arguments = argumentsParser.parse(extractArgumentsFromAttributeName(attributeName));
-            return new ExtractorGetter(ss, valueExtractor, arguments);
+            return new ExtractorGetter(ss, valueExtractor, arguments, namespace);
         } else if (targetObject instanceof Data) {
             return instantiateGetterForData((Data) targetObject);
         } else if (targetObject instanceof HazelcastJsonValue) {
@@ -200,6 +205,7 @@ public final class Extractors {
         private ClassLoader classLoader;
         private List<AttributeConfig> attributeConfigs;
         private Supplier<GetterCache> getterCacheSupplier = EVICTABLE_GETTER_CACHE_SUPPLIER;
+        private String namespace;
 
         private final InternalSerializationService ss;
 
@@ -222,11 +228,16 @@ public final class Extractors {
             return this;
         }
 
+        public Builder setNamespace(String namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
         /**
          * @return a new instance of Extractors
          */
         public Extractors build() {
-            return new Extractors(attributeConfigs, classLoader, ss, getterCacheSupplier);
+            return new Extractors(attributeConfigs, classLoader, ss, getterCacheSupplier, namespace);
         }
     }
 }

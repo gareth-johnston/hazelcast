@@ -128,7 +128,8 @@ public class MapContainer {
         this.objectNamespace = MapService.getObjectNamespace(name);
         this.extractors = Extractors.newBuilder(serializationService)
                 .setAttributeConfigs(mapConfig.getAttributeConfigs())
-                .setClassLoader(nodeEngine.getConfigClassLoader())
+                .setClassLoader(nodeEngine.getNamespaceService().getClassLoaderForNamespace(mapConfig.getNamespace()))
+                .setNamespace(mapConfig.getNamespace())
                 .build();
         this.queryEntryFactory = new QueryEntryFactory(mapConfig.getCacheDeserializedValues(),
                 serializationService, extractors);

@@ -209,7 +209,7 @@ public class QueryCacheConfigHolder {
         config.setInMemoryFormat(InMemoryFormat.valueOf(inMemoryFormat));
         config.setIndexConfigs(indexConfigs == null ? new ArrayList<>() : indexConfigs);
         config.setName(name);
-        config.setPredicateConfig(predicateConfigHolder.asPredicateConfig(serializationService));
+        config.setPredicateConfig(predicateConfigHolder.asPredicateConfig(serializationService, namespace));
         config.setPopulate(populate);
         if (serializeKeysExist) {
             config.setSerializeKeys(serializeKeys);

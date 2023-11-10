@@ -46,6 +46,7 @@ public final class QueryCacheEventDataCodec {
 
         CodecUtil.encodeNullable(clientMessage, queryCacheEventData.getDataKey(), DataCodec::encode);
         CodecUtil.encodeNullable(clientMessage, queryCacheEventData.getDataNewValue(), DataCodec::encode);
+        CodecUtil.encodeNullable(clientMessage, queryCacheEventData.getMapName(), StringCodec::encode);
 
         clientMessage.add(END_FRAME.copy());
     }
@@ -61,9 +62,10 @@ public final class QueryCacheEventDataCodec {
 
         com.hazelcast.internal.serialization.Data dataKey = CodecUtil.decodeNullable(iterator, DataCodec::decode);
         com.hazelcast.internal.serialization.Data dataNewValue = CodecUtil.decodeNullable(iterator, DataCodec::decode);
+        java.lang.String mapName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
 
         fastForwardToEndFrame(iterator);
 
-        return CustomTypeFactory.createQueryCacheEventData(dataKey, dataNewValue, sequence, eventType, partitionId);
+        return CustomTypeFactory.createQueryCacheEventData(dataKey, dataNewValue, sequence, eventType, partitionId, mapName);
     }
 }

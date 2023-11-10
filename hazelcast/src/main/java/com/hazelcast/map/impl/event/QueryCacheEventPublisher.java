@@ -140,7 +140,9 @@ public class QueryCacheEventPublisher {
                 .withDataNewValue(dataNewValue)
                 .withEventType(eventType.getType())
                 .withDataOldValue(dataOldValue)
-                .withSerializationService((serializationService)).build();
+                .withSerializationService(serializationService)
+                .withMapName(mapName)
+                .build();
     }
 
     // this method processes UPDATED events and may morph them into ADDED/REMOVED events

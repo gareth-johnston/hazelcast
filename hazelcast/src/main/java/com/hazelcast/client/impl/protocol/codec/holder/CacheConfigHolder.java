@@ -79,7 +79,7 @@ public class CacheConfigHolder {
                              boolean disablePerEntryInvalidationEvents,
                              List<ListenerConfigHolder> cachePartitionLostListenerConfigs, boolean merkleTreeConfigExists,
                              MerkleTreeConfig merkleTreeConfig, boolean isDataPersistenceConfigExist,
-                             DataPersistenceConfig dataPersistenceConfig, boolean isNamespaceExists, 
+                             DataPersistenceConfig dataPersistenceConfig, boolean isNamespaceExists,
                              String namespace) {
         this.name = name;
         this.managerPrefix = managerPrefix;

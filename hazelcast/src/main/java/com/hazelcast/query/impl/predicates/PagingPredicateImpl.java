@@ -16,17 +16,21 @@
 
 package com.hazelcast.query.impl.predicates;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.serialization.BinaryInterface;
 import com.hazelcast.internal.util.IterationType;
 import com.hazelcast.internal.util.SortingUtil;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.Versioned;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.impl.IndexRegistry;
 import com.hazelcast.query.impl.QueryContext;
 import com.hazelcast.query.impl.QueryableEntry;
+import com.hazelcast.spi.impl.NodeEngine;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -37,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.hazelcast.internal.cluster.Versions.V5_4;
 import static com.hazelcast.internal.serialization.impl.FactoryIdHelper.PREDICATE_DS_FACTORY_ID;
 
 /**
@@ -47,7 +52,7 @@ import static com.hazelcast.internal.serialization.impl.FactoryIdHelper.PREDICAT
  */
 @BinaryInterface
 public class PagingPredicateImpl<K, V>
-        implements PagingPredicate<K, V>, IndexAwarePredicate<K, V>, VisitablePredicate, IdentifiedDataSerializable {
+        implements PagingPredicate<K, V>, IndexAwarePredicate<K, V>, VisitablePredicate, IdentifiedDataSerializable, Versioned {
 
     private static final Map.Entry<Integer, Map.Entry> NULL_ANCHOR = new SimpleImmutableEntry(-1, null);
 
@@ -57,6 +62,7 @@ public class PagingPredicateImpl<K, V>
     private int pageSize;
     private int page;
     private IterationType iterationType;
+    private String namespace;
 
     /**
      * Used for serialization internally
@@ -104,9 +110,10 @@ public class PagingPredicateImpl<K, V>
      * @param comparator the comparator through which results will be ordered
      * @param pageSize   the page size
      */
-    public PagingPredicateImpl(Comparator<Map.Entry<K, V>> comparator, int pageSize) {
+    public PagingPredicateImpl(Comparator<Map.Entry<K, V>> comparator, int pageSize, String namespace) {
         this(pageSize);
         this.comparator = comparator;
+        this.namespace = namespace;
     }
 
     /**
@@ -120,20 +127,23 @@ public class PagingPredicateImpl<K, V>
      * @param comparator the comparator through which results will be ordered
      * @param pageSize   the page size
      */
-    public PagingPredicateImpl(Predicate<K, V> predicate, Comparator<Map.Entry<K, V>> comparator, int pageSize) {
+    public PagingPredicateImpl(Predicate<K, V> predicate, Comparator<Map.Entry<K, V>> comparator, int pageSize, String namespace) {
         this(pageSize);
         setInnerPredicate(predicate);
         this.comparator = comparator;
+        this.namespace = namespace;
     }
 
     public PagingPredicateImpl(List<Map.Entry<Integer, Map.Entry<K, V>>> anchorList, Predicate<K, V> predicate,
-                               Comparator<Map.Entry<K, V>> comparator, int pageSize, int page, IterationType iterationType) {
+                               Comparator<Map.Entry<K, V>> comparator, int pageSize, int page, IterationType iterationType,
+                               String namespace) {
         this.anchorList = anchorList;
         this.predicate = predicate;
         this.comparator = comparator;
         this.pageSize = pageSize;
         this.page = page;
         this.iterationType = iterationType;
+        this.namespace = namespace;
     }
 
     public PagingPredicateImpl(PagingPredicateImpl original) {
@@ -154,14 +164,17 @@ public class PagingPredicateImpl<K, V>
         this.pageSize = originalPagingPredicate.pageSize;
         this.page = originalPagingPredicate.page;
         this.iterationType = originalPagingPredicate.iterationType;
+        this.namespace = originalPagingPredicate.namespace;
         setInnerPredicate(predicateReplacement);
     }
 
     @Override
     public Predicate accept(Visitor visitor, IndexRegistry indexes) {
         if (predicate instanceof VisitablePredicate) {
-            Predicate transformed = ((VisitablePredicate) predicate).accept(visitor, indexes);
-            return transformed == predicate ? this : new PagingPredicateImpl(this, transformed);
+            NamespaceUtil.callWithNamespace(namespace, () -> {
+                Predicate transformed = ((VisitablePredicate) predicate).accept(visitor, indexes);
+                return transformed == predicate ? this : new PagingPredicateImpl(this, transformed);
+            });
         }
         return this;
     }
@@ -192,7 +205,8 @@ public class PagingPredicateImpl<K, V>
             return null;
         }
 
-        Set<QueryableEntry<K, V>> set = ((IndexAwarePredicate<K, V>) predicate).filter(queryContext);
+        Set<QueryableEntry<K, V>> set = NamespaceUtil.callWithNamespace(namespace,
+                () -> ((IndexAwarePredicate<K, V>) predicate).filter(queryContext));
         if (set == null || set.isEmpty()) {
             return set;
         }
@@ -218,7 +232,7 @@ public class PagingPredicateImpl<K, V>
      */
     public boolean isIndexed(QueryContext queryContext) {
         if (predicate instanceof IndexAwarePredicate) {
-            return ((IndexAwarePredicate) predicate).isIndexed(queryContext);
+            return NamespaceUtil.callWithNamespace(namespace, () -> ((IndexAwarePredicate) predicate).isIndexed(queryContext));
         }
         return false;
     }
@@ -231,7 +245,7 @@ public class PagingPredicateImpl<K, V>
      */
     public boolean apply(Map.Entry mapEntry) {
         if (predicate != null) {
-            return predicate.apply(mapEntry);
+            return NamespaceUtil.callWithNamespace(namespace, () -> predicate.apply(mapEntry));
         }
         return true;
     }
@@ -319,6 +333,10 @@ public class PagingPredicateImpl<K, V>
         return anchorList;
     }
 
+    public String getNamespace() {
+        return namespace;
+    }
+
     public Map.Entry<Integer, Map.Entry> getNearestAnchorEntry() {
         int anchorCount = anchorList.size();
         if (page == 0 || anchorCount == 0) {
@@ -337,6 +355,11 @@ public class PagingPredicateImpl<K, V>
 
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
+        // RU_COMPAT_5_4
+        if (out.getVersion().isGreaterOrEqual(V5_4)) {
+            out.writeString(namespace);
+        }
+
         out.writeObject(predicate);
         out.writeObject(comparator);
         out.writeInt(page);
@@ -353,8 +376,18 @@ public class PagingPredicateImpl<K, V>
 
     @Override
     public void readData(ObjectDataInput in) throws IOException {
+        // RU_COMPAT_5_4
+        if (in.getVersion().isGreaterOrEqual(V5_4)) {
+            namespace = in.readString();
+        } else {
+            namespace = null;
+        }
+
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        NamespaceUtil.setupNamespace(engine, namespace);
         predicate = in.readObject();
         comparator = in.readObject();
+        NamespaceUtil.cleanupNamespace(engine, namespace);
         page = in.readInt();
         pageSize = in.readInt();
         iterationType = IterationType.valueOf(in.readString());

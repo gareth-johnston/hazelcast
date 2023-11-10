@@ -17,6 +17,7 @@
 package com.hazelcast.query.impl.getters;
 
 import com.hazelcast.config.AttributeConfig;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.query.extractor.ValueExtractor;
@@ -33,23 +34,24 @@ public final class ExtractorHelper {
     }
 
     static Map<String, ValueExtractor> instantiateExtractors(List<AttributeConfig> attributeConfigs,
-                                                             ClassLoader classLoader) {
+                                                             ClassLoader classLoader,
+                                                             String namespace) {
         Map<String, ValueExtractor> extractors = createHashMap(attributeConfigs.size());
         for (AttributeConfig config : attributeConfigs) {
             if (extractors.containsKey(config.getName())) {
                 throw new IllegalArgumentException("Could not add " + config
                         + ". Extractor for this attribute name already added.");
             }
-            extractors.put(config.getName(), instantiateExtractor(config, classLoader));
+            extractors.put(config.getName(), instantiateExtractor(config, classLoader, namespace));
         }
         return extractors;
     }
 
-    static ValueExtractor instantiateExtractor(AttributeConfig config, ClassLoader classLoader) {
+    static ValueExtractor instantiateExtractor(AttributeConfig config, ClassLoader classLoader, String namespace) {
         ValueExtractor extractor = null;
         if (classLoader != null) {
             try {
-                extractor = instantiateExtractorWithConfigClassLoader(config, classLoader);
+                extractor = instantiateExtractorWithConfigClassLoader(config, classLoader, namespace);
             } catch (IllegalArgumentException ex) {
                 // cached back-stage, initialised lazily since it's not a common case
                 Logger.getLogger(ExtractorHelper.class)
@@ -58,37 +60,43 @@ public final class ExtractorHelper {
         }
 
         if (extractor == null) {
-            extractor = instantiateExtractorWithClassForName(config);
+            extractor = instantiateExtractorWithClassForName(config, namespace);
         }
         return extractor;
     }
 
-    private static ValueExtractor instantiateExtractorWithConfigClassLoader(AttributeConfig config, ClassLoader classLoader) {
-        try {
-            Class<?> clazz = classLoader.loadClass(config.getExtractorClassName());
-            Object extractor = clazz.getDeclaredConstructor().newInstance();
-            if (extractor instanceof ValueExtractor) {
-                return (ValueExtractor) extractor;
-            } else {
-                throw new IllegalArgumentException("Extractor does not extend ValueExtractor class " + config);
+    private static ValueExtractor instantiateExtractorWithConfigClassLoader(AttributeConfig config,
+                                                                            ClassLoader classLoader,
+                                                                            String namespace) {
+        return NamespaceUtil.callWithNamespace(namespace, () -> {
+            try {
+                Class<?> clazz = classLoader.loadClass(config.getExtractorClassName());
+                Object extractor = clazz.getDeclaredConstructor().newInstance();
+                if (extractor instanceof ValueExtractor) {
+                    return (ValueExtractor) extractor;
+                } else {
+                    throw new IllegalArgumentException("Extractor does not extend ValueExtractor class " + config);
+                }
+            } catch (ReflectiveOperationException ex) {
+                throw new IllegalArgumentException("Could not initialize extractor " + config, ex);
             }
-        } catch (ReflectiveOperationException ex) {
-            throw new IllegalArgumentException("Could not initialize extractor " + config, ex);
-        }
+        });
     }
 
-    private static ValueExtractor instantiateExtractorWithClassForName(AttributeConfig config) {
-        try {
-            Class<?> clazz = Class.forName(config.getExtractorClassName());
-            Object extractor = clazz.getDeclaredConstructor().newInstance();
-            if (extractor instanceof ValueExtractor) {
-                return (ValueExtractor) extractor;
-            } else {
-                throw new IllegalArgumentException("Extractor does not extend ValueExtractor class " + config);
+    private static ValueExtractor instantiateExtractorWithClassForName(AttributeConfig config, String namespace) {
+        return NamespaceUtil.callWithNamespace(namespace, () -> {
+            try {
+                Class<?> clazz = Class.forName(config.getExtractorClassName());
+                Object extractor = clazz.getDeclaredConstructor().newInstance();
+                if (extractor instanceof ValueExtractor) {
+                    return (ValueExtractor) extractor;
+                } else {
+                    throw new IllegalArgumentException("Extractor does not extend ValueExtractor class " + config);
+                }
+            } catch (ReflectiveOperationException ex) {
+                throw new IllegalArgumentException("Could not initialize extractor " + config, ex);
             }
-        } catch (ReflectiveOperationException ex) {
-            throw new IllegalArgumentException("Could not initialize extractor " + config, ex);
-        }
+        });
     }
 
     public static String extractAttributeNameNameWithoutArguments(String attributeNameWithArguments) {

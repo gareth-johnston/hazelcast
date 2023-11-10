@@ -754,6 +754,7 @@ public class ReferenceObjects {
         aQueryCacheEventData.setSequence(aLong);
         aQueryCacheEventData.setEventType(anInt);
         aQueryCacheEventData.setPartitionId(anInt);
+        aQueryCacheEventData.setMapName(aString);
     }
 
     public static RaftGroupId aRaftGroupId = new RaftGroupId(aString, aLong, aLong);

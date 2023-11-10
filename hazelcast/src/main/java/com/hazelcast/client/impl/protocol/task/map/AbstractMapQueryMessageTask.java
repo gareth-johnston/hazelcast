@@ -73,6 +73,10 @@ public abstract class AbstractMapQueryMessageTask<P, QueryResult extends Result,
         return new MapPermission(getDistributedObjectName(), ActionConstants.ACTION_READ);
     }
 
+    protected String getNamespace() {
+        return MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName());
+    }
+
     protected abstract Predicate getPredicate();
 
     protected abstract Aggregator<?, ?> getAggregator();
@@ -87,6 +91,7 @@ public abstract class AbstractMapQueryMessageTask<P, QueryResult extends Result,
 
     @Override
     protected final Object call() throws Exception {
+        // Namespace awareness should be handled on the member-side
         Collection<AccumulatedResults> result = new LinkedList<AccumulatedResults>();
         try {
             Predicate predicate = getPredicate();

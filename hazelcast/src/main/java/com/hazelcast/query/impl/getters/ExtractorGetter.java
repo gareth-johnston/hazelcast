@@ -16,6 +16,7 @@
 
 package com.hazelcast.query.impl.getters;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.serialization.impl.GenericRecordQueryReader;
@@ -28,25 +29,30 @@ final class ExtractorGetter extends Getter {
     private final ValueExtractor extractor;
     private final Object arguments;
     private final InternalSerializationService serializationService;
+    private final String namespace;
 
-    ExtractorGetter(InternalSerializationService serializationService, ValueExtractor extractor, Object arguments) {
+    ExtractorGetter(InternalSerializationService serializationService, ValueExtractor extractor, Object arguments,
+                    String namespace) {
         super(null);
         this.extractor = extractor;
         this.arguments = arguments;
         this.serializationService = serializationService;
+        this.namespace = namespace;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     Object getValue(Object target) throws Exception {
-        Object extractionTarget = target;
+        Object extractionTarget;
         // This part will be improved in 3.7 to avoid extra allocation
         DefaultValueCollector collector = new DefaultValueCollector();
         if (target instanceof Data) {
             InternalGenericRecord record = serializationService.readAsInternalGenericRecord((Data) target);
             extractionTarget = new GenericRecordQueryReader(record);
+        } else {
+            extractionTarget = target;
         }
-        extractor.extract(extractionTarget, arguments, collector);
+        NamespaceUtil.runWithNamespace(namespace, () -> extractor.extract(extractionTarget, arguments, collector));
         return collector.getResult();
     }
 

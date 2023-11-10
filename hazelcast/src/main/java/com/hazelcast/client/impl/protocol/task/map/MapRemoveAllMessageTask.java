@@ -19,7 +19,9 @@ package com.hazelcast.client.impl.protocol.task.map;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.MapRemoveAllCodec;
 import com.hazelcast.instance.impl.Node;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.nio.Connection;
+import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.operation.MapOperationProvider;
 import com.hazelcast.query.PartitionPredicate;
 import com.hazelcast.query.Predicate;
@@ -87,7 +89,8 @@ public class MapRemoveAllMessageTask extends AbstractMapAllPartitionsMessageTask
     @Override
     protected MapRemoveAllCodec.RequestParameters decodeClientMessage(ClientMessage clientMessage) {
         MapRemoveAllCodec.RequestParameters parameters = MapRemoveAllCodec.decodeRequest(clientMessage);
-        predicate = serializationService.toObject(parameters.predicate);
+        predicate = NamespaceUtil.callWithNamespace(MapServiceContext.lookupMapNamespace(nodeEngine, parameters.name),
+                () -> serializationService.toObject(parameters.predicate));
         return parameters;
     }
 

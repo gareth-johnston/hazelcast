@@ -16,6 +16,7 @@
 
 package com.hazelcast.internal.util;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.impl.CachedQueryEntry;
 import com.hazelcast.query.impl.QueryableEntry;
@@ -125,8 +126,8 @@ public final class SortingUtil {
     }
 
     private static Comparator<QueryableEntry> newComparator(final PagingPredicateImpl pagingPredicate) {
-        return (entry1, entry2) ->
-                SortingUtil.compare(pagingPredicate.getComparator(), pagingPredicate.getIterationType(), entry1, entry2);
+        return NamespaceUtil.callWithNamespace(pagingPredicate.getNamespace(), () -> (entry1, entry2) ->
+                SortingUtil.compare(pagingPredicate.getComparator(), pagingPredicate.getIterationType(), entry1, entry2));
     }
 
     public static List<QueryableEntry> getSortedSubList(List<QueryableEntry> list, PagingPredicate pagingPredicate,
@@ -167,7 +168,8 @@ public final class SortingUtil {
         PagingPredicateImpl pagingPredicateImpl = (PagingPredicateImpl) pagingPredicate;
         Comparator<Map.Entry> comparator = pagingPredicate.getComparator();
         IterationType iterationType = pagingPredicateImpl.getIterationType();
-        return SortingUtil.compare(comparator, iterationType, anchor, queryEntry) < 0;
+        return NamespaceUtil.callWithNamespace(pagingPredicateImpl.getNamespace(),
+                () -> SortingUtil.compare(comparator, iterationType, anchor, queryEntry) < 0);
     }
 
     /**
@@ -227,7 +229,7 @@ public final class SortingUtil {
         }
         PagingPredicateImpl pagingPredicateImpl = (PagingPredicateImpl) pagingPredicate;
         Comparator<Map.Entry> comparator = SortingUtil.newComparator(pagingPredicateImpl.getComparator(), iterationType);
-        Collections.sort(list, comparator);
+        NamespaceUtil.runWithNamespace(pagingPredicateImpl.getNamespace(), () -> Collections.sort(list, comparator));
 
         Map.Entry<Integer, Map.Entry> nearestAnchorEntry = pagingPredicateImpl.getNearestAnchorEntry();
         int nearestPage = nearestAnchorEntry.getKey();

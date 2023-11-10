@@ -38,7 +38,7 @@ public class ExtractorGetterTest {
     @Test
     public void isCacheable() {
         // GIVEN
-        ExtractorGetter getter = new ExtractorGetter(UNUSED, mock(ValueExtractor.class), "argument");
+        ExtractorGetter getter = new ExtractorGetter(UNUSED, mock(ValueExtractor.class), "argument", null);
 
         // THEN
         assertThat(getter.isCacheable()).isTrue();
@@ -47,7 +47,7 @@ public class ExtractorGetterTest {
     @Test
     public void getReturnType() {
         // GIVEN
-        ExtractorGetter getter = new ExtractorGetter(UNUSED, mock(ValueExtractor.class), "argument");
+        ExtractorGetter getter = new ExtractorGetter(UNUSED, mock(ValueExtractor.class), "argument", null);
 
         // WHEN
         assertThrows(UnsupportedOperationException.class, getter::getReturnType);

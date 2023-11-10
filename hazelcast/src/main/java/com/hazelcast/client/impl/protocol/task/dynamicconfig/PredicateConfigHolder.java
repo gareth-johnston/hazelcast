@@ -17,6 +17,7 @@
 package com.hazelcast.client.impl.protocol.task.dynamicconfig;
 
 import com.hazelcast.config.PredicateConfig;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.internal.serialization.SerializationService;
@@ -48,12 +49,14 @@ public class PredicateConfigHolder {
         return implementation;
     }
 
-    public PredicateConfig asPredicateConfig(SerializationService serializationService) {
+    public PredicateConfig asPredicateConfig(SerializationService serializationService, String namespace) {
         if (className != null) {
             return new PredicateConfig(className);
         } else if (implementation != null) {
-            Predicate predicate = serializationService.toObject(implementation);
-            return new PredicateConfig(predicate);
+            return NamespaceUtil.callWithNamespace(namespace, () -> {
+                Predicate predicate = serializationService.toObject(implementation);
+                return new PredicateConfig(predicate, namespace);
+            });
         } else {
             return new PredicateConfig();
         }
