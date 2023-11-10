@@ -65,7 +65,7 @@ public class CacheConfigHolder {
     private final List<ListenerConfigHolder> cachePartitionLostListenerConfigs;
     private final boolean isDataPersistenceConfigExists;
     private final DataPersistenceConfig dataPersistenceConfig;
-    private final boolean isNamespaceNameNameExists;
+    private final boolean isNamespaceNameExists;
     private final String namespaceName;
 
     public CacheConfigHolder(String name, String managerPrefix, String uriString, int backupCount, int asyncBackupCount,
@@ -79,7 +79,7 @@ public class CacheConfigHolder {
                              boolean disablePerEntryInvalidationEvents,
                              List<ListenerConfigHolder> cachePartitionLostListenerConfigs, boolean merkleTreeConfigExists,
                              MerkleTreeConfig merkleTreeConfig, boolean isDataPersistenceConfigExist,
-                             DataPersistenceConfig dataPersistenceConfig, boolean isNamespaceNameNameExists, 
+                             DataPersistenceConfig dataPersistenceConfig, boolean isNamespaceNameExists, 
                              String namespaceName) {
         this.name = name;
         this.managerPrefix = managerPrefix;
@@ -110,7 +110,7 @@ public class CacheConfigHolder {
         this.merkleTreeConfig = merkleTreeConfig;
         this.isDataPersistenceConfigExists = isDataPersistenceConfigExist;
         this.dataPersistenceConfig = dataPersistenceConfig;
-        this.isNamespaceNameNameExists = isNamespaceNameNameExists;
+        this.isNamespaceNameExists = isNamespaceNameExists;
         this.namespaceName = namespaceName;
     }
 
@@ -276,7 +276,7 @@ public class CacheConfigHolder {
         if (isDataPersistenceConfigExists) {
             config.setDataPersistenceConfig(dataPersistenceConfig);
         }
-        if (isNamespaceNameNameExists) {
+        if (isNamespaceNameExists) {
             config.setNamespace(namespaceName);
         }
         return config;
