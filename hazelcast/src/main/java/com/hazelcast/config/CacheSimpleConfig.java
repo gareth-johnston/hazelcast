@@ -114,7 +114,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
      * Full-flush invalidation means the invalidation of events for all entries when clear is called.
      */
     private boolean disablePerEntryInvalidationEvents;
-    private String namespace;
+    private String namespace = DEFAULT_NAMESPACE;
 
     @SuppressWarnings("checkstyle:executablestatementcount")
     public CacheSimpleConfig(CacheSimpleConfig cacheSimpleConfig) {
