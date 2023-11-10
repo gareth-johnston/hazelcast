@@ -98,7 +98,7 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     public MapResourceClassLoader(ClassLoader parent,
                                      @Nonnull Supplier<? extends Map<String, byte[]>> resourcesSupplier,
                                      boolean childFirst) {
-        super(parent);
+        super("ucd-namespace", parent);
         this.resourcesSupplier = Util.memoizeConcurrent(resourcesSupplier);
         this.childFirst = childFirst;
     }

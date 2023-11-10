@@ -25,6 +25,8 @@ import java.lang.annotation.Target;
  * Marker for interfaces that can be implemented by users and executed on clusters via User Code Deployment.
  * Provides no functionality beyond being a marker for internal-use. Namely, this marker indicates that
  * the class can safely be deserialized in member-to-member communication, with Namespace awareness.
+ *
+ * @implNote This marker only indicates <b>AP</b> data structure support.
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
