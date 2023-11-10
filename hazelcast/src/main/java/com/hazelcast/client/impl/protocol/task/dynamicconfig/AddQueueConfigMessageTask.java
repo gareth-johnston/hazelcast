@@ -62,7 +62,7 @@ public class AddQueueConfigMessageTask
         }
         if (parameters.listenerConfigs != null && !parameters.listenerConfigs.isEmpty()) {
             List<ItemListenerConfig> itemListenerConfigs =
-                    (List<ItemListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs, parameters.namespaceName);
+                    (List<ItemListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs, parameters.namespace);
             config.setItemListenerConfigs(itemListenerConfigs);
         }
         MergePolicyConfig mergePolicyConfig = mergePolicyConfig(parameters.mergePolicy, parameters.mergeBatchSize);
@@ -70,8 +70,8 @@ public class AddQueueConfigMessageTask
         if (parameters.isPriorityComparatorClassNameExists) {
             config.setPriorityComparatorClassName(parameters.priorityComparatorClassName);
         }
-        if (parameters.isNamespaceNameExists) {
-            config.setNamespace(parameters.namespaceName);
+        if (parameters.isNamespaceExists) {
+            config.setNamespace(parameters.namespace);
         }
         return config;
     }

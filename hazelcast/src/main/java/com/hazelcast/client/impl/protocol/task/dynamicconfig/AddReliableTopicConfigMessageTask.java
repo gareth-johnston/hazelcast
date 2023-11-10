@@ -57,10 +57,10 @@ public class AddReliableTopicConfigMessageTask
         config.setExecutor(executor);
         if (parameters.listenerConfigs != null && !parameters.listenerConfigs.isEmpty()) {
             config.setMessageListenerConfigs(
-                    (List<ListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs, parameters.namespaceName));
+                    (List<ListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs, parameters.namespace));
         }
-        if (parameters.isNamespaceNameExists) {
-            config.setNamespace(parameters.namespaceName);
+        if (parameters.isNamespaceExists) {
+            config.setNamespace(parameters.namespace);
         }
         return config;
     }

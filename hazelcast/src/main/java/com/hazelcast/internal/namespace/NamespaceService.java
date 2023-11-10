@@ -38,7 +38,7 @@ public interface NamespaceService {
      */
     boolean removeNamespace(@Nonnull String nsName);
 
-    boolean hasNamespace(String namespaceName);
+    boolean hasNamespace(String namespace);
 
     /**
      * Fast check method to see if the underlying implementation is

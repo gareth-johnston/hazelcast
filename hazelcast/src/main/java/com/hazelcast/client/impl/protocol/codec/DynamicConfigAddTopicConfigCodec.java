@@ -39,7 +39,7 @@ import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCod
  * the new configuration is ignored and the existing one is preserved.
  */
 @SuppressWarnings("unused")
-@Generated("00d45755080039cefc756a5886b741f3")
+@Generated("ee8d3a5b70b971aec17a4f3ee73910e4")
 public final class DynamicConfigAddTopicConfigCodec {
     //hex: 0x1B0700
     public static final int REQUEST_MESSAGE_TYPE = 1771264;
@@ -87,16 +87,16 @@ public final class DynamicConfigAddTopicConfigCodec {
         /**
          * Name of the namespace applied to this instance.
          */
-        public @Nullable java.lang.String namespaceName;
+        public @Nullable java.lang.String namespace;
 
         /**
-         * True if the namespaceName is received from the client, false otherwise.
-         * If this is false, namespaceName has the default value for its type.
+         * True if the namespace is received from the client, false otherwise.
+         * If this is false, namespace has the default value for its type.
          */
-        public boolean isNamespaceNameExists;
+        public boolean isNamespaceExists;
     }
 
-    public static ClientMessage encodeRequest(java.lang.String name, boolean globalOrderingEnabled, boolean statisticsEnabled, boolean multiThreadingEnabled, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs, @Nullable java.lang.String namespaceName) {
+    public static ClientMessage encodeRequest(java.lang.String name, boolean globalOrderingEnabled, boolean statisticsEnabled, boolean multiThreadingEnabled, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs, @Nullable java.lang.String namespace) {
         ClientMessage clientMessage = ClientMessage.createForEncode();
         clientMessage.setContainsSerializedDataInRequest(true);
         clientMessage.setRetryable(false);
@@ -110,7 +110,7 @@ public final class DynamicConfigAddTopicConfigCodec {
         clientMessage.add(initialFrame);
         StringCodec.encode(clientMessage, name);
         ListMultiFrameCodec.encodeNullable(clientMessage, listenerConfigs, ListenerConfigHolderCodec::encode);
-        CodecUtil.encodeNullable(clientMessage, namespaceName, StringCodec::encode);
+        CodecUtil.encodeNullable(clientMessage, namespace, StringCodec::encode);
         return clientMessage;
     }
 
@@ -124,10 +124,10 @@ public final class DynamicConfigAddTopicConfigCodec {
         request.name = StringCodec.decode(iterator);
         request.listenerConfigs = ListMultiFrameCodec.decodeNullable(iterator, ListenerConfigHolderCodec::decode);
         if (iterator.hasNext()) {
-            request.namespaceName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
-            request.isNamespaceNameExists = true;
+            request.namespace = CodecUtil.decodeNullable(iterator, StringCodec::decode);
+            request.isNamespaceExists = true;
         } else {
-            request.isNamespaceNameExists = false;
+            request.isNamespaceExists = false;
         }
         return request;
     }

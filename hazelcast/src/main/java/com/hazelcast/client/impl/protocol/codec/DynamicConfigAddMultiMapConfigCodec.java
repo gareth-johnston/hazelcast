@@ -39,7 +39,7 @@ import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCod
  * the new multimap config is ignored and the existing one is preserved.
  */
 @SuppressWarnings("unused")
-@Generated("60224ac146f0a4d01de991218a4b33d3")
+@Generated("279a0934fdc1373d8292944419434cfe")
 public final class DynamicConfigAddMultiMapConfigCodec {
     //hex: 0x1B0100
     public static final int REQUEST_MESSAGE_TYPE = 1769728;
@@ -116,16 +116,16 @@ public final class DynamicConfigAddMultiMapConfigCodec {
         /**
          * Name of the namespace applied to this instance.
          */
-        public @Nullable java.lang.String namespaceName;
+        public @Nullable java.lang.String namespace;
 
         /**
-         * True if the namespaceName is received from the client, false otherwise.
-         * If this is false, namespaceName has the default value for its type.
+         * True if the namespace is received from the client, false otherwise.
+         * If this is false, namespace has the default value for its type.
          */
-        public boolean isNamespaceNameExists;
+        public boolean isNamespaceExists;
     }
 
-    public static ClientMessage encodeRequest(java.lang.String name, java.lang.String collectionType, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs, boolean binary, int backupCount, int asyncBackupCount, boolean statisticsEnabled, @Nullable java.lang.String splitBrainProtectionName, java.lang.String mergePolicy, int mergeBatchSize, @Nullable java.lang.String namespaceName) {
+    public static ClientMessage encodeRequest(java.lang.String name, java.lang.String collectionType, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs, boolean binary, int backupCount, int asyncBackupCount, boolean statisticsEnabled, @Nullable java.lang.String splitBrainProtectionName, java.lang.String mergePolicy, int mergeBatchSize, @Nullable java.lang.String namespace) {
         ClientMessage clientMessage = ClientMessage.createForEncode();
         clientMessage.setContainsSerializedDataInRequest(true);
         clientMessage.setRetryable(false);
@@ -144,7 +144,7 @@ public final class DynamicConfigAddMultiMapConfigCodec {
         ListMultiFrameCodec.encodeNullable(clientMessage, listenerConfigs, ListenerConfigHolderCodec::encode);
         CodecUtil.encodeNullable(clientMessage, splitBrainProtectionName, StringCodec::encode);
         StringCodec.encode(clientMessage, mergePolicy);
-        CodecUtil.encodeNullable(clientMessage, namespaceName, StringCodec::encode);
+        CodecUtil.encodeNullable(clientMessage, namespace, StringCodec::encode);
         return clientMessage;
     }
 
@@ -163,10 +163,10 @@ public final class DynamicConfigAddMultiMapConfigCodec {
         request.splitBrainProtectionName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
         request.mergePolicy = StringCodec.decode(iterator);
         if (iterator.hasNext()) {
-            request.namespaceName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
-            request.isNamespaceNameExists = true;
+            request.namespace = CodecUtil.decodeNullable(iterator, StringCodec::decode);
+            request.isNamespaceExists = true;
         } else {
-            request.isNamespaceNameExists = false;
+            request.isNamespaceExists = false;
         }
         return request;
     }

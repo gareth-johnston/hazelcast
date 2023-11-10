@@ -39,7 +39,7 @@ import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCod
  * the new ringbuffer config is ignored and the existing one is preserved.
  */
 @SuppressWarnings("unused")
-@Generated("ae752600747ea2c2d7e8dc8c72a7ccb1")
+@Generated("9edee31897281ced5baa34620bdd198c")
 public final class DynamicConfigAddRingbufferConfigCodec {
     //hex: 0x1B0200
     public static final int REQUEST_MESSAGE_TYPE = 1769984;
@@ -116,16 +116,16 @@ public final class DynamicConfigAddRingbufferConfigCodec {
         /**
          * Name of the namespace applied to this instance.
          */
-        public @Nullable java.lang.String namespaceName;
+        public @Nullable java.lang.String namespace;
 
         /**
-         * True if the namespaceName is received from the client, false otherwise.
-         * If this is false, namespaceName has the default value for its type.
+         * True if the namespace is received from the client, false otherwise.
+         * If this is false, namespace has the default value for its type.
          */
-        public boolean isNamespaceNameExists;
+        public boolean isNamespaceExists;
     }
 
-    public static ClientMessage encodeRequest(java.lang.String name, int capacity, int backupCount, int asyncBackupCount, int timeToLiveSeconds, java.lang.String inMemoryFormat, @Nullable com.hazelcast.client.impl.protocol.task.dynamicconfig.RingbufferStoreConfigHolder ringbufferStoreConfig, @Nullable java.lang.String splitBrainProtectionName, java.lang.String mergePolicy, int mergeBatchSize, @Nullable java.lang.String namespaceName) {
+    public static ClientMessage encodeRequest(java.lang.String name, int capacity, int backupCount, int asyncBackupCount, int timeToLiveSeconds, java.lang.String inMemoryFormat, @Nullable com.hazelcast.client.impl.protocol.task.dynamicconfig.RingbufferStoreConfigHolder ringbufferStoreConfig, @Nullable java.lang.String splitBrainProtectionName, java.lang.String mergePolicy, int mergeBatchSize, @Nullable java.lang.String namespace) {
         ClientMessage clientMessage = ClientMessage.createForEncode();
         clientMessage.setContainsSerializedDataInRequest(true);
         clientMessage.setRetryable(false);
@@ -144,7 +144,7 @@ public final class DynamicConfigAddRingbufferConfigCodec {
         CodecUtil.encodeNullable(clientMessage, ringbufferStoreConfig, RingbufferStoreConfigHolderCodec::encode);
         CodecUtil.encodeNullable(clientMessage, splitBrainProtectionName, StringCodec::encode);
         StringCodec.encode(clientMessage, mergePolicy);
-        CodecUtil.encodeNullable(clientMessage, namespaceName, StringCodec::encode);
+        CodecUtil.encodeNullable(clientMessage, namespace, StringCodec::encode);
         return clientMessage;
     }
 
@@ -163,10 +163,10 @@ public final class DynamicConfigAddRingbufferConfigCodec {
         request.splitBrainProtectionName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
         request.mergePolicy = StringCodec.decode(iterator);
         if (iterator.hasNext()) {
-            request.namespaceName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
-            request.isNamespaceNameExists = true;
+            request.namespace = CodecUtil.decodeNullable(iterator, StringCodec::decode);
+            request.isNamespaceExists = true;
         } else {
-            request.isNamespaceNameExists = false;
+            request.isNamespaceExists = false;
         }
         return request;
     }

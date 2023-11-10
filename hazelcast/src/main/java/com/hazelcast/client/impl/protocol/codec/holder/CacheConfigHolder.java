@@ -65,8 +65,8 @@ public class CacheConfigHolder {
     private final List<ListenerConfigHolder> cachePartitionLostListenerConfigs;
     private final boolean isDataPersistenceConfigExists;
     private final DataPersistenceConfig dataPersistenceConfig;
-    private final boolean isNamespaceNameExists;
-    private final String namespaceName;
+    private final boolean isNamespaceExists;
+    private final String namespace;
 
     public CacheConfigHolder(String name, String managerPrefix, String uriString, int backupCount, int asyncBackupCount,
                              String inMemoryFormat, EvictionConfigHolder evictionConfigHolder,
@@ -79,8 +79,8 @@ public class CacheConfigHolder {
                              boolean disablePerEntryInvalidationEvents,
                              List<ListenerConfigHolder> cachePartitionLostListenerConfigs, boolean merkleTreeConfigExists,
                              MerkleTreeConfig merkleTreeConfig, boolean isDataPersistenceConfigExist,
-                             DataPersistenceConfig dataPersistenceConfig, boolean isNamespaceNameExists, 
-                             String namespaceName) {
+                             DataPersistenceConfig dataPersistenceConfig, boolean isNamespaceExists, 
+                             String namespace) {
         this.name = name;
         this.managerPrefix = managerPrefix;
         this.uriString = uriString;
@@ -110,8 +110,8 @@ public class CacheConfigHolder {
         this.merkleTreeConfig = merkleTreeConfig;
         this.isDataPersistenceConfigExists = isDataPersistenceConfigExist;
         this.dataPersistenceConfig = dataPersistenceConfig;
-        this.isNamespaceNameExists = isNamespaceNameExists;
-        this.namespaceName = namespaceName;
+        this.isNamespaceExists = isNamespaceExists;
+        this.namespace = namespace;
     }
 
     public String getName() {
@@ -226,8 +226,8 @@ public class CacheConfigHolder {
         return merkleTreeConfigExists;
     }
 
-    public String getNamespaceName() {
-        return namespaceName;
+    public String getNamespace() {
+        return namespace;
     }
 
     public <K, V> CacheConfig<K, V> asCacheConfig(SerializationService serializationService) {
@@ -270,14 +270,14 @@ public class CacheConfigHolder {
             List<CachePartitionLostListenerConfig> partitionLostListenerConfigs = new ArrayList<>(
                     cachePartitionLostListenerConfigs.size());
             cachePartitionLostListenerConfigs.forEach(listenerConfigHolder -> partitionLostListenerConfigs
-                    .add(listenerConfigHolder.asListenerConfig(serializationService, namespaceName)));
+                    .add(listenerConfigHolder.asListenerConfig(serializationService, namespace)));
             config.setPartitionLostListenerConfigs(partitionLostListenerConfigs);
         }
         if (isDataPersistenceConfigExists) {
             config.setDataPersistenceConfig(dataPersistenceConfig);
         }
-        if (isNamespaceNameExists) {
-            config.setNamespace(namespaceName);
+        if (isNamespaceExists) {
+            config.setNamespace(namespace);
         }
         return config;
     }

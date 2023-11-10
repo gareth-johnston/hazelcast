@@ -39,7 +39,7 @@ import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCod
  * the new configuration is ignored and the existing one is preserved.
  */
 @SuppressWarnings("unused")
-@Generated("c3de6d6f2bb39ad45112736a6c3e6367")
+@Generated("7be1a39592aa620ca2e3150403b6aeef")
 public final class DynamicConfigAddReliableTopicConfigCodec {
     //hex: 0x1B0D00
     public static final int REQUEST_MESSAGE_TYPE = 1772800;
@@ -91,16 +91,16 @@ public final class DynamicConfigAddReliableTopicConfigCodec {
         /**
          * Name of the namespace applied to this instance.
          */
-        public @Nullable java.lang.String namespaceName;
+        public @Nullable java.lang.String namespace;
 
         /**
-         * True if the namespaceName is received from the client, false otherwise.
-         * If this is false, namespaceName has the default value for its type.
+         * True if the namespace is received from the client, false otherwise.
+         * If this is false, namespace has the default value for its type.
          */
-        public boolean isNamespaceNameExists;
+        public boolean isNamespaceExists;
     }
 
-    public static ClientMessage encodeRequest(java.lang.String name, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs, int readBatchSize, boolean statisticsEnabled, java.lang.String topicOverloadPolicy, @Nullable com.hazelcast.internal.serialization.Data executor, @Nullable java.lang.String namespaceName) {
+    public static ClientMessage encodeRequest(java.lang.String name, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs, int readBatchSize, boolean statisticsEnabled, java.lang.String topicOverloadPolicy, @Nullable com.hazelcast.internal.serialization.Data executor, @Nullable java.lang.String namespace) {
         ClientMessage clientMessage = ClientMessage.createForEncode();
         clientMessage.setContainsSerializedDataInRequest(true);
         clientMessage.setRetryable(false);
@@ -115,7 +115,7 @@ public final class DynamicConfigAddReliableTopicConfigCodec {
         ListMultiFrameCodec.encodeNullable(clientMessage, listenerConfigs, ListenerConfigHolderCodec::encode);
         StringCodec.encode(clientMessage, topicOverloadPolicy);
         CodecUtil.encodeNullable(clientMessage, executor, DataCodec::encode);
-        CodecUtil.encodeNullable(clientMessage, namespaceName, StringCodec::encode);
+        CodecUtil.encodeNullable(clientMessage, namespace, StringCodec::encode);
         return clientMessage;
     }
 
@@ -130,10 +130,10 @@ public final class DynamicConfigAddReliableTopicConfigCodec {
         request.topicOverloadPolicy = StringCodec.decode(iterator);
         request.executor = CodecUtil.decodeNullable(iterator, DataCodec::decode);
         if (iterator.hasNext()) {
-            request.namespaceName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
-            request.isNamespaceNameExists = true;
+            request.namespace = CodecUtil.decodeNullable(iterator, StringCodec::decode);
+            request.isNamespaceExists = true;
         } else {
-            request.isNamespaceNameExists = false;
+            request.isNamespaceExists = false;
         }
         return request;
     }

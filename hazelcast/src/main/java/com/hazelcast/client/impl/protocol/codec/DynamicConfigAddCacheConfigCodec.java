@@ -39,7 +39,7 @@ import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCod
  * the new configuration is ignored and the existing one is preserved.
  */
 @SuppressWarnings("unused")
-@Generated("f67465eba7e09e6c0190728c03cd14ec")
+@Generated("86123ab8fed7de6c62d4bc897b2ece48")
 public final class DynamicConfigAddCacheConfigCodec {
     //hex: 0x1B0E00
     public static final int REQUEST_MESSAGE_TYPE = 1773056;
@@ -212,7 +212,7 @@ public final class DynamicConfigAddCacheConfigCodec {
         /**
          * Name of the namespace applied to this instance.
          */
-        public @Nullable java.lang.String namespaceName;
+        public @Nullable java.lang.String namespace;
 
         /**
          * True if the merkleTreeConfig is received from the client, false otherwise.
@@ -227,13 +227,13 @@ public final class DynamicConfigAddCacheConfigCodec {
         public boolean isDataPersistenceConfigExists;
 
         /**
-         * True if the namespaceName is received from the client, false otherwise.
-         * If this is false, namespaceName has the default value for its type.
+         * True if the namespace is received from the client, false otherwise.
+         * If this is false, namespace has the default value for its type.
          */
-        public boolean isNamespaceNameExists;
+        public boolean isNamespaceExists;
     }
 
-    public static ClientMessage encodeRequest(java.lang.String name, @Nullable java.lang.String keyType, @Nullable java.lang.String valueType, boolean statisticsEnabled, boolean managementEnabled, boolean readThrough, boolean writeThrough, @Nullable java.lang.String cacheLoaderFactory, @Nullable java.lang.String cacheWriterFactory, @Nullable java.lang.String cacheLoader, @Nullable java.lang.String cacheWriter, int backupCount, int asyncBackupCount, java.lang.String inMemoryFormat, @Nullable java.lang.String splitBrainProtectionName, @Nullable java.lang.String mergePolicy, int mergeBatchSize, boolean disablePerEntryInvalidationEvents, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> partitionLostListenerConfigs, @Nullable java.lang.String expiryPolicyFactoryClassName, @Nullable com.hazelcast.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.TimedExpiryPolicyFactoryConfig timedExpiryPolicyFactoryConfig, @Nullable java.util.Collection<com.hazelcast.config.CacheSimpleEntryListenerConfig> cacheEntryListeners, @Nullable com.hazelcast.client.impl.protocol.task.dynamicconfig.EvictionConfigHolder evictionConfig, @Nullable com.hazelcast.config.WanReplicationRef wanReplicationRef, @Nullable com.hazelcast.config.EventJournalConfig eventJournalConfig, @Nullable com.hazelcast.config.HotRestartConfig hotRestartConfig, @Nullable com.hazelcast.config.MerkleTreeConfig merkleTreeConfig, com.hazelcast.config.DataPersistenceConfig dataPersistenceConfig, @Nullable java.lang.String namespaceName) {
+    public static ClientMessage encodeRequest(java.lang.String name, @Nullable java.lang.String keyType, @Nullable java.lang.String valueType, boolean statisticsEnabled, boolean managementEnabled, boolean readThrough, boolean writeThrough, @Nullable java.lang.String cacheLoaderFactory, @Nullable java.lang.String cacheWriterFactory, @Nullable java.lang.String cacheLoader, @Nullable java.lang.String cacheWriter, int backupCount, int asyncBackupCount, java.lang.String inMemoryFormat, @Nullable java.lang.String splitBrainProtectionName, @Nullable java.lang.String mergePolicy, int mergeBatchSize, boolean disablePerEntryInvalidationEvents, @Nullable java.util.Collection<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> partitionLostListenerConfigs, @Nullable java.lang.String expiryPolicyFactoryClassName, @Nullable com.hazelcast.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.TimedExpiryPolicyFactoryConfig timedExpiryPolicyFactoryConfig, @Nullable java.util.Collection<com.hazelcast.config.CacheSimpleEntryListenerConfig> cacheEntryListeners, @Nullable com.hazelcast.client.impl.protocol.task.dynamicconfig.EvictionConfigHolder evictionConfig, @Nullable com.hazelcast.config.WanReplicationRef wanReplicationRef, @Nullable com.hazelcast.config.EventJournalConfig eventJournalConfig, @Nullable com.hazelcast.config.HotRestartConfig hotRestartConfig, @Nullable com.hazelcast.config.MerkleTreeConfig merkleTreeConfig, com.hazelcast.config.DataPersistenceConfig dataPersistenceConfig, @Nullable java.lang.String namespace) {
         ClientMessage clientMessage = ClientMessage.createForEncode();
         clientMessage.setContainsSerializedDataInRequest(true);
         clientMessage.setRetryable(false);
@@ -270,7 +270,7 @@ public final class DynamicConfigAddCacheConfigCodec {
         CodecUtil.encodeNullable(clientMessage, hotRestartConfig, HotRestartConfigCodec::encode);
         CodecUtil.encodeNullable(clientMessage, merkleTreeConfig, MerkleTreeConfigCodec::encode);
         DataPersistenceConfigCodec.encode(clientMessage, dataPersistenceConfig);
-        CodecUtil.encodeNullable(clientMessage, namespaceName, StringCodec::encode);
+        CodecUtil.encodeNullable(clientMessage, namespace, StringCodec::encode);
         return clientMessage;
     }
 
@@ -317,10 +317,10 @@ public final class DynamicConfigAddCacheConfigCodec {
             request.isDataPersistenceConfigExists = false;
         }
         if (iterator.hasNext()) {
-            request.namespaceName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
-            request.isNamespaceNameExists = true;
+            request.namespace = CodecUtil.decodeNullable(iterator, StringCodec::decode);
+            request.isNamespaceExists = true;
         } else {
-            request.isNamespaceNameExists = false;
+            request.isNamespaceExists = false;
         }
         return request;
     }

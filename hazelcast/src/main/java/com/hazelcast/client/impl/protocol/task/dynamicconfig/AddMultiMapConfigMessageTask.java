@@ -62,8 +62,8 @@ public class AddMultiMapConfigMessageTask extends
         }
         MergePolicyConfig mergePolicyConfig = mergePolicyConfig(parameters.mergePolicy, parameters.mergeBatchSize);
         multiMapConfig.setMergePolicyConfig(mergePolicyConfig);
-        if (parameters.isNamespaceNameExists) {
-            multiMapConfig.setNamespace(parameters.namespaceName);
+        if (parameters.isNamespaceExists) {
+            multiMapConfig.setNamespace(parameters.namespace);
         }
         return multiMapConfig;
     }

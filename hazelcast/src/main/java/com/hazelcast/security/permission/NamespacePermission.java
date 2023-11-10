@@ -22,8 +22,8 @@ public class NamespacePermission extends InstancePermission {
     private static final int USE = 4;
     private static final int ALL = CREATE | DESTROY | USE;
 
-    public NamespacePermission(String namespaceName, String... actions) {
-        super(namespaceName, actions);
+    public NamespacePermission(String namespace, String... actions) {
+        super(namespace, actions);
     }
 
     @Override

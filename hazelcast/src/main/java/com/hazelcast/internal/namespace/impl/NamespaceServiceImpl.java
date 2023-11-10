@@ -90,8 +90,8 @@ public final class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public boolean hasNamespace(String namespaceName) {
-        return namespaceToClassLoader.containsKey(namespaceName);
+    public boolean hasNamespace(String namespace) {
+        return namespaceToClassLoader.containsKey(namespace);
     }
 
     @Override

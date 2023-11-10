@@ -85,7 +85,7 @@ public class AddCacheConfigMessageTask
         config.setName(parameters.name);
         if (parameters.partitionLostListenerConfigs != null && !parameters.partitionLostListenerConfigs.isEmpty()) {
             List<CachePartitionLostListenerConfig> listenerConfigs = (List<CachePartitionLostListenerConfig>)
-                    adaptListenerConfigs(parameters.partitionLostListenerConfigs, parameters.namespaceName);
+                    adaptListenerConfigs(parameters.partitionLostListenerConfigs, parameters.namespace);
             config.setPartitionLostListenerConfigs(listenerConfigs);
         } else {
             config.setPartitionLostListenerConfigs(new ArrayList<>());
@@ -102,8 +102,8 @@ public class AddCacheConfigMessageTask
         if (parameters.isDataPersistenceConfigExists) {
             config.setDataPersistenceConfig(parameters.dataPersistenceConfig);
         }
-        if (parameters.isNamespaceNameExists) {
-            config.setNamespace(parameters.namespaceName);
+        if (parameters.isNamespaceExists) {
+            config.setNamespace(parameters.namespace);
         }
         return config;
     }

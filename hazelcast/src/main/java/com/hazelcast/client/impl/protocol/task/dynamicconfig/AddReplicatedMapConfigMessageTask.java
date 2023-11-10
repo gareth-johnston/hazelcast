@@ -61,8 +61,8 @@ public class AddReplicatedMapConfigMessageTask
         } else {
             config.setListenerConfigs(new ArrayList<>());
         }
-        if (parameters.isNamespaceNameExists) {
-            config.setNamespace(parameters.namespaceName);
+        if (parameters.isNamespaceExists) {
+            config.setNamespace(parameters.namespace);
         }
         return config;
     }

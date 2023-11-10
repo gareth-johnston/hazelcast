@@ -43,7 +43,7 @@ public final class NoOpNamespaceService implements NamespaceService {
     }
 
     @Override
-    public boolean hasNamespace(String namespaceName) {
+    public boolean hasNamespace(String namespace) {
         return false;
     }
 

@@ -62,7 +62,7 @@ public class AddMapConfigMessageTask
         config.setCacheDeserializedValues(CacheDeserializedValues.valueOf(parameters.cacheDeserializedValues));
         if (parameters.listenerConfigs != null && !parameters.listenerConfigs.isEmpty()) {
             config.setEntryListenerConfigs(
-                    (List<EntryListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs, parameters.namespaceName));
+                    (List<EntryListenerConfig>) adaptListenerConfigs(parameters.listenerConfigs, parameters.namespace));
         }
         if (parameters.merkleTreeConfig != null) {
             config.setMerkleTreeConfig(parameters.merkleTreeConfig);
@@ -98,7 +98,7 @@ public class AddMapConfigMessageTask
         if (parameters.partitionLostListenerConfigs != null && !parameters.partitionLostListenerConfigs.isEmpty()) {
             config.setPartitionLostListenerConfigs(
                     (List<MapPartitionLostListenerConfig>) adaptListenerConfigs(parameters.partitionLostListenerConfigs,
-                            parameters.namespaceName));
+                            parameters.namespace));
         }
         config.setSplitBrainProtectionName(parameters.splitBrainProtectionName);
         if (parameters.queryCacheConfigs != null && !parameters.queryCacheConfigs.isEmpty()) {
@@ -119,8 +119,8 @@ public class AddMapConfigMessageTask
         if (parameters.isPartitioningAttributeConfigsExists) {
             config.setPartitioningAttributeConfigs(parameters.partitioningAttributeConfigs);
         }
-        if (parameters.isNamespaceNameExists) {
-            config.setNamespace(parameters.namespaceName);
+        if (parameters.isNamespaceExists) {
+            config.setNamespace(parameters.namespace);
         }
         return config;
     }

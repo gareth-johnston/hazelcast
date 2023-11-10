@@ -6305,7 +6305,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(null, parameters.splitBrainProtectionName));
         assertTrue(isEqual(aString, parameters.mergePolicy));
         assertTrue(isEqual(anInt, parameters.mergeBatchSize));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6331,7 +6331,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(null, parameters.splitBrainProtectionName));
         assertTrue(isEqual(aString, parameters.mergePolicy));
         assertTrue(isEqual(anInt, parameters.mergeBatchSize));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6377,7 +6377,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(null, parameters.splitBrainProtectionName));
         assertTrue(isEqual(aString, parameters.mergePolicy));
         assertTrue(isEqual(anInt, parameters.mergeBatchSize));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6402,7 +6402,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(null, parameters.splitBrainProtectionName));
         assertTrue(isEqual(aString, parameters.mergePolicy));
         assertTrue(isEqual(anInt, parameters.mergeBatchSize));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6426,7 +6426,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(null, parameters.listenerConfigs));
         assertTrue(isEqual(null, parameters.splitBrainProtectionName));
         assertTrue(isEqual(anInt, parameters.mergeBatchSize));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6447,7 +6447,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(aBoolean, parameters.statisticsEnabled));
         assertTrue(isEqual(aBoolean, parameters.multiThreadingEnabled));
         assertTrue(isEqual(null, parameters.listenerConfigs));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6543,7 +6543,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(anInt, parameters.mergeBatchSize));
         assertTrue(parameters.isPriorityComparatorClassNameExists);
         assertTrue(isEqual(null, parameters.priorityComparatorClassName));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6590,7 +6590,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertFalse(parameters.isDataPersistenceConfigExists);
         assertFalse(parameters.isTieredStoreConfigExists);
         assertFalse(parameters.isPartitioningAttributeConfigsExists);
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6612,7 +6612,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(aBoolean, parameters.statisticsEnabled));
         assertTrue(isEqual(aString, parameters.topicOverloadPolicy));
         assertTrue(isEqual(null, parameters.executor));
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test
@@ -6656,7 +6656,7 @@ public class MemberCompatibilityNullTest_2_1 {
         assertTrue(isEqual(null, parameters.hotRestartConfig));
         assertFalse(parameters.isMerkleTreeConfigExists);
         assertFalse(parameters.isDataPersistenceConfigExists);
-        assertFalse(parameters.isNamespaceNameExists);
+        assertFalse(parameters.isNamespaceExists);
     }
 
     @Test

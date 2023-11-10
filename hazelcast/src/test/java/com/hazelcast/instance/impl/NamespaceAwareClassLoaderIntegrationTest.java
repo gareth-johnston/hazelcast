@@ -273,12 +273,12 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         processor.createExecuteAssertOnMap(this, hazelcastInstance);
 
         // Now swap the class in the namespace
-        String namespaceName = processor.namespace.getName();
+        String namespace = processor.namespace.getName();
         hazelcastInstance.getConfig().getNamespacesConfig()
-                .addNamespaceConfig(new NamespaceConfig(namespaceName).addClass(otherProcessor.clazz));
+                .addNamespaceConfig(new NamespaceConfig(namespace).addClass(otherProcessor.clazz));
 
         // Now assert the behavior has swapped, too
-        otherProcessor.createExecuteAssertOnMap(namespaceName, processor.mapName, this, hazelcastInstance);
+        otherProcessor.createExecuteAssertOnMap(namespace, processor.mapName, this, hazelcastInstance);
     }
 
     /**
