@@ -142,15 +142,17 @@ public class RingbufferContainer<T, E> implements IdentifiedDataSerializable, No
     public void init(RingbufferConfig config, NodeEngine nodeEngine) {
         this.config = config;
         this.serializationService = nodeEngine.getSerializationService();
-        initRingbufferStore(NamespaceUtil.getClassLoaderForNamespace(nodeEngine, config.getNamespace()));
+        initRingbufferStore(NamespaceUtil.getClassLoaderForNamespace(nodeEngine, config.getNamespace()), nodeEngine);
     }
 
-    private void initRingbufferStore(ClassLoader classLoader) {
+    private void initRingbufferStore(ClassLoader classLoader, NodeEngine nodeEngine) {
         this.store = RingbufferStoreWrapper.create(objectNamespace,
                 config.getRingbufferStoreConfig(),
                 config.getInMemoryFormat(),
                 serializationService,
-                classLoader);
+                classLoader,
+                nodeEngine,
+                config.getNamespace());
         if (store.isEnabled()) {
             try {
                 final long storeSequence = store.getLargestSequence();

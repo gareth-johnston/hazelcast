@@ -18,6 +18,7 @@ package com.hazelcast.ringbuffer.impl.operations;
 
 import com.hazelcast.config.RingbufferConfig;
 import com.hazelcast.internal.monitor.impl.LocalTopicStatsImpl;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.services.ObjectNamespace;
 import com.hazelcast.internal.services.ServiceNamespaceAware;
 import com.hazelcast.logging.ILogger;
@@ -28,6 +29,7 @@ import com.hazelcast.ringbuffer.StaleSequenceException;
 import com.hazelcast.ringbuffer.impl.RingbufferContainer;
 import com.hazelcast.ringbuffer.impl.RingbufferService;
 import com.hazelcast.ringbuffer.impl.RingbufferWaitNotifyKey;
+import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.operationservice.NamedOperation;
 import com.hazelcast.spi.impl.operationservice.Operation;
 import com.hazelcast.spi.impl.operationservice.PartitionAwareOperation;
@@ -130,6 +132,31 @@ public abstract class AbstractRingBufferOperation extends Operation implements N
         } else {
             return new RingbufferWaitNotifyKey(ns, getPartitionId());
         }
+    }
+
+    /**
+     * Returns the User Code Deployment namespace used for this RingBuffer
+     *
+     * @return the configured namespace value
+     */
+    public String getUCDNamespace() {
+        // Obtain NodeEngine reference and set for use later in operations
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        setNodeEngine(engine);
+
+        // Check for container linked config first
+        RingbufferService service = engine.getService(SERVICE_NAME);
+        final ObjectNamespace ns = RingbufferService.getRingbufferNamespace(name);
+        final RingbufferContainer container = service.getContainerOrNull(getPartitionId(), ns);
+        if (container != null) {
+            return container.getConfig().getNamespace();
+        }
+        // Manual config lookup fallback
+        RingbufferConfig config = service.getRingbufferConfig(name);
+        if (config != null) {
+            return config.getNamespace();
+        }
+        return null;
     }
 
     @Override
