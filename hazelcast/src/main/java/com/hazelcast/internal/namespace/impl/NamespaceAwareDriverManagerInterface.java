@@ -18,7 +18,6 @@ package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.internal.util.ExceptionUtil;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
-import com.hazelcast.jet.impl.util.LoggingUtil;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
@@ -42,11 +41,11 @@ public class NamespaceAwareDriverManagerInterface {
     public static void initializeJdbcDrivers(String nsName, MapResourceClassLoader classLoader) {
         ServiceLoader<? extends Driver> driverLoader = ServiceLoader.load(Driver.class, classLoader);
 
-        LoggingUtil.logFinest(LOGGER, "Initializing driverLoader=%s in namespace %s", driverLoader, nsName);
+        LOGGER.finest("Initializing driverLoader=%s in namespace %s", driverLoader, nsName);
 
         for (Driver d : driverLoader) {
             if (d.getClass().getClassLoader() == classLoader) {
-                LoggingUtil.logFinest(LOGGER, "Registering driver %s from classloader for namespace %s", d.getClass(), nsName);
+                LOGGER.finest("Registering driver %s from classloader for namespace %s", d.getClass(), nsName);
 
                 try {
                     DriverManager.registerDriver(d);
@@ -54,8 +53,8 @@ public class NamespaceAwareDriverManagerInterface {
                     LOGGER.warning("Failed to register driver " + d + " in namespace " + nsName, e);
                 }
             } else {
-                LoggingUtil.logFinest(LOGGER, "Skipping %s because it's classloader (%s) differs from classloader (%s)",
-                        d.getClass(), d.getClass().getClassLoader(), classLoader);
+                LOGGER.finest("Skipping %s because it's classloader (%s) differs from classloader (%s)", d.getClass(),
+                        d.getClass().getClassLoader(), classLoader);
             }
         }
     }
@@ -86,22 +85,21 @@ public class NamespaceAwareDriverManagerInterface {
     public void cleanupJdbcDrivers(String nsName) {
         Enumeration<Driver> registeredDrivers = DriverManager.getDrivers();
 
-        LoggingUtil.logFinest(LOGGER, "Cleaning up registeredDrivers=%s, in namespace %s", registeredDrivers, nsName);
+        LOGGER.finest("Cleaning up registeredDrivers=%s, in namespace %s", registeredDrivers, nsName);
 
         while (registeredDrivers.hasMoreElements()) {
             Driver d = registeredDrivers.nextElement();
 
             if (d.getClass().getClassLoader() == classLoader) {
                 try {
-                    LoggingUtil.logFinest(LOGGER, "Deregistering %s from removed classloader for namespace %s", d.getClass(),
-                            nsName);
+                    LOGGER.finest("Deregistering %s from removed classloader for namespace %s", d.getClass(), nsName);
                     DriverManager.deregisterDriver(d);
                 } catch (SQLException e) {
                     LOGGER.warning("Failed to deregister driver " + d + " in namespace " + nsName, e);
                 }
             } else {
-                LoggingUtil.logFinest(LOGGER, "Skipping %s because it's classloader (%s) differs from removedClassLoader (%s)",
-                        d.getClass(), d.getClass().getClassLoader(), classLoader);
+                LOGGER.finest("Skipping %s because it's classloader (%s) differs from removedClassLoader (%s)", d.getClass(),
+                        d.getClass().getClassLoader(), classLoader);
             }
         }
     }
