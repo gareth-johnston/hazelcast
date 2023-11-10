@@ -20,6 +20,7 @@ import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.spi.impl.NodeEngine;
 
 import javax.annotation.Nullable;
+
 import java.util.concurrent.Callable;
 
 /**
@@ -32,11 +33,13 @@ public class NamespaceUtil {
 
     // TODO Docs for all methods
     public static void setupNamespace(@Nullable String namespace) {
-        setupNamespace(NodeEngineThreadLocalContext.getNamespaceThreadLocalContext(), namespace);
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        setupNamespace(engine, namespace);
     }
 
     public static void cleanupNamespace(@Nullable String namespace) {
-        cleanupNamespace(NodeEngineThreadLocalContext.getNamespaceThreadLocalContext(), namespace);
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        cleanupNamespace(engine, namespace);
     }
 
     public static void setupNamespace(NodeEngine engine, @Nullable String namespace) {
