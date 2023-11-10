@@ -32,13 +32,11 @@ public class NamespaceUtil {
 
     // TODO Docs for all methods
     public static void setupNamespace(@Nullable String namespace) {
-        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
-        engine.getNamespaceService().setupNamespace(namespace);
+        setupNamespace(NodeEngineThreadLocalContext.getNamespaceThreadLocalContext(), namespace);
     }
 
     public static void cleanupNamespace(@Nullable String namespace) {
-        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
-        engine.getNamespaceService().cleanupNamespace(namespace);
+        cleanupNamespace(NodeEngineThreadLocalContext.getNamespaceThreadLocalContext(), namespace);
     }
 
     public static void setupNamespace(NodeEngine engine, @Nullable String namespace) {
@@ -69,8 +67,7 @@ public class NamespaceUtil {
 
     // Use namespace ClassLoader if it exists, otherwise fallback to config class loader
     public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, String namespace) {
-        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
-        return loader != null ? loader : getDefaultClassloader(engine);
+        return getClassLoaderForNamespace(engine, namespace, getDefaultClassloader(engine));
     }
 
     // Use namespace CL if exists, otherwise fallback to config class loader
@@ -81,7 +78,6 @@ public class NamespaceUtil {
 
     // Use default namespace CL if exists, otherwise fallback to config class loader
     public static ClassLoader getDefaultClassloader(NodeEngine engine) {
-        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(NamespaceService.DEFAULT_NAMESPACE_ID);
-        return loader != null ? loader : engine.getConfigClassLoader();
+        return getClassLoaderForNamespace(engine, NamespaceService.DEFAULT_NAMESPACE_ID, engine.getConfigClassLoader());
     }
 }
