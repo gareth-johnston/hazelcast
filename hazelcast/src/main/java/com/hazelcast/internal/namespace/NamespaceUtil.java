@@ -70,9 +70,11 @@ public class NamespaceUtil {
 
     // Use namespace ClassLoader if it exists, otherwise fallback to config class loader
     public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, String namespace) {
-        return getClassLoaderForNamespace(engine, namespace, getDefaultClassloader(engine));
+        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
+        return loader != null ? loader : getDefaultClassloader(engine);
     }
 
+    // TODO This isn't used anywhere?
     // Use namespace CL if exists, otherwise fallback to config class loader
     public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, String namespace, ClassLoader defaultLoader) {
         ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
@@ -81,6 +83,7 @@ public class NamespaceUtil {
 
     // Use default namespace CL if exists, otherwise fallback to config class loader
     public static ClassLoader getDefaultClassloader(NodeEngine engine) {
-        return getClassLoaderForNamespace(engine, NamespaceService.DEFAULT_NAMESPACE_ID, engine.getConfigClassLoader());
+        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(NamespaceService.DEFAULT_NAMESPACE_ID);
+        return loader != null ? loader : engine.getConfigClassLoader();
     }
 }
