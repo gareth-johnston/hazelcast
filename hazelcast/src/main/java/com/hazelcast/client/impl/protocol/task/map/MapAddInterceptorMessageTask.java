@@ -16,6 +16,7 @@
 
 package com.hazelcast.client.impl.protocol.task.map;
 
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.impl.operation.AddInterceptorOperationSupplier;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.MapAddInterceptorCodec;
@@ -49,7 +50,10 @@ public class MapAddInterceptorMessageTask
     protected Supplier<Operation> createOperationSupplier() {
         final MapService mapService = getService(MapService.SERVICE_NAME);
         final MapServiceContext mapServiceContext = mapService.getMapServiceContext();
-        final MapInterceptor mapInterceptor = serializationService.toObject(parameters.interceptor);
+        final MapInterceptor mapInterceptor =
+            NamespaceUtil.callWithNamespace(nodeEngine,
+                    mapServiceContext.getMapContainer(parameters.name).getMapConfig().getNamespace(),
+                        () -> serializationService.toObject(parameters.interceptor));
         id = mapServiceContext.generateInterceptorId(parameters.name, mapInterceptor);
         return new AddInterceptorOperationSupplier(parameters.name, id, mapInterceptor);
     }
