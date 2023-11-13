@@ -278,7 +278,6 @@ public abstract class MapOperation extends AbstractNamedOperation
             return;
         }
         // Cleanup Namespace awareness
-        // TODO: Can we drop the `namespace` on cleanup and avoid storing it in all Map ops?
         getNodeEngine().getNamespaceService().cleanupNamespace(namespace);
 
         afterRunInternal();

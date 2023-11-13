@@ -93,6 +93,7 @@ public class OnJoinCacheOperation extends Operation implements IdentifiedDataSer
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
         int confSize = in.readInt();
+        // TODO: Configs can contain listener configs, which need NS awareness?
         for (int i = 0; i < confSize; i++) {
             CacheConfig config = in.readObject();
             configs.add(config);
