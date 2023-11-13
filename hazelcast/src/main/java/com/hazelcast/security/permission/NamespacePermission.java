@@ -36,9 +36,9 @@ public class NamespacePermission extends InstancePermission {
 
             if (ActionConstants.ACTION_CREATE.equals(action)) {
                 mask |= CREATE;
-            } else if (ActionConstants.ACTION_PUBLISH.equals(action)) {
-                mask |= DESTROY;
             } else if (ActionConstants.ACTION_DESTROY.equals(action)) {
+                mask |= DESTROY;
+            } else if (ActionConstants.ACTION_USE.equals(action)) {
                 mask |= USE;
             }
         }

@@ -34,6 +34,7 @@ public interface SecureRequest {
     @Nullable
     Permission getRequiredPermission();
 
+    // TODO Should this return a Collection instead?
     @Nullable
     default Permission[] getRequiredPermissions() {
         return new Permission[] {getRequiredPermission()};

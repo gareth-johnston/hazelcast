@@ -16,7 +16,6 @@
 
 package com.hazelcast.client.impl.protocol.task.map;
 
-import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.map.impl.operation.AddInterceptorOperationSupplier;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.MapAddInterceptorCodec;
@@ -30,9 +29,11 @@ import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.security.SecurityInterceptorConstants;
 import com.hazelcast.security.permission.ActionConstants;
 import com.hazelcast.security.permission.MapPermission;
+import com.hazelcast.security.permission.NamespacePermission;
 import com.hazelcast.spi.impl.operationservice.Operation;
 
 import java.security.Permission;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -50,10 +51,7 @@ public class MapAddInterceptorMessageTask
     protected Supplier<Operation> createOperationSupplier() {
         final MapService mapService = getService(MapService.SERVICE_NAME);
         final MapServiceContext mapServiceContext = mapService.getMapServiceContext();
-        final MapInterceptor mapInterceptor =
-            NamespaceUtil.callWithNamespace(nodeEngine,
-                    mapServiceContext.getMapContainer(parameters.name).getMapConfig().getNamespace(),
-                        () -> serializationService.toObject(parameters.interceptor));
+        final MapInterceptor mapInterceptor = serializationService.toObject(parameters.interceptor);
         id = mapServiceContext.generateInterceptorId(parameters.name, mapInterceptor);
         return new AddInterceptorOperationSupplier(parameters.name, id, mapInterceptor);
     }
@@ -91,7 +89,21 @@ public class MapAddInterceptorMessageTask
 
     @Override
     public Permission getRequiredPermission() {
-        return new MapPermission(parameters.name, ActionConstants.ACTION_INTERCEPT);
+        return null;
+    }
+
+    @Override
+    public Permission[] getRequiredPermissions() {
+        Collection<Permission> permissions = new ArrayList<>();
+        permissions.add(new MapPermission(getDistributedObjectName(), ActionConstants.ACTION_INTERCEPT));
+
+        String namespace = MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName());
+
+        if (namespace != null) {
+            permissions.add(new NamespacePermission(namespace, ActionConstants.ACTION_USE));
+        }
+
+        return permissions.toArray(Permission[]::new);
     }
 
     @Override

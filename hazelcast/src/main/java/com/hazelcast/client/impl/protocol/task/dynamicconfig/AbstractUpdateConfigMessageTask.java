@@ -23,11 +23,9 @@ import com.hazelcast.config.MergePolicyConfig;
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.dynamicconfig.ConfigurationService;
 import com.hazelcast.internal.nio.Connection;
-import com.hazelcast.internal.util.collection.ArrayUtils;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.security.permission.ConfigPermission;
 
-import javax.annotation.Nullable;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,19 +62,6 @@ public abstract class AbstractUpdateConfigMessageTask<P> extends AbstractMessage
         return new Permission[] {CONFIG_PERMISSION};
     }
 
-    protected Permission[] extendPermissions(Permission... permissions) {
-        Permission[] parentPermissions = super.getRequiredPermissions();
-
-        if (parentPermissions == null) {
-            return permissions;
-        } else {
-            // TODO if https://github.com/hazelcast/hazelcast/pull/25953 is merged, "cumulativePermissions" can be deleted
-            Permission[] cumulativePermissions = new Permission[permissions.length + parentPermissions.length];
-            ArrayUtils.concat(permissions, parentPermissions, cumulativePermissions);
-            return cumulativePermissions;
-        }
-    }
-
     @Override
     public Object[] getParameters() {
         // todo may have to specify for security
@@ -97,7 +82,7 @@ public abstract class AbstractUpdateConfigMessageTask<P> extends AbstractMessage
     }
 
     protected List<? extends ListenerConfig> adaptListenerConfigs(List<ListenerConfigHolder> listenerConfigHolders,
-                                                                  @Nullable String namespace) {
+                                                                  String namespace) {
         if (listenerConfigHolders == null || listenerConfigHolders.isEmpty()) {
             return null;
         } else {

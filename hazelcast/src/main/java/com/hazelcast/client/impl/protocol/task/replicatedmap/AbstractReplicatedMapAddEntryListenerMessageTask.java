@@ -34,9 +34,12 @@ import com.hazelcast.replicatedmap.impl.record.ReplicatedEntryEventFilter;
 import com.hazelcast.replicatedmap.impl.record.ReplicatedQueryEventFilter;
 import com.hazelcast.security.SecurityInterceptorConstants;
 import com.hazelcast.security.permission.ActionConstants;
-import com.hazelcast.security.permission.MapPermission;
+import com.hazelcast.security.permission.NamespacePermission;
+import com.hazelcast.security.permission.ReplicatedMapPermission;
 
 import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -46,14 +49,14 @@ public abstract class AbstractReplicatedMapAddEntryListenerMessageTask<Parameter
         extends AbstractAddListenerMessageTask<Parameter>
         implements EntryListener<Object, Object> {
 
-    public AbstractReplicatedMapAddEntryListenerMessageTask(ClientMessage clientMessage, Node node,
+    protected AbstractReplicatedMapAddEntryListenerMessageTask(ClientMessage clientMessage, Node node,
                                                             Connection connection) {
         super(clientMessage, node, connection);
     }
 
     @Override
     protected CompletableFuture<UUID> processInternal() {
-        ReplicatedMapService service = getService(ReplicatedMapService.SERVICE_NAME);
+        ReplicatedMapService service = getService(getServiceName());
         ReplicatedMapEventPublishingService eventPublishingService = service.getEventPublishingService();
         Predicate predicate = getPredicate();
         ReplicatedEntryEventFilter filter;
@@ -77,7 +80,22 @@ public abstract class AbstractReplicatedMapAddEntryListenerMessageTask<Parameter
 
     @Override
     public Permission getRequiredPermission() {
-        return new MapPermission(getDistributedObjectName(), ActionConstants.ACTION_LISTEN);
+        return null;
+    }
+
+    @Override
+    public Permission[] getRequiredPermissions() {
+        Collection<Permission> permissions = new ArrayList<>();
+        permissions.add(new ReplicatedMapPermission(getDistributedObjectName(), ActionConstants.ACTION_LISTEN));
+
+        ReplicatedMapService service = getService(getServiceName());
+        String namespace = service.getNamespace(getDistributedObjectName());
+
+        if (namespace != null) {
+            permissions.add(new NamespacePermission(namespace, ActionConstants.ACTION_USE));
+        }
+
+        return permissions.toArray(Permission[]::new);
     }
 
     public abstract Predicate getPredicate();
@@ -91,7 +109,7 @@ public abstract class AbstractReplicatedMapAddEntryListenerMessageTask<Parameter
             return;
         }
 
-        DataAwareEntryEvent dataAwareEntryEvent = (DataAwareEntryEvent) event;
+        DataAwareEntryEvent<Object, Object> dataAwareEntryEvent = (DataAwareEntryEvent<Object, Object>) event;
 
         Data key = dataAwareEntryEvent.getKeyData();
         Data newValue = dataAwareEntryEvent.getNewValueData();

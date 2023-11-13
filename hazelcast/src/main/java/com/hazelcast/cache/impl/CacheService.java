@@ -18,6 +18,7 @@ package com.hazelcast.cache.impl;
 
 import com.hazelcast.cache.impl.event.CacheWanEventPublisher;
 import com.hazelcast.cache.impl.operation.CacheReplicationOperation;
+import com.hazelcast.config.CacheSimpleConfig;
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.internal.nearcache.impl.invalidation.MetaDataGenerator;
 import com.hazelcast.internal.partition.MigrationAwareService;
@@ -164,5 +165,14 @@ public class CacheService extends AbstractCacheService {
 
     public static ObjectNamespace getObjectNamespace(String cacheName) {
         return new DistributedObjectNamespace(SERVICE_NAME, cacheName);
+    }
+
+    public String getNamespace(String cacheName) {
+        // No regular containers available, fallback to config
+        CacheSimpleConfig config = nodeEngine.getConfig().getCacheConfig(cacheName);
+        if (config != null) {
+            return config.getNamespace();
+        }
+        return null;
     }
 }

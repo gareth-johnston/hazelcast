@@ -32,7 +32,10 @@ import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.partition.PartitioningStrategy;
 import com.hazelcast.security.SecurityInterceptorConstants;
+import com.hazelcast.security.permission.ActionConstants;
+import com.hazelcast.security.permission.NamespacePermission;
 
+import java.security.Permission;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,6 +137,17 @@ public class AddMapConfigMessageTask
             return new PartitioningStrategyConfig(partitioningStrategy);
         } else {
             return null;
+        }
+    }
+
+    @Override
+    public Permission[] getRequiredPermissions() {
+        if (parameters.namespace == null) {
+            return super.getRequiredPermissions();
+        } else {
+            // Require NamespacePermissions as the config is namespace aware - e.g. if inflating a MapStore, could be required
+            return extendPermissions(super.getRequiredPermissions(),
+                    new NamespacePermission(parameters.namespace, ActionConstants.ACTION_USE));
         }
     }
 

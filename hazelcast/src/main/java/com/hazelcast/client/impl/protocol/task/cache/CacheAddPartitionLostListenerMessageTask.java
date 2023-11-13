@@ -28,12 +28,15 @@ import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.security.permission.ActionConstants;
 import com.hazelcast.security.permission.CachePermission;
+import com.hazelcast.security.permission.NamespacePermission;
 import com.hazelcast.security.SecurityInterceptorConstants;
 import com.hazelcast.spi.impl.eventservice.EventFilter;
 import com.hazelcast.spi.impl.eventservice.EventRegistration;
 import com.hazelcast.spi.impl.eventservice.EventService;
 
 import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -60,15 +63,15 @@ public class CacheAddPartitionLostListenerMessageTask
         InternalCachePartitionLostListenerAdapter listenerAdapter =
                 new InternalCachePartitionLostListenerAdapter(listener);
         EventFilter filter = new CachePartitionLostEventFilter();
-        CacheService service = getService(CacheService.SERVICE_NAME);
+        CacheService service = getService(getServiceName());
         EventService eventService = service.getNodeEngine().getEventService();
         if (parameters.localOnly) {
             return newCompletedFuture(
-                    eventService.registerLocalListener(ICacheService.SERVICE_NAME, parameters.name, filter, listenerAdapter)
+                    eventService.registerLocalListener(getServiceName(), parameters.name, filter, listenerAdapter)
                                 .getId());
         }
 
-        return eventService.registerListenerAsync(ICacheService.SERVICE_NAME, parameters.name, filter, listenerAdapter)
+        return eventService.registerListenerAsync(getServiceName(), parameters.name, filter, listenerAdapter)
                            .thenApplyAsync(EventRegistration::getId, CALLER_RUNS);
     }
 
@@ -84,7 +87,7 @@ public class CacheAddPartitionLostListenerMessageTask
 
     @Override
     public String getServiceName() {
-        return CacheService.SERVICE_NAME;
+        return ICacheService.SERVICE_NAME;
     }
 
     @Override
@@ -99,7 +102,22 @@ public class CacheAddPartitionLostListenerMessageTask
 
     @Override
     public Permission getRequiredPermission() {
-        return new CachePermission(parameters.name, ActionConstants.ACTION_LISTEN);
+        return null;
+    }
+
+    @Override
+    public Permission[] getRequiredPermissions() {
+        Collection<Permission> permissions = new ArrayList<>();
+        permissions.add(new CachePermission(getDistributedObjectName(), ActionConstants.ACTION_LISTEN));
+
+        CacheService service = getService(getServiceName());
+        String namespace = service.getNamespace(getDistributedObjectName());
+
+        if (namespace != null) {
+            permissions.add(new NamespacePermission(namespace, ActionConstants.ACTION_USE));
+        }
+
+        return permissions.toArray(Permission[]::new);
     }
 
     @Override

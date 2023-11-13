@@ -30,9 +30,12 @@ import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.security.permission.ActionConstants;
 import com.hazelcast.security.permission.MapPermission;
+import com.hazelcast.security.permission.NamespacePermission;
 import com.hazelcast.spi.impl.eventservice.EventFilter;
 
 import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -80,7 +83,21 @@ public abstract class AbstractMapAddEntryListenerMessageTask<Parameter>
 
     @Override
     public Permission getRequiredPermission() {
-        return new MapPermission(getDistributedObjectName(), ActionConstants.ACTION_LISTEN);
+        return null;
+    }
+
+    @Override
+    public Permission[] getRequiredPermissions() {
+        Collection<Permission> permissions = new ArrayList<>();
+        permissions.add(new MapPermission(getDistributedObjectName(), ActionConstants.ACTION_LISTEN));
+
+        String namespace = MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName());
+
+        if (namespace != null) {
+            permissions.add(new NamespacePermission(namespace, ActionConstants.ACTION_USE));
+        }
+
+        return permissions.toArray(Permission[]::new);
     }
 
     private class ClientMapListener extends MapListenerAdapter<Object, Object> {

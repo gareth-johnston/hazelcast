@@ -26,6 +26,8 @@ import java.util.concurrent.Callable;
 
 // TODO proper documentation
 public interface NamespaceService {
+    // TODO no idea for the format
+    public static final String SERVICE_NAME = "hz:impl:namespaceService";
     String DEFAULT_NAMESPACE_ID = "default";
 
     void addNamespace(@Nonnull String nsName,
@@ -75,5 +77,5 @@ public interface NamespaceService {
         removeNamespace(config.getName());
     }
 
-    ClassLoader getClassLoaderForNamespace(@Nullable String namespace);
+    ClassLoader getClassLoaderForNamespace(String namespace);
 }

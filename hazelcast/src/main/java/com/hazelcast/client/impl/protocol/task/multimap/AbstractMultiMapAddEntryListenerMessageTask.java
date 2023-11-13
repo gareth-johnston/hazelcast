@@ -30,8 +30,11 @@ import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.security.SecurityInterceptorConstants;
 import com.hazelcast.security.permission.ActionConstants;
 import com.hazelcast.security.permission.MultiMapPermission;
+import com.hazelcast.security.permission.NamespacePermission;
 
 import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -40,14 +43,14 @@ import static com.hazelcast.spi.impl.InternalCompletableFuture.newCompletedFutur
 public abstract class AbstractMultiMapAddEntryListenerMessageTask<P>
         extends AbstractAddListenerMessageTask<P> {
 
-    public AbstractMultiMapAddEntryListenerMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
+    protected AbstractMultiMapAddEntryListenerMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
         super(clientMessage, node, connection);
     }
 
     @Override
     protected CompletableFuture<UUID> processInternal() {
         final MultiMapService service = getService(MultiMapService.SERVICE_NAME);
-        EntryAdapter listener = new MultiMapListener();
+        EntryAdapter<?, ?> listener = new MultiMapListener();
 
         final String name = getDistributedObjectName();
         Data key = getKey();
@@ -70,7 +73,22 @@ public abstract class AbstractMultiMapAddEntryListenerMessageTask<P>
 
     @Override
     public Permission getRequiredPermission() {
-        return new MultiMapPermission(getDistributedObjectName(), ActionConstants.ACTION_LISTEN);
+        return null;
+    }
+
+    @Override
+    public Permission[] getRequiredPermissions() {
+        Collection<Permission> permissions = new ArrayList<>();
+        permissions.add(new MultiMapPermission(getDistributedObjectName(), ActionConstants.ACTION_LISTEN));
+
+        MultiMapService service = getService(getServiceName());
+        String namespace = service.getNamespace(getDistributedObjectName());
+
+        if (namespace != null) {
+            permissions.add(new NamespacePermission(namespace, ActionConstants.ACTION_USE));
+        }
+
+        return permissions.toArray(Permission[]::new);
     }
 
 
@@ -92,7 +110,7 @@ public abstract class AbstractMultiMapAddEntryListenerMessageTask<P>
                     throw new IllegalArgumentException("Expecting: DataAwareEntryEvent, Found: "
                             + event.getClass().getSimpleName());
                 }
-                DataAwareEntryEvent dataAwareEntryEvent = (DataAwareEntryEvent) event;
+                DataAwareEntryEvent<?, ?> dataAwareEntryEvent = (DataAwareEntryEvent<?, ?>) event;
                 Data key = dataAwareEntryEvent.getKeyData();
                 Data value = dataAwareEntryEvent.getNewValueData();
                 Data oldValue = dataAwareEntryEvent.getOldValueData();

@@ -43,7 +43,7 @@ import com.hazelcast.query.PartitionPredicate;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.QueryException;
 import com.hazelcast.security.permission.ActionConstants;
-import com.hazelcast.security.permission.MapPermission;
+import com.hazelcast.security.permission.NamespacePermission;
 import com.hazelcast.spi.impl.operationservice.Operation;
 import com.hazelcast.spi.impl.operationservice.impl.OperationServiceImpl;
 import java.security.Permission;
@@ -70,7 +70,14 @@ public abstract class AbstractMapQueryMessageTask<P, QueryResult extends Result,
 
     @Override
     public Permission getRequiredPermission() {
-        return new MapPermission(getDistributedObjectName(), ActionConstants.ACTION_READ);
+        return null;
+    }
+
+    @Override
+    public Permission[] getRequiredPermissions() {
+        String namespace = getNamespace();
+
+        return namespace == null ? null : new Permission[] {new NamespacePermission(getNamespace(), ActionConstants.ACTION_USE)};
     }
 
     protected String getNamespace() {
@@ -91,7 +98,6 @@ public abstract class AbstractMapQueryMessageTask<P, QueryResult extends Result,
 
     @Override
     protected final Object call() throws Exception {
-        // Namespace awareness should be handled on the member-side
         Collection<AccumulatedResults> result = new LinkedList<AccumulatedResults>();
         try {
             Predicate predicate = getPredicate();

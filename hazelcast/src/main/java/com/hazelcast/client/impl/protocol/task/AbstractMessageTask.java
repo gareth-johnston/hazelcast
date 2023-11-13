@@ -35,6 +35,7 @@ import com.hazelcast.internal.nio.ConnectionType;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.server.ServerConnection;
 import com.hazelcast.internal.tpcengine.net.AsyncSocket;
+import com.hazelcast.internal.util.collection.ArrayUtils;
 import com.hazelcast.internal.tpcengine.iobuffer.IOBuffer;
 import com.hazelcast.internal.tpcengine.iobuffer.IOBufferAllocator;
 import com.hazelcast.logging.ILogger;
@@ -43,6 +44,8 @@ import com.hazelcast.security.SecurityContext;
 import com.hazelcast.spi.exception.RetryableHazelcastException;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.impl.operationservice.impl.responses.NormalResponse;
+
+import javax.annotation.Nullable;
 
 import java.lang.reflect.Field;
 import java.security.AccessControlException;
@@ -336,14 +339,16 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
         return getServiceName();
     }
 
-    @Override
-    public abstract String getDistributedObjectName();
-
-    @Override
-    public abstract String getMethodName();
-
-    @Override
-    public abstract Object[] getParameters();
+    protected static Permission[] extendPermissions(@Nullable Permission[] parentPermissions, Permission... permissions) {
+        if (parentPermissions == null) {
+            return permissions;
+        } else {
+            // TODO if https://github.com/hazelcast/hazelcast/pull/25953 is merged, "cumulativePermissions" can be deleted
+            Permission[] cumulativePermissions = new Permission[permissions.length + parentPermissions.length];
+            ArrayUtils.concat(permissions, parentPermissions, cumulativePermissions);
+            return cumulativePermissions;
+        }
+    }
 
     protected final BuildInfo getMemberBuildInfo() {
         return node.getBuildInfo();
