@@ -23,6 +23,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.internal.util.OsHelper;
@@ -40,6 +41,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,10 +65,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.hazelcast.jet.impl.JobRepository.classKeyName;
+import static com.hazelcast.test.Accessors.getNodeEngineImpl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
@@ -101,6 +105,13 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
     public void setUp() {
         config = new Config();
         config.getNamespacesConfig().setEnabled(true);
+    }
+
+    // TODO: This only validates cleanup from the test environment; would be good to
+    //  validate for all threads somehow?
+    @After
+    public void validateNamespaceCleanup() {
+        assertNull(NamespaceThreadLocalContext.getClassLoader());
     }
 
     /**
@@ -525,7 +536,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                         }
                     }));
 
-            return new MapResourceClassLoader(NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
+            return new MapResourceClassLoader(null, NamespaceAwareClassLoaderIntegrationTest.class.getClassLoader(),
                     () -> classNameToContent, true);
         }
     }
@@ -535,9 +546,9 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
         return OsHelper.ensureUnixSeparators(classKeyName);
     }
 
-    Class<?> tryLoadClass(String namespace, String className) throws Exception {
+    Class<?> tryLoadClass(HazelcastInstance instance, String namespace, String className) throws Exception {
         if (namespace != null) {
-            NamespaceThreadLocalContext.onStartNsAware(namespace);
+            NamespaceUtil.setupNamespace(getNodeEngineImpl(instance), namespace);
         }
         try {
             return nodeClassLoader.loadClass(className);
@@ -546,7 +557,7 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
                     MessageFormat.format("\"{0}\" class not found in \"{1}\" namespace", className, namespace), e);
         } finally {
             if (namespace != null) {
-                NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+                NamespaceUtil.cleanupNamespace(getNodeEngineImpl(instance), namespace);
             }
         }
     }
@@ -611,7 +622,8 @@ public class NamespaceAwareClassLoaderIntegrationTest extends HazelcastTestSuppo
             try {
                 // Execute the EntryProcessor
                 Class<? extends EntryProcessor<Object, String, String>> clazz =
-                        (Class<? extends EntryProcessor<Object, String, String>>) instance.tryLoadClass(namespace, className);
+                        (Class<? extends EntryProcessor<Object, String, String>>)
+                                instance.tryLoadClass(hazelcastInstance, namespace, className);
                 map.executeOnKey(Void.TYPE, clazz.getDeclaredConstructor().newInstance());
             } catch (Exception e) {
                 throw new RuntimeException(e);

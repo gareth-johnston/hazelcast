@@ -22,6 +22,7 @@ import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.query.extractor.ValueExtractor;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -35,7 +36,7 @@ public final class ExtractorHelper {
 
     static Map<String, ValueExtractor> instantiateExtractors(List<AttributeConfig> attributeConfigs,
                                                              ClassLoader classLoader,
-                                                             String namespace) {
+                                                             @Nullable String namespace) {
         Map<String, ValueExtractor> extractors = createHashMap(attributeConfigs.size());
         for (AttributeConfig config : attributeConfigs) {
             if (extractors.containsKey(config.getName())) {
@@ -47,7 +48,7 @@ public final class ExtractorHelper {
         return extractors;
     }
 
-    static ValueExtractor instantiateExtractor(AttributeConfig config, ClassLoader classLoader, String namespace) {
+    static ValueExtractor instantiateExtractor(AttributeConfig config, ClassLoader classLoader, @Nullable String namespace) {
         ValueExtractor extractor = null;
         if (classLoader != null) {
             try {
@@ -67,7 +68,7 @@ public final class ExtractorHelper {
 
     private static ValueExtractor instantiateExtractorWithConfigClassLoader(AttributeConfig config,
                                                                             ClassLoader classLoader,
-                                                                            String namespace) {
+                                                                            @Nullable String namespace) {
         return NamespaceUtil.callWithNamespace(namespace, () -> {
             try {
                 Class<?> clazz = classLoader.loadClass(config.getExtractorClassName());
@@ -83,7 +84,7 @@ public final class ExtractorHelper {
         });
     }
 
-    private static ValueExtractor instantiateExtractorWithClassForName(AttributeConfig config, String namespace) {
+    private static ValueExtractor instantiateExtractorWithClassForName(AttributeConfig config, @Nullable String namespace) {
         return NamespaceUtil.callWithNamespace(namespace, () -> {
             try {
                 Class<?> clazz = Class.forName(config.getExtractorClassName());

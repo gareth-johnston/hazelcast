@@ -34,6 +34,7 @@ import com.hazelcast.nio.serialization.HazelcastSerializationException;
 import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.splitbrainprotection.SplitBrainProtectionListener;
 
+import javax.annotation.Nullable;
 import java.util.EventListener;
 
 @SuppressWarnings("checkstyle:cyclomaticcomplexity")
@@ -137,7 +138,7 @@ public class ListenerConfigHolder {
         return local;
     }
 
-    public <T extends ListenerConfig> T asListenerConfig(SerializationService serializationService, String namespace) {
+    public <T extends ListenerConfig> T asListenerConfig(SerializationService serializationService, @Nullable String namespace) {
         validate();
         ListenerConfig listenerConfig = null;
         if (className != null) {
@@ -208,7 +209,8 @@ public class ListenerConfigHolder {
         }
     }
 
-    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService, String namespace) {
+    public static ListenerConfigHolder of(ListenerConfig config, SerializationService serializationService,
+                                          @Nullable String namespace) {
         ListenerConfigType listenerType = listenerTypeOf(config);
         Data implementationData = null;
         if (config.getImplementation() != null) {

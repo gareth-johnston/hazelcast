@@ -25,6 +25,7 @@ import com.hazelcast.spi.impl.executionservice.ExecutionService;
 import com.hazelcast.topic.ITopic;
 import com.hazelcast.topic.TopicOverloadPolicy;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -80,7 +81,7 @@ public class ReliableTopicConfig implements IdentifiedDataSerializable, NamedCon
     private boolean statisticsEnabled = DEFAULT_STATISTICS_ENABLED;
     private List<ListenerConfig> listenerConfigs = new LinkedList<ListenerConfig>();
     private TopicOverloadPolicy topicOverloadPolicy = DEFAULT_TOPIC_OVERLOAD_POLICY;
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     public ReliableTopicConfig() {
     }
@@ -304,7 +305,7 @@ public class ReliableTopicConfig implements IdentifiedDataSerializable, NamedCon
     }
 
     /** @since 5.4 */
-    public void setNamespace(String namespace) {
+    public void setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
     }
 

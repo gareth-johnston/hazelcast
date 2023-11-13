@@ -22,6 +22,7 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.impl.Versioned;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -142,7 +143,7 @@ public class QueryCacheConfig implements IdentifiedDataSerializable, NamespaceAw
 
     private List<IndexConfig> indexConfigs;
 
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     public QueryCacheConfig() {
     }
@@ -468,7 +469,7 @@ public class QueryCacheConfig implements IdentifiedDataSerializable, NamespaceAw
     }
 
     /** @since 5.4 **/
-    public void setNamespace(String namespace) {
+    public void setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
     }
 

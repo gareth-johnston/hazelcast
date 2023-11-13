@@ -37,6 +37,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class PagingPredicateHolder {
     private final AnchorDataListHolder anchorDataListHolder;
@@ -101,7 +102,7 @@ public class PagingPredicateHolder {
         return partitionKeysData;
     }
 
-    public <K, V> Predicate<K, V> asPredicate(SerializationService serializationService, String namespace) {
+    public <K, V> Predicate<K, V> asPredicate(SerializationService serializationService, @Nullable String namespace) {
         return NamespaceUtil.callWithNamespace(namespace, () -> {
             List<Map.Entry<Integer, Map.Entry<K, V>>> anchorList = anchorDataListHolder.asAnchorList(serializationService);
             Predicate predicate = serializationService.toObject(predicateData);

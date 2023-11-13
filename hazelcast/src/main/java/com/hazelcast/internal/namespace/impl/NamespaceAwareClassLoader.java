@@ -94,13 +94,11 @@ public class NamespaceAwareClassLoader extends ClassLoader {
     }
 
     ClassLoader pickClassLoader() {
-        String namespace = NamespaceThreadLocalContext.getNamespaceThreadLocalContext();
-        if (namespace == null) {
-            return parent;
-        } else {
-            ClassLoader candidate = namespaceService.getClassLoaderForExactNamespace(namespace);
-            return candidate == null ? parent : candidate;
+        ClassLoader classLoader = NamespaceThreadLocalContext.getClassLoader();
+        if (classLoader != null) {
+            return classLoader;
         }
+        return parent;
     }
 
     @Override

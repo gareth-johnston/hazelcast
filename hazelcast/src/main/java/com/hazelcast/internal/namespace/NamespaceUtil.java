@@ -16,12 +16,16 @@
 
 package com.hazelcast.internal.namespace;
 
+import com.hazelcast.internal.namespace.impl.NamespaceThreadLocalContext;
 import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
+import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.spi.impl.NodeEngine;
 
 import javax.annotation.Nullable;
 
 import java.util.concurrent.Callable;
+
+import static com.hazelcast.internal.util.ExceptionUtil.sneakyThrow;
 
 /**
  * Utility to simplify accessing the NamespaceService and Namespace-aware wrapping
@@ -68,22 +72,82 @@ public class NamespaceUtil {
         return engine.getNamespaceService().callWithNamespace(namespace, callable);
     }
 
+    /**
+     * Calls the passed {@link Callable} within the {@link ClassLoader} context
+     * of the passed {@link Object}'s own {@link ClassLoader} as defined by
+     * {@code Object#getClass#getClassLoader()}. The intention is that we can
+     * retrieve a User Code Deployment class's {@link MapResourceClassLoader}
+     * without the need for any additional references like we would need when
+     * fetching using a {@code String namespace}.
+     *
+     * @implNote This should only be used on UCD objects, as the contract is
+     * that all UCD objects are instantiated using the correct Namespace-aware
+     * {@link ClassLoader}, allowing this shortcut to work. This also allows us
+     * to handle client-executed UCD objects without fuss, as it will simply
+     * use their local {@link ClassLoader}.
+     *
+     * @param ucdObject the UCD-instantiated object to retrieve the
+     *                  {@link ClassLoader} from for execution
+     * @param callable  the {@link Callable} to execute with Namespace awareness
+     */
+    public static <V> V callWithOwnClassLoader(Object ucdObject, Callable<V> callable) {
+        ClassLoader loader = ucdObject.getClass().getClassLoader();
+        NamespaceThreadLocalContext.onStartNsAware(loader);
+        try {
+            return callable.call();
+        } catch (Exception exception) {
+            throw sneakyThrow(exception);
+        } finally {
+            NamespaceThreadLocalContext.onCompleteNsAware(loader);
+        }
+    }
+
+    /**
+     * Runs the passed {@link Runnable} within the {@link ClassLoader} context
+     * of the passed {@link Object}'s own {@link ClassLoader} as defined by
+     * {@code Object#getClass#getClassLoader()}. The intention is that we can
+     * retrieve a User Code Deployment class's {@link MapResourceClassLoader}
+     * without the need for any additional references like we would need when
+     * fetching with only a {@code String namespace}.
+     *
+     * @implNote This should only be used on UCD objects, as the contract is
+     * that all UCD objects are instantiated using the correct Namespace-aware
+     * {@link ClassLoader}, allowing this shortcut to work. This also allows us
+     * to handle client-executed UCD objects without fuss, as it will simply
+     * use their local {@link ClassLoader}.
+     *
+     * @param ucdObject the UCD-instantiated object to retrieve the
+     *                  {@link ClassLoader} from for execution
+     * @param runnable  the {@link Runnable} to execute with Namespace awareness
+     */
+    public static void runWithOwnClassLoader(Object ucdObject, Runnable runnable) {
+        ClassLoader loader = ucdObject.getClass().getClassLoader();
+        NamespaceThreadLocalContext.onStartNsAware(loader);
+        try {
+            runnable.run();
+        } catch (Exception exception) {
+            throw sneakyThrow(exception);
+        } finally {
+            NamespaceThreadLocalContext.onCompleteNsAware(loader);
+        }
+    }
+
     // Use namespace ClassLoader if it exists, otherwise fallback to config class loader
-    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, String namespace) {
+    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, @Nullable String namespace) {
         ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
         return loader != null ? loader : getDefaultClassloader(engine);
     }
 
-    // TODO This isn't used anywhere?
     // Use namespace CL if exists, otherwise fallback to config class loader
-    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, String namespace, ClassLoader defaultLoader) {
+    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, @Nullable String namespace, ClassLoader defaultLoader) {
         ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
         return loader != null ? loader : defaultLoader;
     }
 
     // Use default namespace CL if exists, otherwise fallback to config class loader
     public static ClassLoader getDefaultClassloader(NodeEngine engine) {
-        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(NamespaceService.DEFAULT_NAMESPACE_ID);
+        // Call with `null` namespace, which will fallback to a default Namespace if available
+        ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(null);
         return loader != null ? loader : engine.getConfigClassLoader();
     }
 }

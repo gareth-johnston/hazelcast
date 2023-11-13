@@ -25,6 +25,7 @@ import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.impl.Versioned;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,7 +115,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
      * Full-flush invalidation means the invalidation of events for all entries when clear is called.
      */
     private boolean disablePerEntryInvalidationEvents;
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     @SuppressWarnings("checkstyle:executablestatementcount")
     public CacheSimpleConfig(CacheSimpleConfig cacheSimpleConfig) {
@@ -765,7 +766,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
     }
 
     /** @since 5.4 */
-    public void setNamespace(String namespace) {
+    public void setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
     }
 

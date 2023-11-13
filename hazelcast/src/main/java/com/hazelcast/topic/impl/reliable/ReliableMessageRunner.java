@@ -24,6 +24,7 @@ import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.topic.ReliableMessageListener;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
@@ -33,7 +34,7 @@ public class ReliableMessageRunner<E> extends MessageRunner<E> {
     private final ReliableTopicProxy<E> proxy;
 
     private final NodeEngine nodeEngine;
-    private final String namespace;
+    private final @Nullable String namespace;
 
     ReliableMessageRunner(UUID id, ReliableMessageListener<E> listener,
                           SerializationService serializationService,

@@ -24,15 +24,17 @@ import com.hazelcast.internal.serialization.impl.InternalGenericRecord;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.impl.DefaultValueCollector;
 
+import javax.annotation.Nullable;
+
 final class ExtractorGetter extends Getter {
 
     private final ValueExtractor extractor;
     private final Object arguments;
     private final InternalSerializationService serializationService;
-    private final String namespace;
+    private final @Nullable String namespace;
 
     ExtractorGetter(InternalSerializationService serializationService, ValueExtractor extractor, Object arguments,
-                    String namespace) {
+                    @Nullable String namespace) {
         super(null);
         this.extractor = extractor;
         this.arguments = arguments;

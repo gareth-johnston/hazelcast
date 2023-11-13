@@ -30,6 +30,7 @@ import com.hazelcast.query.QueryException;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.impl.DefaultArgumentParser;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -57,14 +58,14 @@ public final class Extractors {
     private final Map<String, ValueExtractor> extractors;
     private final InternalSerializationService ss;
     private final DefaultArgumentParser argumentsParser;
-    private final String namespace;
+    private final @Nullable String namespace;
 
     private Extractors(
             List<AttributeConfig> attributeConfigs,
             ClassLoader classLoader,
             InternalSerializationService ss,
             Supplier<GetterCache> getterCacheSupplier,
-            String namespace
+            @Nullable String namespace
     ) {
         this.extractors = attributeConfigs == null
                 ? Collections.<String, ValueExtractor>emptyMap()
@@ -87,9 +88,8 @@ public final class Extractors {
             try {
                 // For CompactGetter and PortableGetter metadata is a boolean
                 // indicating whether lazy deserialization should be used or not.
-                return getter.getValue(targetObject, attributeName, metadata);
-//                return NamespaceUtil.callWithOwnClassLoader(getter,
-//                        () -> getter.getValue(targetObject, attributeName, metadata));
+                return NamespaceUtil.callWithOwnClassLoader(getter,
+                        () -> getter.getValue(targetObject, attributeName, metadata));
             } catch (Exception ex) {
                 throw new QueryException(ex);
             }
@@ -206,7 +206,7 @@ public final class Extractors {
         private ClassLoader classLoader;
         private List<AttributeConfig> attributeConfigs;
         private Supplier<GetterCache> getterCacheSupplier = EVICTABLE_GETTER_CACHE_SUPPLIER;
-        private String namespace;
+        private @Nullable String namespace;
 
         private final InternalSerializationService ss;
 
@@ -229,7 +229,7 @@ public final class Extractors {
             return this;
         }
 
-        public Builder setNamespace(String namespace) {
+        public Builder setNamespace(@Nullable String namespace) {
             this.namespace = namespace;
             return this;
         }

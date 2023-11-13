@@ -63,7 +63,7 @@ public final class NamespaceServiceImpl implements NamespaceService {
             handleResource(r, resourceMap);
         }
 
-        MapResourceClassLoader updated = new MapResourceClassLoader(configClassLoader, () -> resourceMap, true);
+        MapResourceClassLoader updated = new MapResourceClassLoader(nsName, configClassLoader, () -> resourceMap, true);
 
         MapResourceClassLoader removed = namespaceToClassLoader.put(nsName, updated);
         if (removed != null) {
@@ -106,14 +106,22 @@ public final class NamespaceServiceImpl implements NamespaceService {
 
     // Namespace setup/cleanup handling functions
 
-    private static void setupNs(@Nullable String namespace) {
+    private void setupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;
         }
-        NamespaceThreadLocalContext.onStartNsAware(namespace);
+
+        ClassLoader loader = getClassLoaderForExactNamespace(namespace);
+        if (loader == null) {
+            // TODO: Do we want to be this aggressive about floating Namespaces? We can only reach here if a
+            //  Namespace was defined for a Distributed Object, but not within Namespaces config; feels correct
+            throw new IllegalArgumentException("There is no environment defined for provided namespace: " + namespace);
+        }
+
+        NamespaceThreadLocalContext.onStartNsAware(loader);
     }
 
-    private static void cleanupNs(@Nullable String namespace) {
+    private void cleanupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;
         }
@@ -243,12 +251,16 @@ public final class NamespaceServiceImpl implements NamespaceService {
         return nsConfig.getResourceConfigs();
     }
 
-    MapResourceClassLoader getClassLoaderForExactNamespace(String namespace) {
+    MapResourceClassLoader getClassLoaderForExactNamespace(@Nonnull String namespace) {
         return namespaceToClassLoader.get(namespace);
     }
 
     @Override
-    public ClassLoader getClassLoaderForNamespace(String namespace) {
-        return namespaceToClassLoader.get(transformNamespace(namespace));
+    public ClassLoader getClassLoaderForNamespace(@Nullable String namespace) {
+         namespace = transformNamespace(namespace);
+         if (namespace != null) {
+             return namespaceToClassLoader.get(namespace);
+         }
+        return null;
     }
 }

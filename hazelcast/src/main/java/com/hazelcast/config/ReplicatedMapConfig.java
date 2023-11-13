@@ -23,6 +23,7 @@ import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.impl.Versioned;
 import com.hazelcast.replicatedmap.ReplicatedMap;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,7 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
     private List<ListenerConfig> listenerConfigs = new ArrayList<>();
     private InMemoryFormat inMemoryFormat = DEFAULT_IN_MEMORY_FORMAT;
     private MergePolicyConfig mergePolicyConfig = new MergePolicyConfig();
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     public ReplicatedMapConfig() {
     }
@@ -247,7 +248,7 @@ public class ReplicatedMapConfig implements IdentifiedDataSerializable, NamedCon
     }
 
     /** @since 5.4 */
-    public void setNamespace(String namespace) {
+    public void setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
     }
 

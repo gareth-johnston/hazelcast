@@ -64,7 +64,7 @@ public class StepRunner extends Offload
     private final Set<MapOperation> offloadedOperations;
     private final OperationExecutor operationExecutor;
     private final ExecutionService executionService;
-    private final String namespace;
+    private final @Nullable String namespace;
 
     private volatile StepSupplier stepSupplier;
 

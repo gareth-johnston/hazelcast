@@ -56,7 +56,7 @@ public final class QueueStoreWrapper implements QueueStore<Data> {
     private QueueStore store;
     private SerializationService serializationService;
 
-    private final String namespace;
+    private final @Nullable String namespace;
     private final NodeEngine nodeEngine;
 
     private QueueStoreWrapper(@Nonnull NodeEngine nodeEngine, @Nonnull String name, @Nullable String namespace) {

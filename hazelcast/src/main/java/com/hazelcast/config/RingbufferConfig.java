@@ -22,6 +22,7 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.impl.Versioned;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -75,7 +76,7 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
     private RingbufferStoreConfig ringbufferStoreConfig = new RingbufferStoreConfig().setEnabled(false);
     private String splitBrainProtectionName;
     private MergePolicyConfig mergePolicyConfig = new MergePolicyConfig();
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     public RingbufferConfig() {
     }
@@ -391,7 +392,7 @@ public class RingbufferConfig implements IdentifiedDataSerializable, NamedConfig
     }
 
     /** @since 5.4 */
-    public void setNamespace(String namespace) {
+    public void setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
     }
 
