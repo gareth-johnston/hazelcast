@@ -30,6 +30,7 @@ import com.hazelcast.test.starter.MavenInterface;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,6 +55,7 @@ import static com.hazelcast.test.Accessors.getNodeEngineImpl;
 import static com.hazelcast.test.UserCodeUtil.fileRelativeToBinariesFolder;
 import static com.hazelcast.test.UserCodeUtil.urlFromFile;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 /** Test static namespace configuration, resource resolution and classloading end-to-end */
@@ -75,10 +77,17 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
         config.getNamespacesConfig().setEnabled(true);
     }
 
+    // TODO: This only validates cleanup from the test environment; would be good to
+    //  validate for all threads somehow?
+    @After
+    public void validateNamespaceCleanup() {
+        assertNull(NamespaceThreadLocalContext.getClassLoader());
+    }
+
     @Test
     public void whenLoadClassKnownToParent_thenIsLoaded() throws Exception {
         populateConfigClassLoader();
-        Class<?> klass = tryLoadClass("ns1", "com.hazelcast.core.HazelcastInstance");
+        Class<?> klass = tryLoadClass(null, "com.hazelcast.core.HazelcastInstance");
         assertSame(HazelcastInstance.class, klass);
     }
 
@@ -195,14 +204,14 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
                                 }
                             }));
 
-            return new MapResourceClassLoader(NamespaceAwareClassLoaderTest.class.getClassLoader(), () -> classNameToContent,
+            return new MapResourceClassLoader(null, NamespaceAwareClassLoaderTest.class.getClassLoader(), () -> classNameToContent,
                     true);
         }
     }
 
     Class<?> tryLoadClass(String namespace, String className) throws Exception {
         if (namespace != null) {
-            NamespaceThreadLocalContext.onStartNsAware(namespace);
+            NamespaceUtil.setupNamespace(getNodeEngineImpl(lastInstance), namespace);
         }
         try {
             return nodeClassLoader.loadClass(className);
@@ -211,7 +220,7 @@ public class NamespaceAwareClassLoaderTest extends ConfigClassLoaderTest {
                     MessageFormat.format("\"{0}\" class not found in \"{1}\" namespace", className, namespace), e);
         } finally {
             if (namespace != null) {
-                NamespaceThreadLocalContext.onCompleteNsAware(namespace);
+                NamespaceUtil.cleanupNamespace(getNodeEngineImpl(lastInstance), namespace);
             }
         }
     }

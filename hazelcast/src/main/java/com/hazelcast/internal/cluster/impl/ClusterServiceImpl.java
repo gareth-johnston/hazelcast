@@ -791,7 +791,8 @@ public class ClusterServiceImpl implements ClusterService, ConnectionListener, M
     @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
     @Override
     public void dispatchEvent(MembershipEvent event, MembershipListener listener) {
-        NamespaceUtil.runWithNamespace(nodeEngine, NamespaceService.DEFAULT_NAMESPACE_ID, () -> {
+        // Call with `null` namespace, which will fallback to a default Namespace if available
+        NamespaceUtil.runWithNamespace(nodeEngine, null, () -> {
             switch (event.getEventType()) {
                 case MembershipEvent.MEMBER_ADDED:
                     listener.memberAdded(event);

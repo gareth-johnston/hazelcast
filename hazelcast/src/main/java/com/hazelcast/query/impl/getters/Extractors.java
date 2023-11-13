@@ -87,9 +87,8 @@ public final class Extractors {
             try {
                 // For CompactGetter and PortableGetter metadata is a boolean
                 // indicating whether lazy deserialization should be used or not.
-                return getter.getValue(targetObject, attributeName, metadata);
-//                return NamespaceUtil.callWithOwnClassLoader(getter,
-//                        () -> getter.getValue(targetObject, attributeName, metadata));
+                return NamespaceUtil.callWithOwnClassLoader(getter,
+                        () -> getter.getValue(targetObject, attributeName, metadata));
             } catch (Exception ex) {
                 throw new QueryException(ex);
             }

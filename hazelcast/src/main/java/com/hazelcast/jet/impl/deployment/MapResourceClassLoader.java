@@ -90,17 +90,34 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
     protected volatile boolean isShutdown;
 
     private final ILogger logger = Logger.getLogger(getClass());
+    private final String namespace;
 
     static {
         ClassLoader.registerAsParallelCapable();
     }
 
-    public MapResourceClassLoader(ClassLoader parent,
+    // Jet only constructor
+    MapResourceClassLoader(ClassLoader parent,
+                                     @Nonnull Supplier<? extends Map<String, byte[]>> resourcesSupplier,
+                                     boolean childFirst) {
+        super(parent);
+        this.namespace = null;
+        this.resourcesSupplier = Util.memoizeConcurrent(resourcesSupplier);
+        this.childFirst = childFirst;
+    }
+
+    // UCD Namespaces oriented constructor
+    public MapResourceClassLoader(String namespace, ClassLoader parent,
                                      @Nonnull Supplier<? extends Map<String, byte[]>> resourcesSupplier,
                                      boolean childFirst) {
         super("ucd-namespace", parent);
+        this.namespace = namespace;
         this.resourcesSupplier = Util.memoizeConcurrent(resourcesSupplier);
         this.childFirst = childFirst;
+    }
+
+    public String getNamespace() {
+        return namespace;
     }
 
     @Override

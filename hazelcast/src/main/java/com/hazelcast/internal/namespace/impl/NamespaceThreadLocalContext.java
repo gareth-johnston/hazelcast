@@ -16,24 +16,33 @@
 
 package com.hazelcast.internal.namespace.impl;
 
-import com.hazelcast.config.NamespaceAwareConfig;
+import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 /**
- * A thread-local context that supplies namespace name to classloading operations.
- * Must be set around user-code serde in client messages.
+ * A thread-local context that maintains a ClassLoader instance for use in operations.
+ * Must be setup around user-code serde in client messages, and execution on members.
  * Additionally, should be propagated via member-to-member operations.
  */
 public final class NamespaceThreadLocalContext {
-    private static final ILogger LOGGER = Logger.getLogger(NamespaceThreadLocalContext.class);
     private static final ThreadLocal<NamespaceThreadLocalContext> NS_THREAD_LOCAL = new ThreadLocal<>();
 
-    private final String namespace;
+    private final ClassLoader classLoader;
     private int counter = 1;
+    private NamespaceThreadLocalContext previous;
 
-    private NamespaceThreadLocalContext(String namespace) {
-        this.namespace = namespace;
+    private NamespaceThreadLocalContext(ClassLoader classLoader) {
+        this.classLoader = classLoader;
+    }
+
+    private NamespaceThreadLocalContext(ClassLoader classLoader, NamespaceThreadLocalContext previous) {
+        this.classLoader = classLoader;
+        this.previous = previous;
     }
 
     private void incCounter() {
@@ -47,50 +56,68 @@ public final class NamespaceThreadLocalContext {
     @Override
     public String toString() {
         return "NamespaceThreadLocalContext{"
-                + "namespace='" + namespace + '\''
+                + "classLoader=" + classLoader
                 + ", counter=" + counter
                 + '}';
     }
 
-    public static void onStartNsAware(String namespace) {
+    public static void onStartNsAware(ClassLoader classLoader) {
+        assert classLoader != null;
         NamespaceThreadLocalContext tlContext = NS_THREAD_LOCAL.get();
         if (tlContext == null) {
-            tlContext = new NamespaceThreadLocalContext(namespace);
+            tlContext = new NamespaceThreadLocalContext(classLoader);
             NS_THREAD_LOCAL.set(tlContext);
-            LOGGER.finest(">> start %s", tlContext);
         } else {
-            if (!tlContext.namespace.equals(namespace)) {
-                // doesn't look like a valid state...
-                throw new IllegalStateException("Attempted to start NSTLContext for namespace " + namespace
-                    + " but there is an existing context " + tlContext);
+            if (!tlContext.classLoader.equals(classLoader)) {
+                // Allow for ClassLoader overwrite, but allow for return by retaining the current context, linked list style
+                tlContext = new NamespaceThreadLocalContext(classLoader, tlContext);
+                NS_THREAD_LOCAL.set(tlContext);
+                return;
             }
             tlContext.incCounter();
-            LOGGER.finest(">> inc %s", tlContext);
         }
     }
 
-    // TODO: Do we need to know the namespace? Is it safe to just clear the namespace without reference?
+    public static void onCompleteNsAware(ClassLoader classLoader) {
+        onCompleteNsAware(tlContext -> Objects.equals(tlContext.classLoader, classLoader),
+                tlContext -> "Attempted to complete NSTLContext for classLoader " + classLoader
+                        + " but there is an existing context: " + tlContext);
+    }
+
     public static void onCompleteNsAware(String namespace) {
+        onCompleteNsAware(tlContext -> tlContext.classLoader instanceof MapResourceClassLoader
+                        && Objects.equals(((MapResourceClassLoader) tlContext.classLoader).getNamespace(), namespace),
+                tlContext -> "Attempted to complete NSTLContext for namespace " + namespace
+                        + " but there is an existing context: " + tlContext);
+    }
+
+    private static void onCompleteNsAware(Predicate<NamespaceThreadLocalContext> equalityFunc,
+                                          Function<NamespaceThreadLocalContext, String> errorMessageFunc) {
         NamespaceThreadLocalContext tlContext = NS_THREAD_LOCAL.get();
         if (tlContext != null) {
-            if (!tlContext.namespace.equals(namespace)) {
-                throw new IllegalStateException("Attempted to complete NSTLContext for namespace " + namespace
-                        + " but there is an existing context " + tlContext);
+            if (!equalityFunc.test(tlContext)) {
+                throw new IllegalStateException(errorMessageFunc.apply(tlContext));
             }
             int count = tlContext.decCounter();
-            LOGGER.finest(">> dec %s", tlContext);
             if (count == 0) {
-                NS_THREAD_LOCAL.remove();
+                // Check for linked previous to revert to
+                if (tlContext.previous != null) {
+                    NS_THREAD_LOCAL.set(tlContext.previous);
+                    tlContext.previous = null;
+                } else {
+                    NS_THREAD_LOCAL.remove();
+                }
             }
         }
     }
 
-    public static String getNamespaceThreadLocalContext() {
+    public static ClassLoader getClassLoader() {
         NamespaceThreadLocalContext tlContext = NS_THREAD_LOCAL.get();
         if (tlContext == null) {
-            return NamespaceAwareConfig.DEFAULT_NAMESPACE;
+            // No context, no namespace wrapping (not even default)
+            return null;
         } else {
-            return tlContext.namespace;
+            return tlContext.classLoader;
         }
     }
 }

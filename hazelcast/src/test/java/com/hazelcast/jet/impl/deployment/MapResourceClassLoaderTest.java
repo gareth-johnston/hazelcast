@@ -71,7 +71,7 @@ class MapResourceClassLoaderTest {
 
     @Test
     void findClass_whenClassFromMap() throws Exception {
-        classLoader = new MapResourceClassLoader(null, () -> classBytes, false);
+        classLoader = new MapResourceClassLoader(null, null, () -> classBytes, false);
         assertDoesNotThrow(
                 () -> classLoader.findClass("usercodedeployment.ParentClass").getDeclaredConstructor().newInstance());
         assertDoesNotThrow(() -> classLoader.findClass("usercodedeployment.ChildClass").getDeclaredConstructor().newInstance());
@@ -79,7 +79,7 @@ class MapResourceClassLoaderTest {
 
     @Test
     void findClass_whenClassFromMapReferencesClassFromParent() throws Exception {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, false);
         // IncrementingEntryProcessor implements EntryProcessor
         assertDoesNotThrow(() -> classLoader.findClass("usercodedeployment.IncrementingEntryProcessor").getDeclaredConstructor()
                 .newInstance());
@@ -87,13 +87,13 @@ class MapResourceClassLoaderTest {
 
     @Test
     void loadClass_whenClassFromParentClassLoader() throws Exception {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, false);
         assertDoesNotThrow(() -> classLoader.loadClass("com.hazelcast.map.EntryProcessor"));
     }
 
     @Test
     void loadClassChildFirst_whenClassFromChild_shadesClassFromParent() throws Exception {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, true);
         // com.hazelcast.core.HazelcastInstance loaded from ShadedClasses.jar is a concrete class with a main method
         Class<?> klass = classLoader.loadClass("com.hazelcast.core.HazelcastInstance");
         assertFalse(klass.isInterface());
@@ -101,7 +101,7 @@ class MapResourceClassLoaderTest {
 
     @Test
     void loadClassParentFirst_whenClassFromChild_shadesClassFromParent() throws Exception {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, false);
         // expect to load com.hazelcast.core.HazelcastInstance interface from the codebase
         Class<?> klass = classLoader.loadClass("com.hazelcast.core.HazelcastInstance");
         assertTrue(klass.isInterface());
@@ -109,7 +109,7 @@ class MapResourceClassLoaderTest {
 
     @Test
     void getResource_whenResolvableFromChild() {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, true);
         URL url = classLoader.getResource("usercodedeployment/ParentClass.class");
         assertEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
         assertEquals(toClassResourceId("usercodedeployment.ParentClass"), url.getFile());
@@ -117,7 +117,7 @@ class MapResourceClassLoaderTest {
 
     @Test
     void getResource_whenResolvableFromParent() {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, true);
         URL url = classLoader.getResource("com/hazelcast/map/IMap.class");
         assertNotNull(url);
         assertNotEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
@@ -125,7 +125,7 @@ class MapResourceClassLoaderTest {
 
     @Test
     void getResource_whenResolvableFromChild_andNotChildFirst() {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, false);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, false);
         URL url = classLoader.getResource("usercodedeployment/ParentClass.class");
         assertEquals(MapResourceClassLoader.PROTOCOL, url.getProtocol());
         assertEquals(toClassResourceId("usercodedeployment.ParentClass"), url.getFile());
@@ -141,7 +141,7 @@ class MapResourceClassLoaderTest {
     @NullSource
     @MethodSource("findResource_negativeCases")
     void findResource_negativeCases(String name) {
-        classLoader = new MapResourceClassLoader(parentClassLoader, () -> classBytes, true);
+        classLoader = new MapResourceClassLoader(null, parentClassLoader, () -> classBytes, true);
         URL url = classLoader.findResource(name);
         assertNull(url);
     }
