@@ -115,9 +115,12 @@ public class PartitionWideEntryWithPredicateOperationFactory extends PartitionAw
         name = in.readString();
         String namespace = MapServiceContext.getNamespace(name);
         NamespaceUtil.setupNamespace(namespace);
-        entryProcessor = in.readObject();
-        predicate = in.readObject();
-        NamespaceUtil.cleanupNamespace(namespace);
+        try {
+            entryProcessor = in.readObject();
+            predicate = in.readObject();
+        } finally {
+            NamespaceUtil.cleanupNamespace(namespace);
+        }
     }
 
     /**

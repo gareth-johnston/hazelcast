@@ -180,9 +180,12 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
             container = existing;
         } else {
             NamespaceUtil.setupNamespace(nodeEngine, queueConfig.getNamespace());
-            container.init(fromBackup);
-            container.getStore().instrument(nodeEngine);
-            NamespaceUtil.cleanupNamespace(nodeEngine, queueConfig.getNamespace());
+            try {
+                container.init(fromBackup);
+                container.getStore().instrument(nodeEngine);
+            } finally {
+                NamespaceUtil.cleanupNamespace(nodeEngine, queueConfig.getNamespace());
+            }
         }
         return container;
     }

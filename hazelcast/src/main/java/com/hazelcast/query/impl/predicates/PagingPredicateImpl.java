@@ -387,9 +387,12 @@ public class PagingPredicateImpl<K, V>
 
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
         NamespaceUtil.setupNamespace(engine, namespace);
-        predicate = in.readObject();
-        comparator = in.readObject();
-        NamespaceUtil.cleanupNamespace(engine, namespace);
+        try {
+            predicate = in.readObject();
+            comparator = in.readObject();
+        } finally {
+            NamespaceUtil.cleanupNamespace(engine, namespace);
+        }
         page = in.readInt();
         pageSize = in.readInt();
         iterationType = IterationType.valueOf(in.readString());

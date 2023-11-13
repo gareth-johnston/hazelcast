@@ -161,14 +161,15 @@ public class Query implements IdentifiedDataSerializable, Versioned {
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
         String namespace = MapServiceContext.lookupMapNamespace(engine, mapName);
         NamespaceUtil.setupNamespace(engine, namespace);
-
-        this.predicate = in.readObject();
-        this.iterationType = IterationType.getById(in.readByte());
-        this.aggregator = in.readObject();
-        this.projection = in.readObject();
-        this.partitionIdSet = in.readObject();
-
-        NamespaceUtil.cleanupNamespace(engine, namespace);
+        try {
+            this.predicate = in.readObject();
+            this.iterationType = IterationType.getById(in.readByte());
+            this.aggregator = in.readObject();
+            this.projection = in.readObject();
+            this.partitionIdSet = in.readObject();
+        } finally {
+            NamespaceUtil.cleanupNamespace(engine, namespace);
+        }
     }
 
     public static final class QueryBuilder {
