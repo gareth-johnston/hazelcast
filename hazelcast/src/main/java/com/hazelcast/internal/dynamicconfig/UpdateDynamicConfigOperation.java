@@ -34,7 +34,7 @@ public abstract class UpdateDynamicConfigOperation extends AbstractDynamicConfig
     protected IdentifiedDataSerializable config;
     protected int memberListVersion;
     // User Code Deployment
-    protected String namespace;
+    protected @Nullable String namespace;
 
     protected UpdateDynamicConfigOperation() {
     }

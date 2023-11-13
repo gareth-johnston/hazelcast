@@ -45,7 +45,7 @@ public class PredicateConfig implements IdentifiedDataSerializable, NamespaceAwa
 
     protected Predicate implementation;
 
-    protected String namespace = DEFAULT_NAMESPACE;
+    protected @Nullable String namespace = DEFAULT_NAMESPACE;
 
     /**
      * Creates a PredicateConfig without className/implementation.

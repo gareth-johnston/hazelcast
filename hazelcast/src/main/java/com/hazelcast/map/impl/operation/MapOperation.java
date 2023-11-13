@@ -90,7 +90,7 @@ public abstract class MapOperation extends AbstractNamedOperation
     protected transient boolean tieredStoreOffloadEnabled;
 
     private transient boolean canPublishWanEvent;
-    private transient String namespace;
+    private transient @Nullable String namespace;
 
     public MapOperation() {
     }

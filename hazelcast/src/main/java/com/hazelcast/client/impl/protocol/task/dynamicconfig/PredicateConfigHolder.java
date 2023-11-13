@@ -22,6 +22,8 @@ import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.internal.serialization.SerializationService;
 
+import javax.annotation.Nullable;
+
 /**
  *
  */
@@ -49,7 +51,7 @@ public class PredicateConfigHolder {
         return implementation;
     }
 
-    public PredicateConfig asPredicateConfig(SerializationService serializationService, String namespace) {
+    public PredicateConfig asPredicateConfig(SerializationService serializationService, @Nullable String namespace) {
         if (className != null) {
             return new PredicateConfig(className);
         } else if (implementation != null) {

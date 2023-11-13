@@ -32,6 +32,7 @@ import com.hazelcast.query.impl.QueryContext;
 import com.hazelcast.query.impl.QueryableEntry;
 import com.hazelcast.spi.impl.NodeEngine;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class PagingPredicateImpl<K, V>
     private int pageSize;
     private int page;
     private IterationType iterationType;
-    private String namespace;
+    private @Nullable String namespace;
 
     /**
      * Used for serialization internally
@@ -110,7 +111,7 @@ public class PagingPredicateImpl<K, V>
      * @param comparator the comparator through which results will be ordered
      * @param pageSize   the page size
      */
-    public PagingPredicateImpl(Comparator<Map.Entry<K, V>> comparator, int pageSize, String namespace) {
+    public PagingPredicateImpl(Comparator<Map.Entry<K, V>> comparator, int pageSize, @Nullable String namespace) {
         this(pageSize);
         this.comparator = comparator;
         this.namespace = namespace;
@@ -127,7 +128,8 @@ public class PagingPredicateImpl<K, V>
      * @param comparator the comparator through which results will be ordered
      * @param pageSize   the page size
      */
-    public PagingPredicateImpl(Predicate<K, V> predicate, Comparator<Map.Entry<K, V>> comparator, int pageSize, String namespace) {
+    public PagingPredicateImpl(Predicate<K, V> predicate, Comparator<Map.Entry<K, V>> comparator, int pageSize,
+                               @Nullable String namespace) {
         this(pageSize);
         setInnerPredicate(predicate);
         this.comparator = comparator;
@@ -136,7 +138,7 @@ public class PagingPredicateImpl<K, V>
 
     public PagingPredicateImpl(List<Map.Entry<Integer, Map.Entry<K, V>>> anchorList, Predicate<K, V> predicate,
                                Comparator<Map.Entry<K, V>> comparator, int pageSize, int page, IterationType iterationType,
-                               String namespace) {
+                               @Nullable String namespace) {
         this.anchorList = anchorList;
         this.predicate = predicate;
         this.comparator = comparator;

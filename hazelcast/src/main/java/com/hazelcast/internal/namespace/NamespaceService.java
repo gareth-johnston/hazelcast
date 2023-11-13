@@ -75,5 +75,5 @@ public interface NamespaceService {
         removeNamespace(config.getName());
     }
 
-    ClassLoader getClassLoaderForNamespace(String namespace);
+    ClassLoader getClassLoaderForNamespace(@Nullable String namespace);
 }

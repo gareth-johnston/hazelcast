@@ -74,7 +74,7 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
     private String splitBrainProtectionName;
     private MergePolicyConfig mergePolicyConfig = new MergePolicyConfig();
     private String priorityComparatorClassName;
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     public QueueConfig() {
     }
@@ -385,7 +385,7 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
      * TODO: Documentation
      * @since 5.4
      */
-    public void setNamespace(String namespace) {
+    public void setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
     }
 

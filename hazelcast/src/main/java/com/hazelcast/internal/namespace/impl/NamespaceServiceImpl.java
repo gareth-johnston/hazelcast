@@ -251,12 +251,12 @@ public final class NamespaceServiceImpl implements NamespaceService {
         return nsConfig.getResourceConfigs();
     }
 
-    MapResourceClassLoader getClassLoaderForExactNamespace(String namespace) {
+    MapResourceClassLoader getClassLoaderForExactNamespace(@Nonnull String namespace) {
         return namespaceToClassLoader.get(namespace);
     }
 
     @Override
-    public ClassLoader getClassLoaderForNamespace(String namespace) {
+    public ClassLoader getClassLoaderForNamespace(@Nullable String namespace) {
          namespace = transformNamespace(namespace);
          if (namespace != null) {
              return namespaceToClassLoader.get(namespace);

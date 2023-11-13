@@ -22,6 +22,7 @@ import com.hazelcast.config.IndexConfig;
 import com.hazelcast.config.QueryCacheConfig;
 import com.hazelcast.internal.serialization.SerializationService;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class QueryCacheConfigHolder {
     private List<ListenerConfigHolder> listenerConfigs;
     private List<IndexConfig> indexConfigs;
     private boolean isNamespaceExists;
-    private String namespace;
+    private @Nullable String namespace;
 
     public QueryCacheConfigHolder() {
     }
@@ -54,7 +55,7 @@ public class QueryCacheConfigHolder {
                                   PredicateConfigHolder predicateConfigHolder, EvictionConfigHolder evictionConfigHolder,
                                   List<ListenerConfigHolder> listenerConfigs, List<IndexConfig> indexConfigs,
                                   boolean serializeKeysExist, boolean serializeKeys, boolean isNamespaceExists,
-                                  String namespace) {
+                                  @Nullable String namespace) {
         this.batchSize = batchSize;
         this.bufferSize = bufferSize;
         this.delaySeconds = delaySeconds;
@@ -185,7 +186,7 @@ public class QueryCacheConfigHolder {
         return namespace;
     }
 
-    public void setNamespace(String namespace) {
+    public void setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
     }
 

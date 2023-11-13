@@ -30,6 +30,7 @@ import com.hazelcast.config.WanReplicationRef;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.internal.serialization.SerializationService;
 
+import javax.annotation.Nullable;
 import javax.cache.configuration.CacheEntryListenerConfiguration;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +67,7 @@ public class CacheConfigHolder {
     private final boolean isDataPersistenceConfigExists;
     private final DataPersistenceConfig dataPersistenceConfig;
     private final boolean isNamespaceExists;
-    private final String namespace;
+    private final @Nullable String namespace;
 
     public CacheConfigHolder(String name, String managerPrefix, String uriString, int backupCount, int asyncBackupCount,
                              String inMemoryFormat, EvictionConfigHolder evictionConfigHolder,

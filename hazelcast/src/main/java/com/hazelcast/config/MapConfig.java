@@ -27,6 +27,7 @@ import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.impl.Versioned;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -146,7 +147,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
             .setSize(DEFAULT_MAX_SIZE);
     private TieredStoreConfig tieredStoreConfig = new TieredStoreConfig();
     private List<PartitioningAttributeConfig> partitioningAttributeConfigs;
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     public MapConfig() {
     }
@@ -845,7 +846,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
     }
 
     /** @since 5.4 */
-    public MapConfig setNamespace(String namespace) {
+    public MapConfig setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
         return this;
     }

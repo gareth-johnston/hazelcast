@@ -27,6 +27,7 @@ import com.hazelcast.internal.util.collection.ArrayUtils;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.security.permission.ConfigPermission;
 
+import javax.annotation.Nullable;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +97,7 @@ public abstract class AbstractUpdateConfigMessageTask<P> extends AbstractMessage
     }
 
     protected List<? extends ListenerConfig> adaptListenerConfigs(List<ListenerConfigHolder> listenerConfigHolders,
-                                                                  String namespace) {
+                                                                  @Nullable String namespace) {
         if (listenerConfigHolders == null || listenerConfigHolders.isEmpty()) {
             return null;
         } else {

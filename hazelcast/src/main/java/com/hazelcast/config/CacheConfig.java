@@ -32,6 +32,7 @@ import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.SerializationServiceSupport;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import javax.annotation.Nullable;
 import javax.cache.configuration.CacheEntryListenerConfiguration;
 import javax.cache.configuration.CompleteConfiguration;
 import javax.cache.configuration.Factory;
@@ -91,7 +92,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
      * Full-flush invalidation means the invalidation of events for all entries when clear is called.
      */
     private boolean disablePerEntryInvalidationEvents;
-    private String namespace = DEFAULT_NAMESPACE;
+    private @Nullable String namespace = DEFAULT_NAMESPACE;
 
     public CacheConfig() {
     }
@@ -523,7 +524,7 @@ public class CacheConfig<K, V> extends AbstractCacheConfig<K, V> implements Vers
     }
 
     /** @since 5.4 */
-    public CacheConfig<K, V> setNamespace(String namespace) {
+    public CacheConfig<K, V> setNamespace(@Nullable String namespace) {
         this.namespace = namespace;
         return this;
     }
