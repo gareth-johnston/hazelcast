@@ -18,6 +18,7 @@ package com.hazelcast.client.impl.protocol.task.dynamicconfig;
 
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.client.impl.protocol.codec.DynamicConfigRemoveNamespaceConfigCodec;
+import com.hazelcast.config.ConfigAccessor;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.nio.Connection;
@@ -48,7 +49,7 @@ public class RemoveNamespaceConfigMessageTask
     @Override
     protected IdentifiedDataSerializable getConfig() {
         NamespaceConfig config = new NamespaceConfig(parameters.name);
-        parameters.resources.forEach(config::add);
+        parameters.resources.forEach(holder -> ConfigAccessor.add(config, holder));
         return config;
     }
 

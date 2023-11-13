@@ -16,7 +16,6 @@
 
 package com.hazelcast.config;
 
-import com.hazelcast.client.impl.protocol.task.dynamicconfig.ResourceDefinitionHolder;
 import com.hazelcast.internal.config.ConfigDataSerializerHook;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.namespace.impl.ResourceDefinitionImpl;
@@ -82,25 +81,16 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
         return add(url, id, ResourceType.JARS_IN_ZIP);
     }
 
-    private NamespaceConfig add(@Nonnull URL url, @Nullable String id, @Nonnull ResourceType resourceType) {
+    NamespaceConfig add(@Nonnull URL url, @Nullable String id, @Nonnull ResourceType resourceType) {
         return add(new ResourceDefinitionImpl(new ResourceConfig(url, id, resourceType)));
     }
 
-    public NamespaceConfig add(@Nonnull ResourceDefinitionHolder holder) {
-        return add(new ResourceDefinitionImpl(holder));
-    }
-
-    private NamespaceConfig add(ResourceDefinition resourceDefinition) {
+    protected NamespaceConfig add(ResourceDefinition resourceDefinition) {
         if (resourceDefinitions.putIfAbsent(resourceDefinition.id(), resourceDefinition) != null) {
             throw new IllegalArgumentException("Resource with id: " + resourceDefinition.id() + " already exists");
         } else {
             return this;
         }
-    }
-
-    public NamespaceConfig removeResourceConfig(String id) {
-        resourceDefinitions.remove(id);
-        return this;
     }
 
     // TODO this returns a Collection, but the client-protocl declares this as a List - I don't think it supports Collections -

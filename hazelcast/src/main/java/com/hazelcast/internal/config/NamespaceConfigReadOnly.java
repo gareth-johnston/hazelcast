@@ -48,9 +48,4 @@ public class NamespaceConfigReadOnly extends NamespaceConfig {
     public NamespaceConfig addJarsInZip(@Nonnull URL url, @Nullable String id) {
         throw new UnsupportedOperationException("This config is read-only name-space: " + getName());
     }
-
-    @Override
-    public NamespaceConfig removeResourceConfig(String id) {
-        throw new UnsupportedOperationException("This config is read-only name-space: " + getName());
-    }
 }
