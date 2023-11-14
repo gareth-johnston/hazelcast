@@ -173,7 +173,7 @@ public class PagingPredicateImpl<K, V>
     @Override
     public Predicate accept(Visitor visitor, IndexRegistry indexes) {
         if (predicate instanceof VisitablePredicate) {
-            NamespaceUtil.callWithNamespace(namespace, () -> {
+            return NamespaceUtil.callWithOwnClassLoader(predicate, () -> {
                 Predicate transformed = ((VisitablePredicate) predicate).accept(visitor, indexes);
                 return transformed == predicate ? this : new PagingPredicateImpl(this, transformed);
             });
