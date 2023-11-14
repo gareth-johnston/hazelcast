@@ -89,7 +89,8 @@ public class AddScheduledExecutorConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         ScheduledExecutorConfig scheduledExecutorConfig = (ScheduledExecutorConfig) config;
-        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getScheduledExecutorConfigs(),
-                scheduledExecutorConfig.getName(), scheduledExecutorConfig);
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(
+                nodeConfig.getStaticConfig().getScheduledExecutorConfigs(), scheduledExecutorConfig.getName(),
+                scheduledExecutorConfig);
     }
 }

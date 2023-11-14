@@ -79,7 +79,8 @@ public class AddDurableExecutorConfigMessageTask
     protected boolean checkStaticConfigDoesNotExist(IdentifiedDataSerializable config) {
         DynamicConfigurationAwareConfig nodeConfig = (DynamicConfigurationAwareConfig) nodeEngine.getConfig();
         DurableExecutorConfig durableExecutorConfig = (DurableExecutorConfig) config;
-        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(nodeConfig.getStaticConfig().getDurableExecutorConfigs(),
-                durableExecutorConfig.getName(), durableExecutorConfig);
+        return DynamicConfigurationAwareConfig.checkStaticConfigDoesNotExist(
+                nodeConfig.getStaticConfig().getDurableExecutorConfigs(), durableExecutorConfig.getName(),
+                durableExecutorConfig);
     }
 }

@@ -22,7 +22,6 @@ import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.query.extractor.ValueExtractor;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;

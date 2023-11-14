@@ -18,7 +18,6 @@ package com.hazelcast.config;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.hazelcast.config.LoginModuleConfig.LoginModuleUsage;
 import com.hazelcast.config.PermissionConfig.PermissionType;
 import com.hazelcast.config.cp.CPSubsystemConfig;
@@ -3831,7 +3830,7 @@ public class XMLConfigBuilderTest extends AbstractConfigBuilderTest {
                 + HAZELCAST_END_TAG;
 
         Config config = buildConfig(xml);
-        
+
         MemberAddressProviderConfig memberAddressProviderConfig = config.getNetworkConfig().getMemberAddressProviderConfig();
 
         assertTrue(memberAddressProviderConfig.isEnabled());

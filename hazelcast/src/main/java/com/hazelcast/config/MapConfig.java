@@ -1101,7 +1101,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         setDataPersistenceConfig(in.readObject());
         setTieredStoreConfig(in.readObject());
         partitioningAttributeConfigs = readNullableList(in);
- 
+
         // RU_COMPAT_5_4
         if (in.getVersion().isGreaterOrEqual(Versions.V5_4)) {
             namespace = in.readString();

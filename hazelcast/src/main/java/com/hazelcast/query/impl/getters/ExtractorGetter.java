@@ -24,8 +24,6 @@ import com.hazelcast.internal.serialization.impl.InternalGenericRecord;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.impl.DefaultValueCollector;
 
-import javax.annotation.Nullable;
-
 final class ExtractorGetter extends Getter {
 
     private final ValueExtractor extractor;

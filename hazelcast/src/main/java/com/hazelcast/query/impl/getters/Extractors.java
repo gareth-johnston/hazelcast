@@ -30,7 +30,6 @@ import com.hazelcast.query.QueryException;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.impl.DefaultArgumentParser;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
