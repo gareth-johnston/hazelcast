@@ -53,7 +53,7 @@ public class MapExecuteOnKeysMessageTask
         // Special case handling for Namespaces as this task does not inherit AbstractNsAwareMapPartitionMessageTask,
         //  and we want to avoid creating even more layers of abstraction
         EntryProcessor processor = NamespaceUtil.callWithNamespace(nodeEngine,
-                MapServiceContext.getNamespace(getDistributedObjectName()),
+                MapServiceContext.lookupMapNamespace(nodeEngine, getDistributedObjectName()),
                 () -> serializationService.toObject(parameters.entryProcessor));
         MapOperationProvider operationProvider = getMapOperationProvider(parameters.name);
         return operationProvider.createMultipleEntryOperationFactory(parameters.name,
