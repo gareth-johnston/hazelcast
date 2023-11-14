@@ -1261,7 +1261,9 @@ public class ConfigXmlGenerator {
             });
         }
 
-        gen.close();
+        if (!namespaces.isEmpty()) {
+            gen.close();
+        }
         gen.close();
     }
 
