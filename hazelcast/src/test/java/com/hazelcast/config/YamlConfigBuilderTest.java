@@ -18,6 +18,7 @@ package com.hazelcast.config;
 
 import com.google.common.collect.ImmutableSet;
 import com.hazelcast.config.LoginModuleConfig.LoginModuleUsage;
+import com.hazelcast.config.PermissionConfig.PermissionType;
 import com.hazelcast.config.tpc.TpcConfig;
 import com.hazelcast.config.tpc.TpcSocketConfig;
 import com.hazelcast.config.cp.CPSubsystemConfig;
@@ -32,7 +33,6 @@ import com.hazelcast.config.security.SimpleAuthenticationConfig;
 import com.hazelcast.instance.EndpointQualifier;
 import com.hazelcast.internal.config.SchemaViolationConfigurationException;
 import com.hazelcast.internal.namespace.ResourceDefinition;
-import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.internal.serialization.impl.compact.CompactTestUtil;
 import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.memory.Capacity;
@@ -50,6 +50,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import wiremock.com.google.common.collect.Sets;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -68,6 +69,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.hazelcast.config.DynamicConfigurationConfig.DEFAULT_BACKUP_COUNT;
 import static com.hazelcast.config.DynamicConfigurationConfig.DEFAULT_BACKUP_DIR;
@@ -3762,20 +3764,16 @@ public class YamlConfigBuilderTest extends AbstractConfigBuilderTest {
 
     @Override
     @Test
-    public void testAllPermissionsCovered() {
-        InputStream yamlResource = YamlConfigBuilderTest.class.getClassLoader().getResourceAsStream("hazelcast-fullconfig.yaml");
-        Config config;
-        try {
-            config = new YamlConfigBuilder(yamlResource).build();
-        } finally {
-            IOUtil.closeResource(yamlResource);
-        }
-        Set<PermissionConfig.PermissionType> permTypes = new HashSet<>(asList(PermissionConfig.PermissionType.values()));
-        for (PermissionConfig pc : config.getSecurityConfig().getClientPermissionConfigs()) {
-            permTypes.remove(pc.getType());
-        }
-        assertTrue("All permission types should be listed in hazelcast-fullconfig.yaml. Not found ones: " + permTypes,
-                permTypes.isEmpty());
+    public void testAllPermissionsCovered() throws IOException {
+        URL yamlResource = YamlConfigBuilderTest.class.getClassLoader().getResource("hazelcast-fullconfig.yaml");
+        Config config = new YamlConfigBuilder(yamlResource).build();
+        Set<PermissionType> allPermissionTypes = Set.of(PermissionType.values());
+        Set<PermissionType> foundPermissionTypes = config.getSecurityConfig().getClientPermissionConfigs().stream()
+                .map(PermissionConfig::getType).collect(Collectors.toSet());
+        Collection<PermissionType> difference = Sets.difference(allPermissionTypes, foundPermissionTypes);
+
+        assertTrue(String.format("All permission types should be listed in %s. Not found ones: %s", yamlResource, difference),
+                difference.isEmpty());
     }
 
     @Override

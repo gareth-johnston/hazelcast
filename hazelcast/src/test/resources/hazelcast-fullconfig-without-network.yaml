@@ -902,6 +902,10 @@ hazelcast:
         - name: "*"
           actions:
             - all
+      namespace:
+        - name: "*"
+          actions:
+            - all
 
     client-block-unmapped-actions: true
 

@@ -17,6 +17,8 @@
 package com.hazelcast.config;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.hazelcast.config.LoginModuleConfig.LoginModuleUsage;
 import com.hazelcast.config.PermissionConfig.PermissionType;
 import com.hazelcast.config.cp.CPSubsystemConfig;
@@ -34,7 +36,6 @@ import com.hazelcast.config.tpc.TpcConfig;
 import com.hazelcast.config.tpc.TpcSocketConfig;
 import com.hazelcast.instance.EndpointQualifier;
 import com.hazelcast.internal.namespace.ResourceDefinition;
-import com.hazelcast.internal.nio.IOUtil;
 import com.hazelcast.internal.serialization.impl.compact.CompactTestUtil;
 import com.hazelcast.jet.config.ResourceType;
 import com.hazelcast.memory.Capacity;
@@ -62,7 +63,6 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Collection;
 import java.util.Iterator;
@@ -71,6 +71,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.hazelcast.config.DynamicConfigurationConfig.DEFAULT_BACKUP_COUNT;
 import static com.hazelcast.config.DynamicConfigurationConfig.DEFAULT_BACKUP_DIR;
@@ -3780,20 +3781,16 @@ public class XMLConfigBuilderTest extends AbstractConfigBuilderTest {
 
     @Override
     @Test
-    public void testAllPermissionsCovered() {
-        InputStream xmlResource = XMLConfigBuilderTest.class.getClassLoader().getResourceAsStream("hazelcast-fullconfig.xml");
-        Config config = null;
-        try {
-            config = new XmlConfigBuilder(xmlResource).build();
-        } finally {
-            IOUtil.closeResource(xmlResource);
-        }
-        Set<PermissionType> permTypes = new HashSet<>(Arrays.asList(PermissionType.values()));
-        for (PermissionConfig pc : config.getSecurityConfig().getClientPermissionConfigs()) {
-            permTypes.remove(pc.getType());
-        }
-        assertTrue("All permission types should be listed in hazelcast-fullconfig.xml. Not found ones: " + permTypes,
-                permTypes.isEmpty());
+    public void testAllPermissionsCovered() throws IOException {
+        URL xmlResource = XMLConfigBuilderTest.class.getClassLoader().getResource("hazelcast-fullconfig.xml");
+        Config config = new XmlConfigBuilder(xmlResource).build();
+        Set<PermissionType> allPermissionTypes = Set.of(PermissionType.values());
+        Set<PermissionType> foundPermissionTypes = config.getSecurityConfig().getClientPermissionConfigs().stream()
+                .map(PermissionConfig::getType).collect(Collectors.toSet());
+        Collection<PermissionType> difference = Sets.difference(allPermissionTypes, foundPermissionTypes);
+
+        assertTrue(String.format("All permission types should be listed in %s. Not found ones: %s", xmlResource, difference),
+                difference.isEmpty());
     }
 
     @Override
@@ -3834,6 +3831,7 @@ public class XMLConfigBuilderTest extends AbstractConfigBuilderTest {
                 + HAZELCAST_END_TAG;
 
         Config config = buildConfig(xml);
+        
         MemberAddressProviderConfig memberAddressProviderConfig = config.getNetworkConfig().getMemberAddressProviderConfig();
 
         assertTrue(memberAddressProviderConfig.isEnabled());

@@ -961,6 +961,11 @@
                     <action>all</action>
                 </actions>
             </sql-permission>
+            <namespace-permission name="*">
+                <actions>
+                    <action>all</action>
+                </actions>
+            </namespace-permission>
         </client-permissions>
         <client-block-unmapped-actions>true</client-block-unmapped-actions>
     </security>

@@ -2921,7 +2921,8 @@
               "job",
               "connector",
               "sql",
-              "cpmap"
+              "cpmap",
+              "namespace"
             ]
           },
           "properties": {
