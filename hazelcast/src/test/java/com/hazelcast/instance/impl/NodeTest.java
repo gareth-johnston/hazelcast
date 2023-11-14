@@ -23,9 +23,8 @@ import com.hazelcast.test.annotation.NamespaceTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 @Category(NamespaceTest.class)
 public class NodeTest extends ConfigClassLoaderTest {
@@ -42,7 +41,7 @@ public class NodeTest extends ConfigClassLoaderTest {
         config.getUserCodeDeploymentConfig().setEnabled(true);
 
         populateConfigClassLoader();
-        assertThat(nodeClassLoader, instanceOf(UserCodeDeploymentClassLoader.class));
+        assertTrue(nodeClassLoader instanceof UserCodeDeploymentClassLoader);
         assertSame(config.getClassLoader(), nodeClassLoader.getParent());
     }
 
@@ -53,8 +52,8 @@ public class NodeTest extends ConfigClassLoaderTest {
         config.getNamespacesConfig().addNamespaceConfig(new NamespaceConfig("namespace"));
 
         populateConfigClassLoader();
-        assertThat(nodeClassLoader, instanceOf(NamespaceAwareClassLoader.class));
-        assertThat(nodeClassLoader.getParent(), instanceOf(UserCodeDeploymentClassLoader.class));
+        assertTrue(nodeClassLoader instanceof NamespaceAwareClassLoader);
+        assertTrue(nodeClassLoader.getParent() instanceof UserCodeDeploymentClassLoader);
         assertSame(config.getClassLoader(), nodeClassLoader.getParent().getParent());
     }
 }
