@@ -55,7 +55,7 @@ public class MapExecuteWithPredicateMessageTask
 
     @Override
     protected void beforeProcess() {
-        predicate = NamespaceUtil.callWithNamespace(MapServiceContext.lookupMapNamespace(nodeEngine, parameters.name),
+        predicate = NamespaceUtil.callWithNamespace(nodeEngine, MapServiceContext.lookupMapNamespace(nodeEngine, parameters.name),
                 () -> serializationService.toObject(parameters.predicate));
     }
 

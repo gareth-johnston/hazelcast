@@ -89,7 +89,7 @@ public class MapRemoveAllMessageTask extends AbstractMapAllPartitionsMessageTask
     @Override
     protected MapRemoveAllCodec.RequestParameters decodeClientMessage(ClientMessage clientMessage) {
         MapRemoveAllCodec.RequestParameters parameters = MapRemoveAllCodec.decodeRequest(clientMessage);
-        predicate = NamespaceUtil.callWithNamespace(MapServiceContext.lookupMapNamespace(nodeEngine, parameters.name),
+        predicate = NamespaceUtil.callWithNamespace(nodeEngine, MapServiceContext.lookupMapNamespace(nodeEngine, parameters.name),
                 () -> serializationService.toObject(parameters.predicate));
         return parameters;
     }
