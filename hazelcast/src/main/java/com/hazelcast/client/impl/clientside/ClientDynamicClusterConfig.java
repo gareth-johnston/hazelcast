@@ -319,7 +319,7 @@ public class ClientDynamicClusterConfig extends Config {
     public Config addExecutorConfig(ExecutorConfig executorConfig) {
         ClientMessage request = DynamicConfigAddExecutorConfigCodec.encodeRequest(
                 executorConfig.getName(), executorConfig.getPoolSize(), executorConfig.getQueueCapacity(),
-                executorConfig.isStatisticsEnabled(), executorConfig.getSplitBrainProtectionName());
+                executorConfig.isStatisticsEnabled(), executorConfig.getSplitBrainProtectionName(), executorConfig.getNamespace());
         invoke(request);
         return this;
     }
@@ -342,7 +342,7 @@ public class ClientDynamicClusterConfig extends Config {
                 scheduledExecutorConfig.getDurability(), scheduledExecutorConfig.getCapacity(),
                 scheduledExecutorConfig.getSplitBrainProtectionName(), scheduledExecutorConfig.getMergePolicyConfig().getPolicy(),
                 scheduledExecutorConfig.getMergePolicyConfig().getBatchSize(), scheduledExecutorConfig.isStatisticsEnabled(),
-                scheduledExecutorConfig.getCapacityPolicy().getId());
+                scheduledExecutorConfig.getCapacityPolicy().getId(), scheduledExecutorConfig.getNamespace());
         invoke(request);
         return this;
     }

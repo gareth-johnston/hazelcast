@@ -6616,6 +6616,8 @@ public class MemberCompatibilityTest_2_7 {
         assertTrue(isEqual(anInt, parameters.queueCapacity));
         assertTrue(isEqual(aBoolean, parameters.statisticsEnabled));
         assertTrue(isEqual(aString, parameters.splitBrainProtectionName));
+        assertTrue(parameters.isNamespaceExists);
+        assertTrue(isEqual(aString, parameters.namespace));
     }
 
     @Test
@@ -6638,6 +6640,8 @@ public class MemberCompatibilityTest_2_7 {
         assertTrue(isEqual(aString, parameters.splitBrainProtectionName));
         assertTrue(parameters.isStatisticsEnabledExists);
         assertTrue(isEqual(aBoolean, parameters.statisticsEnabled));
+        assertTrue(parameters.isNamespaceExists);
+        assertTrue(isEqual(aString, parameters.namespace));
     }
 
     @Test
@@ -6664,6 +6668,8 @@ public class MemberCompatibilityTest_2_7 {
         assertTrue(isEqual(aBoolean, parameters.statisticsEnabled));
         assertTrue(parameters.isCapacityPolicyExists);
         assertTrue(isEqual(aByte, parameters.capacityPolicy));
+        assertTrue(parameters.isNamespaceExists);
+        assertTrue(isEqual(aString, parameters.namespace));
     }
 
     @Test
