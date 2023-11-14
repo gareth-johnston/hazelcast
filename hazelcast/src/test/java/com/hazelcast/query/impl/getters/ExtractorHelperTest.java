@@ -249,12 +249,12 @@ public class ExtractorHelperTest {
 
     private ValueExtractor instantiateExtractor(AttributeConfig attributeConfig) {
         return ExtractorHelper.instantiateExtractor(attributeConfig,
-                useClassloader ? this.getClass().getClassLoader() : null, null);
+                useClassloader ? this.getClass().getClassLoader() : null);
     }
 
     private Map<String, ValueExtractor> instantiateExtractors(List<AttributeConfig> attributeConfigs) {
         return ExtractorHelper.instantiateExtractors(attributeConfigs,
-                useClassloader ? this.getClass().getClassLoader() : null, null);
+                useClassloader ? this.getClass().getClassLoader() : null);
     }
 
     public abstract class InitExceptionExtractor extends NameExtractor {

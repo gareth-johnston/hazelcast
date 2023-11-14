@@ -31,15 +31,12 @@ final class ExtractorGetter extends Getter {
     private final ValueExtractor extractor;
     private final Object arguments;
     private final InternalSerializationService serializationService;
-    private final @Nullable String namespace;
 
-    ExtractorGetter(InternalSerializationService serializationService, ValueExtractor extractor, Object arguments,
-                    @Nullable String namespace) {
+    ExtractorGetter(InternalSerializationService serializationService, ValueExtractor extractor, Object arguments) {
         super(null);
         this.extractor = extractor;
         this.arguments = arguments;
         this.serializationService = serializationService;
-        this.namespace = namespace;
     }
 
     @Override
@@ -54,7 +51,7 @@ final class ExtractorGetter extends Getter {
         } else {
             extractionTarget = target;
         }
-        NamespaceUtil.runWithNamespace(namespace, () -> extractor.extract(extractionTarget, arguments, collector));
+        NamespaceUtil.runWithOwnClassLoader(extractor, () -> extractor.extract(extractionTarget, arguments, collector));
         return collector.getResult();
     }
 

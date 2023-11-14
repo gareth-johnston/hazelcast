@@ -86,20 +86,14 @@ public class NamespaceUtil {
      * to handle client-executed UCD objects without fuss, as it will simply
      * use their local {@link ClassLoader}.
      *
+     * @see #callWithClassLoader(ClassLoader, Callable)
+     *
      * @param ucdObject the UCD-instantiated object to retrieve the
      *                  {@link ClassLoader} from for execution
      * @param callable  the {@link Callable} to execute with Namespace awareness
      */
     public static <V> V callWithOwnClassLoader(Object ucdObject, Callable<V> callable) {
-        ClassLoader loader = ucdObject.getClass().getClassLoader();
-        NamespaceThreadLocalContext.onStartNsAware(loader);
-        try {
-            return callable.call();
-        } catch (Exception exception) {
-            throw sneakyThrow(exception);
-        } finally {
-            NamespaceThreadLocalContext.onCompleteNsAware(loader);
-        }
+        return callWithClassLoader(ucdObject.getClass().getClassLoader(), callable);
     }
 
     /**
@@ -116,12 +110,61 @@ public class NamespaceUtil {
      * to handle client-executed UCD objects without fuss, as it will simply
      * use their local {@link ClassLoader}.
      *
+     * @see #runWithClassLoader(ClassLoader, Runnable)
+     *
      * @param ucdObject the UCD-instantiated object to retrieve the
      *                  {@link ClassLoader} from for execution
      * @param runnable  the {@link Runnable} to execute with Namespace awareness
      */
     public static void runWithOwnClassLoader(Object ucdObject, Runnable runnable) {
-        ClassLoader loader = ucdObject.getClass().getClassLoader();
+        runWithClassLoader(ucdObject.getClass().getClassLoader(), runnable);
+    }
+
+    /**
+     * Calls the passed {@link Callable} within the {@link ClassLoader} context
+     * of the passed {@link ClassLoader}, leveraging the
+     * {@link com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader}.
+     *
+     * @implNote This is intended to be used with UCD Namespace-aware objects.
+     *
+     * @param loader    the {@link ClassLoader} to use for execution context
+     * @param callable  the {@link Callable} to execute with Namespace awareness
+     */
+    public static <V> V callWithClassLoader(ClassLoader loader, Callable<V> callable) {
+        if (loader == null) {
+            try {
+                return callable.call();
+            } catch (Exception ex) {
+                throw sneakyThrow(ex);
+            }
+        }
+
+        NamespaceThreadLocalContext.onStartNsAware(loader);
+        try {
+            return callable.call();
+        } catch (Exception exception) {
+            throw sneakyThrow(exception);
+        } finally {
+            NamespaceThreadLocalContext.onCompleteNsAware(loader);
+        }
+    }
+
+    /**
+     * Runs the passed {@link Callable} within the {@link ClassLoader} context
+     * of the passed {@link ClassLoader}, leveraging the
+     * {@link com.hazelcast.internal.namespace.impl.NamespaceAwareClassLoader}.
+     *
+     * @implNote This is intended to be used with UCD Namespace-aware objects.
+     *
+     * @param loader    the {@link ClassLoader} to use for execution context
+     * @param runnable  the {@link Runnable} to execute with Namespace awareness
+     */
+    public static void runWithClassLoader(ClassLoader loader, Runnable runnable) {
+        if (loader == null) {
+            runnable.run();
+            return;
+        }
+
         NamespaceThreadLocalContext.onStartNsAware(loader);
         try {
             runnable.run();

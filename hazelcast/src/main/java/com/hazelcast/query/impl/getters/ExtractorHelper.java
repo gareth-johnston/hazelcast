@@ -35,24 +35,23 @@ public final class ExtractorHelper {
     }
 
     static Map<String, ValueExtractor> instantiateExtractors(List<AttributeConfig> attributeConfigs,
-                                                             ClassLoader classLoader,
-                                                             @Nullable String namespace) {
+                                                             ClassLoader classLoader) {
         Map<String, ValueExtractor> extractors = createHashMap(attributeConfigs.size());
         for (AttributeConfig config : attributeConfigs) {
             if (extractors.containsKey(config.getName())) {
                 throw new IllegalArgumentException("Could not add " + config
                         + ". Extractor for this attribute name already added.");
             }
-            extractors.put(config.getName(), instantiateExtractor(config, classLoader, namespace));
+            extractors.put(config.getName(), instantiateExtractor(config, classLoader));
         }
         return extractors;
     }
 
-    static ValueExtractor instantiateExtractor(AttributeConfig config, ClassLoader classLoader, @Nullable String namespace) {
+    static ValueExtractor instantiateExtractor(AttributeConfig config, ClassLoader classLoader) {
         ValueExtractor extractor = null;
         if (classLoader != null) {
             try {
-                extractor = instantiateExtractorWithConfigClassLoader(config, classLoader, namespace);
+                extractor = instantiateExtractorWithConfigClassLoader(config, classLoader);
             } catch (IllegalArgumentException ex) {
                 // cached back-stage, initialised lazily since it's not a common case
                 Logger.getLogger(ExtractorHelper.class)
@@ -61,15 +60,14 @@ public final class ExtractorHelper {
         }
 
         if (extractor == null) {
-            extractor = instantiateExtractorWithClassForName(config, namespace);
+            extractor = instantiateExtractorWithClassForName(config, classLoader);
         }
         return extractor;
     }
 
     private static ValueExtractor instantiateExtractorWithConfigClassLoader(AttributeConfig config,
-                                                                            ClassLoader classLoader,
-                                                                            @Nullable String namespace) {
-        return NamespaceUtil.callWithNamespace(namespace, () -> {
+                                                                            ClassLoader classLoader) {
+        return NamespaceUtil.callWithClassLoader(classLoader, () -> {
             try {
                 Class<?> clazz = classLoader.loadClass(config.getExtractorClassName());
                 Object extractor = clazz.getDeclaredConstructor().newInstance();
@@ -84,8 +82,8 @@ public final class ExtractorHelper {
         });
     }
 
-    private static ValueExtractor instantiateExtractorWithClassForName(AttributeConfig config, @Nullable String namespace) {
-        return NamespaceUtil.callWithNamespace(namespace, () -> {
+    private static ValueExtractor instantiateExtractorWithClassForName(AttributeConfig config, ClassLoader classLoader) {
+        return NamespaceUtil.callWithClassLoader(classLoader, () -> {
             try {
                 Class<?> clazz = Class.forName(config.getExtractorClassName());
                 Object extractor = clazz.getDeclaredConstructor().newInstance();

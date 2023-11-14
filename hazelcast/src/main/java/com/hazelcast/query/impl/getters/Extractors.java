@@ -58,22 +58,19 @@ public final class Extractors {
     private final Map<String, ValueExtractor> extractors;
     private final InternalSerializationService ss;
     private final DefaultArgumentParser argumentsParser;
-    private final @Nullable String namespace;
 
     private Extractors(
             List<AttributeConfig> attributeConfigs,
             ClassLoader classLoader,
             InternalSerializationService ss,
-            Supplier<GetterCache> getterCacheSupplier,
-            @Nullable String namespace
+            Supplier<GetterCache> getterCacheSupplier
     ) {
         this.extractors = attributeConfigs == null
                 ? Collections.<String, ValueExtractor>emptyMap()
-                : instantiateExtractors(attributeConfigs, classLoader, namespace);
+                : instantiateExtractors(attributeConfigs, classLoader);
         this.getterCache = getterCacheSupplier.get();
         this.argumentsParser = new DefaultArgumentParser();
         this.ss = ss;
-        this.namespace = namespace;
     }
 
     public Object extract(Object target, String attributeName, Object metadata) {
@@ -145,7 +142,7 @@ public final class Extractors {
         ValueExtractor valueExtractor = extractors.get(attributeNameWithoutArguments);
         if (valueExtractor != null) {
             Object arguments = argumentsParser.parse(extractArgumentsFromAttributeName(attributeName));
-            return new ExtractorGetter(ss, valueExtractor, arguments, namespace);
+            return new ExtractorGetter(ss, valueExtractor, arguments);
         } else if (targetObject instanceof Data) {
             return instantiateGetterForData((Data) targetObject);
         } else if (targetObject instanceof HazelcastJsonValue) {
@@ -206,7 +203,6 @@ public final class Extractors {
         private ClassLoader classLoader;
         private List<AttributeConfig> attributeConfigs;
         private Supplier<GetterCache> getterCacheSupplier = EVICTABLE_GETTER_CACHE_SUPPLIER;
-        private @Nullable String namespace;
 
         private final InternalSerializationService ss;
 
@@ -229,16 +225,11 @@ public final class Extractors {
             return this;
         }
 
-        public Builder setNamespace(@Nullable String namespace) {
-            this.namespace = namespace;
-            return this;
-        }
-
         /**
          * @return a new instance of Extractors
          */
         public Extractors build() {
-            return new Extractors(attributeConfigs, classLoader, ss, getterCacheSupplier, namespace);
+            return new Extractors(attributeConfigs, classLoader, ss, getterCacheSupplier);
         }
     }
 }
