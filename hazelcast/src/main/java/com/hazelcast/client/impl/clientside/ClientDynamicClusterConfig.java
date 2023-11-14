@@ -329,7 +329,8 @@ public class ClientDynamicClusterConfig extends Config {
         ClientMessage request = DynamicConfigAddDurableExecutorConfigCodec.encodeRequest(
                 durableExecutorConfig.getName(), durableExecutorConfig.getPoolSize(),
                 durableExecutorConfig.getDurability(), durableExecutorConfig.getCapacity(),
-                durableExecutorConfig.getSplitBrainProtectionName(), durableExecutorConfig.isStatisticsEnabled());
+                durableExecutorConfig.getSplitBrainProtectionName(), durableExecutorConfig.isStatisticsEnabled(),
+                durableExecutorConfig.getNamespace());
         invoke(request);
         return this;
     }

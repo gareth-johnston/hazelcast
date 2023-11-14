@@ -16,6 +16,8 @@
 
 package com.hazelcast.internal.util.executor;
 
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
+import com.hazelcast.spi.impl.NodeEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.Collection;
@@ -50,12 +52,13 @@ public final class CachedExecutorServiceDelegate implements ExecutorService, Man
     private final int maxPoolSize;
     private final ExecutorService cachedExecutor;
     private final BlockingQueue<Runnable> taskQ;
+    private final NodeEngine nodeEngine;
     private final Lock lock = new ReentrantLock();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private volatile int size;
 
     public CachedExecutorServiceDelegate(String name, ExecutorService cachedExecutor,
-                                         int maxPoolSize, int queueCapacity) {
+                                         int maxPoolSize, int queueCapacity, NodeEngine nodeEngine) {
         if (maxPoolSize <= 0) {
             throw new IllegalArgumentException("Max pool size must be positive!");
         }
@@ -66,6 +69,7 @@ public final class CachedExecutorServiceDelegate implements ExecutorService, Man
         this.maxPoolSize = maxPoolSize;
         this.cachedExecutor = cachedExecutor;
         this.taskQ = new LinkedBlockingQueue<Runnable>(queueCapacity);
+        this.nodeEngine = nodeEngine;
     }
 
     @Override
@@ -210,7 +214,8 @@ public final class CachedExecutorServiceDelegate implements ExecutorService, Man
         @Override
         public void run() {
             try {
-                // TODO: Add NodeEngine context if needed for Namespace awareness
+                // Provide NodeEngine context for Namespaces; no need to rescind as this thread will always be for our instance
+                NodeEngineThreadLocalContext.declareNodeEngineReference(nodeEngine);
                 Runnable r;
                 do {
                     r = taskQ.poll(1, TimeUnit.MILLISECONDS);

@@ -17,13 +17,14 @@
 package com.hazelcast.executor.impl.operations;
 
 import com.hazelcast.core.ManagedContext;
-import com.hazelcast.internal.nio.IOUtil;
-import com.hazelcast.internal.util.UUIDSerializationUtil;
 import com.hazelcast.executor.impl.DistributedExecutorService;
 import com.hazelcast.executor.impl.ExecutorDataSerializerHook;
+import com.hazelcast.internal.namespace.NamespaceUtil;
+import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.internal.serialization.Data;
+import com.hazelcast.internal.util.UUIDSerializationUtil;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.spi.impl.operationservice.CallStatus;
 import com.hazelcast.spi.impl.operationservice.NamedOperation;
@@ -104,10 +105,11 @@ abstract class AbstractCallableTaskOperation extends Operation implements NamedO
         }
 
         private <T> T loadTask() {
-            ManagedContext managedContext = serializationService.getManagedContext();
-
-            Object object = serializationService.toObject(callableData);
-            return (T) managedContext.initialize(object);
+            return NamespaceUtil.callWithNamespace(DistributedExecutorService.getNamespace(name), () -> {
+                ManagedContext managedContext = serializationService.getManagedContext();
+                Object object = serializationService.toObject(callableData);
+                return (T) managedContext.initialize(object);
+            });
         }
     }
 }

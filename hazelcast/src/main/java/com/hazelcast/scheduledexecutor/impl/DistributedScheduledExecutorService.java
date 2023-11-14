@@ -24,6 +24,7 @@ import com.hazelcast.internal.metrics.DynamicMetricsProvider;
 import com.hazelcast.internal.metrics.MetricDescriptor;
 import com.hazelcast.internal.metrics.MetricsCollectionContext;
 import com.hazelcast.internal.monitor.impl.LocalExecutorStatsImpl;
+import com.hazelcast.internal.namespace.impl.NodeEngineThreadLocalContext;
 import com.hazelcast.internal.partition.MigrationAwareService;
 import com.hazelcast.internal.partition.MigrationEndpoint;
 import com.hazelcast.internal.partition.PartitionMigrationEvent;
@@ -399,5 +400,11 @@ public class DistributedScheduledExecutorService
             MergeOperation operation = new MergeOperation(name, mergingEntries, mergePolicy);
             invoke(SERVICE_NAME, operation, partitionId);
         }
+    }
+
+    public static String getNamespace(String executorName) {
+        NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
+        ScheduledExecutorConfig config = engine.getConfig().findScheduledExecutorConfig(executorName);
+        return config != null ? config.getNamespace() : null;
     }
 }

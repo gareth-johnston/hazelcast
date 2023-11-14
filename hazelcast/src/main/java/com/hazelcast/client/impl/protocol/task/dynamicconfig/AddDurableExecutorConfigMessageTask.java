@@ -51,7 +51,7 @@ public class AddDurableExecutorConfigMessageTask
                 || parameters.statisticsEnabled;
 
         DurableExecutorConfig config = new DurableExecutorConfig(parameters.name, parameters.poolSize,
-                parameters.durability, parameters.capacity, statsEnabled);
+                parameters.durability, parameters.capacity, statsEnabled, parameters.namespace);
         return config;
     }
 

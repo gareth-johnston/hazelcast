@@ -28,7 +28,7 @@ import java.io.IOException;
 
 import static com.hazelcast.internal.cluster.Versions.V5_4;
 
-// RU_COMPAT_5_3 "implements Versioned" can be removed in 5.5
+// RU_COMPAT_5_4 "implements Versioned" can be removed in 5.5
 public class AddDynamicConfigOperation extends UpdateDynamicConfigOperation implements Versioned {
     public AddDynamicConfigOperation() {
     }
@@ -46,7 +46,7 @@ public class AddDynamicConfigOperation extends UpdateDynamicConfigOperation impl
 
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {
-        // RU_COMPAT_5_3
+        // RU_COMPAT_5_4
         if (out.getVersion().isGreaterOrEqual(V5_4)) {
             super.writeInternal(out);
         } else {
@@ -57,7 +57,7 @@ public class AddDynamicConfigOperation extends UpdateDynamicConfigOperation impl
 
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
-        // RU_COMPAT_5_3
+        // RU_COMPAT_5_4
         if (in.getVersion().isGreaterOrEqual(V5_4)) {
             super.readInternal(in);
         } else {

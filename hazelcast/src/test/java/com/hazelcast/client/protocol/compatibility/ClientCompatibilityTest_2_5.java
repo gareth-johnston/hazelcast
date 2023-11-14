@@ -5877,7 +5877,7 @@ public class ClientCompatibilityTest_2_5 {
     @Test
     public void test_DynamicConfigAddDurableExecutorConfigCodec_encodeRequest() {
         int fileClientMessageIndex = 741;
-        ClientMessage encoded = DynamicConfigAddDurableExecutorConfigCodec.encodeRequest(aString, anInt, anInt, anInt, aString, aBoolean);
+        ClientMessage encoded = DynamicConfigAddDurableExecutorConfigCodec.encodeRequest(aString, anInt, anInt, anInt, aString, aBoolean, aString);
         ClientMessage fromFile = clientMessages.get(fileClientMessageIndex);
         compareClientMessages(fromFile, encoded);
     }
