@@ -17,8 +17,6 @@
 package com.hazelcast.internal.namespace.impl;
 
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 
 import java.util.Objects;
 import java.util.function.Function;

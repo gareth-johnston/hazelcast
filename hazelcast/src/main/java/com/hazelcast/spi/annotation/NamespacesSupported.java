@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * Provides no functionality beyond being a marker for internal-use. Namely, this marker indicates that
  * the class can safely be deserialized in member-to-member communication, with Namespace awareness.
  *
- * @implNote This marker only indicates <b>AP</b> data structure support.
+ * <b>Implementation note:</b> This marker only indicates <b>AP</b> data structure support.
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

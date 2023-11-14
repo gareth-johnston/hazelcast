@@ -139,7 +139,8 @@ public class NamespaceUtil {
     }
 
     // Use namespace CL if exists, otherwise fallback to config class loader
-    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, @Nullable String namespace, ClassLoader defaultLoader) {
+    public static ClassLoader getClassLoaderForNamespace(NodeEngine engine, @Nullable String namespace,
+                                                         ClassLoader defaultLoader) {
         ClassLoader loader = engine.getNamespaceService().getClassLoaderForNamespace(namespace);
         return loader != null ? loader : defaultLoader;
     }

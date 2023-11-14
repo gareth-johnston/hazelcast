@@ -173,7 +173,7 @@ public interface ICacheService
     <K, V> void createCacheConfigOnAllMembers(PreJoinCacheConfig<K, V> cacheConfig);
 
     // TODO: Better place for this
-    public static String getUcdNamespace(String prefixedCacheName) {
+    static String getUcdNamespace(String prefixedCacheName) {
         NodeEngine engine = NodeEngineThreadLocalContext.getNamespaceThreadLocalContext();
         CacheService service = engine.getService(CacheService.SERVICE_NAME);
         CacheConfig config = service.getCacheConfig(prefixedCacheName);

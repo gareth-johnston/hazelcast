@@ -33,7 +33,6 @@ import com.hazelcast.flakeidgen.impl.FlakeIdGeneratorService;
 import com.hazelcast.internal.crdt.pncounter.PNCounterService;
 import com.hazelcast.internal.locksupport.LockSupportService;
 import com.hazelcast.internal.namespace.NamespaceService;
-import com.hazelcast.internal.namespace.NamespaceUtil;
 import com.hazelcast.internal.usercodedeployment.UserCodeDeploymentService;
 import com.hazelcast.jet.impl.JetServiceBackend;
 import com.hazelcast.map.impl.MapService;

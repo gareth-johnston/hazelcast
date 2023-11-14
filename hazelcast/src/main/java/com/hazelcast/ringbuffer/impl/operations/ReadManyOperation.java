@@ -18,7 +18,6 @@ package com.hazelcast.ringbuffer.impl.operations;
 
 import com.hazelcast.core.IFunction;
 import com.hazelcast.internal.namespace.NamespaceUtil;
-import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.ringbuffer.impl.ReadResultSetImpl;
