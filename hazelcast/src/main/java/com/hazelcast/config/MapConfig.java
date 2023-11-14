@@ -946,6 +946,9 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         if (!getPartitioningAttributeConfigs().equals(that.getPartitioningAttributeConfigs())) {
             return false;
         }
+        if (!Objects.equals(namespace, that.namespace)) {
+            return false;
+        }
 
         return hotRestartConfig.equals(that.hotRestartConfig);
     }
@@ -981,6 +984,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         result = 31 * result + dataPersistenceConfig.hashCode();
         result = 31 * result + tieredStoreConfig.hashCode();
         result = 31 * result + getPartitioningAttributeConfigs().hashCode();
+        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
         return result;
     }
 
@@ -1014,6 +1018,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
                 + ", entryStatsEnabled=" + perEntryStatsEnabled
                 + ", tieredStoreConfig=" + tieredStoreConfig
                 + ", partitioningAttributeConfigs=" + partitioningAttributeConfigs
+                + ", namespace=" + namespace
                 + '}';
     }
 
@@ -1058,6 +1063,8 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         out.writeObject(dataPersistenceConfig);
         out.writeObject(tieredStoreConfig);
         writeNullableList(partitioningAttributeConfigs, out);
+
+        // RU_COMPAT_5_4
         if (out.getVersion().isGreaterOrEqual(Versions.V5_4)) {
             out.writeString(namespace);
         }
@@ -1094,6 +1101,8 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         setDataPersistenceConfig(in.readObject());
         setTieredStoreConfig(in.readObject());
         partitioningAttributeConfigs = readNullableList(in);
+ 
+        // RU_COMPAT_5_4
         if (in.getVersion().isGreaterOrEqual(Versions.V5_4)) {
             namespace = in.readString();
         }

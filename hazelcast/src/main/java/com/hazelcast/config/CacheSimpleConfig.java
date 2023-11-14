@@ -1007,7 +1007,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
                 + ", hotRestartConfig=" + hotRestartConfig
                 + ", dataPersistenceConfig=" + dataPersistenceConfig
                 + ", eventJournal=" + eventJournalConfig
-                + ", namespace=" + eventJournalConfig
+                + ", namespace=" + namespace
                 + '}';
     }
 

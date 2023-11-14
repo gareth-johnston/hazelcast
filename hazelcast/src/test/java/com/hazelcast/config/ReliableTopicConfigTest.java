@@ -225,7 +225,7 @@ public class ReliableTopicConfigTest {
         String s = config.toString();
 
         assertEquals("ReliableTopicConfig{name='foo', topicOverloadPolicy=BLOCK, executor=null,"
-                + " readBatchSize=10, statisticsEnabled=true, listenerConfigs=[]}", s);
+                + " readBatchSize=10, statisticsEnabled=true, listenerConfigs=[], namespace=null}", s);
     }
 
     @Test
