@@ -165,7 +165,7 @@ public class PartitionScanRunner {
                     }
                 }
             }
-            return new QueryableEntriesSegment(resultList, pointers);
+            return new QueryableEntriesSegment(resultList, localPointers);
         });
     }
 
