@@ -37,7 +37,9 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -57,21 +59,30 @@ import static org.junit.Assert.assertTrue;
 @Category(NamespaceTest.class)
 public class NamespaceServiceImplTest {
 
+    // TODO JUNIT 5
+
     @Parameter(0)
     public String name;
 
     @Parameter(1)
     public Set<ResourceDefinition> resources;
 
+    @Parameter(2)
+    public String[] expectedClasses;
+
     private NamespaceServiceImpl namespaceService;
 
     @Parameters(name = "Source: {0}")
     public static Iterable<Object[]> parameters() throws IOException {
         return List.of(
-                new Object[] {"JAR", singletonJarResourceFromBinaries("usercodedeployment/ChildParent.jar")},
-                new Object[] {"Class", classResourcesFromClassPath("usercodedeployment/ChildClass.class",
-                                "usercodedeployment/ParentClass.class")}
-        );
+                new Object[] {"Class",
+                        classResourcesFromClassPath("usercodedeployment/ChildClass.class",
+                                "usercodedeployment/ParentClass.class"),
+                        new String[] {"usercodedeployment.ParentClass", "usercodedeployment.ChildClass"}},
+                new Object[] {"JAR", singletonJarResourceFromBinaries("usercodedeployment/ChildParent.jar"),
+                        new String[] {"usercodedeployment.ParentClass", "usercodedeployment.ChildClass"}},
+                new Object[] {"JAR in ZIP", jarResourcesFromBinaries("/zip-resources/person-car-jar.zip"),
+                        new String[] {"com.sample.pojo.car.Car"}});
     }
 
     @Before
@@ -82,19 +93,19 @@ public class NamespaceServiceImplTest {
     @Test
     public void testLoadClasses() throws Exception {
         namespaceService.addNamespace("ns1", resources);
-        final ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
+        ClassLoader classLoader = namespaceService.namespaceToClassLoader.get("ns1");
 
-        Class<?> klass = classLoader.loadClass("usercodedeployment.ParentClass");
-        klass.getDeclaredConstructor().newInstance();
+        for (String expectedClass : expectedClasses) {
+            Class<?> clazz = classLoader.loadClass(expectedClass);
 
-        klass = classLoader.loadClass("usercodedeployment.ChildClass");
-        klass.getDeclaredConstructor().newInstance();
-    }
+            Constructor<?> constructor = clazz.getDeclaredConstructors()[0];
 
-    private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String idPath)
-            throws IOException {
-        final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(idPath));
-        return Collections.singleton(new ResourceDefinitionImpl(idPath, bytes, ResourceType.JAR, idPath));
+            // Workaround the fact that the "Car" class doesn't have a default constructor
+            Object[] parameters = new Object[constructor.getParameterCount()];
+
+            // TODO Assert does not throw
+            constructor.newInstance(parameters);
+        }
     }
 
     private static Set<ResourceDefinition> classResourcesFromClassPath(String... classIdPaths) {
@@ -108,31 +119,38 @@ public class NamespaceServiceImplTest {
         }).collect(Collectors.toSet());
     }
 
+    private static Set<ResourceDefinition> singletonJarResourceFromBinaries(final String idPath) throws IOException {
+        final byte[] bytes = Files.toByteArray(fileRelativeToBinariesFolder(idPath));
+        return Collections.singleton(new ResourceDefinitionImpl(idPath, bytes, ResourceType.JAR, idPath));
+    }
+
+    private static Set<ResourceDefinition> jarResourcesFromBinaries(final String idPath) throws IOException {
+        try (InputStream stream =
+                NamespaceServiceImplTest.class.getResource("/zip-resources/person-car-jar.zip").openStream()) {
+            return Collections
+                    .singleton(new ResourceDefinitionImpl(idPath, stream.readAllBytes(), ResourceType.JARS_IN_ZIP, idPath));
+        }
+    }
+
     // TODO This test is hacky and probably does not belong here - we should refactor/move it eventually
+    // TODO This test needs to move as it's being run parameterized multiple times
     @Test
     public void testXmlConfigLoadingForNamespacesWithIMap() {
         Path pathToJar = Paths.get("src", "test", "class", "usercodedeployment", "ChildParent.jar");
-        String stringPath = OsHelper.ensureUnixSeparators(
-                UrlEscapers.urlFragmentEscaper().escape(pathToJar.toAbsolutePath().toString()));
+        String stringPath =
+                OsHelper.ensureUnixSeparators(UrlEscapers.urlFragmentEscaper().escape(pathToJar.toAbsolutePath().toString()));
 
         stringPath = stringPath.replace("\\", "/");
-        String xmlPayload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"\n"
-                + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-                + "           xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
-                + "           http://www.hazelcast.com/schema/config/hazelcast-config-5.4.xsd\">\n" + "\n"
-                + "    <cluster-name>cluster</cluster-name>\n\n"
-                + "    <namespaces enabled=\"true\">\n"
-                + "        <namespace name=\"myNamespace\">\n"
-                + "          <jar>\n"
-                + "              <url>file:///" + stringPath + "</url>\n"
-                + "          </jar>\n"
-                + "      </namespace>\n"
-                + "    </namespaces>\n\n"
-                + "    <map name=\"myMap\">\n"
-                + "        <namespace>myNamespace</namespace>\n"
-                + "    </map>\n"
-                + "</hazelcast>\n" + "\n";
+        String xmlPayload =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"\n"
+                        + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                        + "           xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
+                        + "           http://www.hazelcast.com/schema/config/hazelcast-config-5.4.xsd\">\n" + "\n"
+                        + "    <cluster-name>cluster</cluster-name>\n\n" + "    <namespaces enabled=\"true\">\n"
+                        + "        <namespace name=\"myNamespace\">\n" + "          <jar>\n" + "              <url>file:///"
+                        + stringPath + "</url>\n" + "          </jar>\n" + "      </namespace>\n" + "    </namespaces>\n\n"
+                        + "    <map name=\"myMap\">\n" + "        <namespace>myNamespace</namespace>\n" + "    </map>\n"
+                        + "</hazelcast>\n" + "\n";
 
         HazelcastInstance instance = Hazelcast.newHazelcastInstance(Config.loadFromString(xmlPayload));
         try {
@@ -149,7 +167,9 @@ public class NamespaceServiceImplTest {
         }
     }
 
-    // "No-op" implementation test TODO Should this be in a separate test class? It would only be the 1 test...
+    // "No-op" implementation test
+    // TODO Should this be in a separate test class? It would only be the 1 test...
+    // TODO This test needs to move as it's being run parameterized multiple times
     @Test
     public void testNoOpImplementation() {
         // Do not enable Namespaces in any form, results in No-Op implementation being used

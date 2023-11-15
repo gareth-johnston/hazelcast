@@ -54,6 +54,7 @@ import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -70,6 +71,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -294,15 +296,34 @@ public class JobRepository {
      * Unzips the ZIP archive and processes JAR files
      */
     private void loadJarsInZip(Map<String, byte[]> map, URL url) throws IOException {
-        try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(url.openStream()))) {
-            ZipEntry zipEntry;
-            while ((zipEntry = zis.getNextEntry()) != null) {
-                if (zipEntry.isDirectory()) {
-                    continue;
-                }
-                if (lowerCaseInternal(zipEntry.getName()).endsWith(".jar")) {
+        try (InputStream inputStream = new BufferedInputStream(url.openStream())) {
+            executeOnJarsInZIP(inputStream, zis -> {
+                try {
                     loadJarFromInputStream(map, zis);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
                 }
+            });
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
+    }
+
+    /**
+     * Extracts JARs from a ZIP, provided by an {@link InputStream}, passing them to a consumer to process.
+     * <p>
+     * Caller is responsible for closing stream.
+     */
+    public static void executeOnJarsInZIP(InputStream zip, Consumer<ZipInputStream> processor) throws IOException {
+        ZipInputStream zis = new ZipInputStream(zip);
+        ZipEntry zipEntry;
+
+        while ((zipEntry = zis.getNextEntry()) != null) {
+            if (zipEntry.isDirectory()) {
+                continue;
+            }
+            if (lowerCaseInternal(zipEntry.getName()).endsWith(".jar")) {
+                processor.accept(zis);
             }
         }
     }

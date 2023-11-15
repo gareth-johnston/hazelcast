@@ -27,8 +27,10 @@ import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -121,7 +123,7 @@ public final class NamespaceServiceImpl implements NamespaceService {
         NamespaceThreadLocalContext.onStartNsAware(loader);
     }
 
-    private void cleanupNs(@Nullable String namespace) {
+    private static void cleanupNs(@Nullable String namespace) {
         if (namespace == null) {
             return;
         }
@@ -177,53 +179,19 @@ public final class NamespaceServiceImpl implements NamespaceService {
 
     // Resource/classloader handling functions
 
-    static void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
+    private static void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
         switch (resource.type()) {
-            case JAR:
-                handleJar(resource.id(), resource.payload(), resourceMap);
-                break;
             case CLASS:
                 handleClass(resource.id(), resource.payload(), resourceMap);
                 break;
+            case JAR:
+                 handleJar(resource.id(), resource.payload(), resourceMap);
+                break;
+            case JARS_IN_ZIP:
+                handleJarInZip(resource.id(), resource.payload(), resourceMap);
+                break;
             default:
                 throw new IllegalArgumentException("Cannot handle resource type " + resource.type());
-        }
-    }
-
-    /**
-     * Add classes and files in the given {@code jarBytes} to the provided {@code resourceMap}, after appropriate
-     * encoding:
-     * <ul>
-     *     <li>Payload is deflated</li>
-     *     <li>For each JAR entry in {@code jarBytes} that is a class, its class name is converted to a resource ID with the
-     *     {@code "c."} prefix followed by the class name converted to a path.</li>
-     *     <li>For other JAR entries in {@code jarBytes}, its path is converted to a resource ID with the
-     *     {@code "f."} prefix followed by the path.</li>
-     * </ul>
-     * @param id
-     * @param jarBytes
-     * @param resourceMap
-     * @see     com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId(String)
-     * @see     JobRepository#classKeyName(String)
-     * @see     JobRepository#fileKeyName(String)
-     */
-    public static void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
-                JarInputStream inputStream = new JarInputStream(bais)) {
-            JarEntry entry;
-            do {
-                entry = inputStream.getNextJarEntry();
-                if (entry == null) {
-                    break;
-                }
-                String className = ClassLoaderUtil.extractClassName(entry.getName());
-                byte[] payload = IOUtil.compress(inputStream.readAllBytes());
-                inputStream.closeEntry();
-                resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName())
-                        : JobRepository.classKeyName(toClassResourceId(className)), payload);
-            } while (true);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
         }
     }
 
@@ -239,6 +207,63 @@ public final class NamespaceServiceImpl implements NamespaceService {
         resourceMap.put(classKeyName(resourceId), IOUtil.compress(classBytes));
     }
 
+    /** @see #handleJar(String, InputStream, Map<String, byte[]>) */
+    private static void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
+        try (InputStream stream = new ByteArrayInputStream(jarBytes)) {
+            handleJar(id, stream, resourceMap);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
+        }
+    }
+
+    /**
+     * Add classes and files in the given {@code jarBytes} to the provided {@code resourceMap}, after appropriate encoding:
+     * <ul>
+     * <li>Payload is deflated</li>
+     * <li>For each JAR entry in {@code jarBytes} that is a class, its class name is converted to a resource ID with the
+     * {@code "c."} prefix followed by the class name converted to a path.</li>
+     * <li>For other JAR entries in {@code jarBytes}, its path is converted to a resource ID with the {@code "f."} prefix
+     * followed by the path.</li>
+     * </ul>
+     * <p>
+     * Caller is responsible for closing stream.
+     * 
+     * @param id
+     * @param jarBytes
+     * @param resourceMap
+     * @see com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId(String)
+     * @see JobRepository#classKeyName(String)
+     * @see JobRepository#fileKeyName(String)
+     */
+    private static void handleJar(String id, InputStream inputStream, Map<String, byte[]> resourceMap) {
+        try {
+            JarInputStream jarInputStream = new JarInputStream(inputStream);
+
+            JarEntry entry;
+            do {
+                entry = jarInputStream.getNextJarEntry();
+                if (entry == null) {
+                    break;
+                }
+                String className = ClassLoaderUtil.extractClassName(entry.getName());
+                byte[] payload = IOUtil.compress(jarInputStream.readAllBytes());
+                jarInputStream.closeEntry();
+                resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName())
+                        : JobRepository.classKeyName(toClassResourceId(className)), payload);
+            } while (true);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
+        }
+    }
+
+    private static void handleJarInZip(String id, byte[] zipBytes, Map<String, byte[]> resourceMap) {
+        try (InputStream inputStream = new ByteArrayInputStream(zipBytes)) {
+            JobRepository.executeOnJarsInZIP(inputStream, zis -> handleJar(id, zis, resourceMap));
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to read from JAR bytes for resource with id " + id, e);
+        }
+    }
+
     private static void initializeClassLoader(String nsName, MapResourceClassLoader classLoader) {
         NamespaceAwareDriverManagerInterface.initializeJdbcDrivers(nsName, classLoader);
     }
@@ -251,7 +276,7 @@ public final class NamespaceServiceImpl implements NamespaceService {
         return nsConfig.getResourceConfigs();
     }
 
-    MapResourceClassLoader getClassLoaderForExactNamespace(@Nonnull String namespace) {
+    private MapResourceClassLoader getClassLoaderForExactNamespace(@Nonnull String namespace) {
         return namespaceToClassLoader.get(namespace);
     }
 
