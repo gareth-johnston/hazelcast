@@ -1262,9 +1262,20 @@ public class DynamicConfigurationAwareConfig extends Config {
         return getDataConnectionConfigInternal(name, name);
     }
 
+    // S1185:S1612 A test (testDecorateAllPublicMethodsFromTest) forces this class to implement all of the parent methods, but
+    // as we are overriding "namespaceConfig" with our own version, the parent implementation is sufficient
+    @SuppressWarnings("squid:S1185")
     @Override
     public NamespacesConfig getNamespacesConfig() {
-        return namespacesConfig;
+        return super.getNamespacesConfig();
+    }
+
+    // S1185:S1612 A test (testDecorateAllPublicMethodsFromTest) forces this class to implement all of the parent methods, but
+    // as we are overriding "namespaceConfig" with our own version, the parent implementation is sufficient
+    @SuppressWarnings("squid:S1185")
+    @Override
+    public Config setNamespacesConfig(NamespacesConfig namespacesConfig) {
+        return super.setNamespacesConfig(namespacesConfig);
     }
 
     private DataConnectionConfig getDataConnectionConfigInternal(String name, String fallbackName) {
