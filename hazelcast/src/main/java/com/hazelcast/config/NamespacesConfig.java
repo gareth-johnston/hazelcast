@@ -57,11 +57,11 @@ public class NamespacesConfig {
         return this;
     }
 
-    protected Map<String, NamespaceConfig> getNamespaceConfigs() {
+    public Map<String, NamespaceConfig> getNamespaceConfigs() {
         return Collections.unmodifiableMap(namespaceConfigs);
     }
 
-    void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
+    public void setNamespaceConfigs(Map<String, NamespaceConfig> namespaceConfigs) {
         this.namespaceConfigs.clear();
         this.namespaceConfigs.putAll(namespaceConfigs);
     }

@@ -16,8 +16,6 @@
 
 package com.hazelcast.jet.config;
 
-import com.hazelcast.internal.util.Preconditions;
-import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.jet.impl.util.ReflectionUtils;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -27,12 +25,12 @@ import com.hazelcast.spi.annotation.PrivateApi;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static com.hazelcast.internal.config.ConfigUtils.resolveResourceId;
 import static com.hazelcast.jet.impl.util.ReflectionUtils.toClassResourceId;
 
 /**
@@ -62,7 +60,7 @@ public class ResourceConfig implements IdentifiedDataSerializable {
         Objects.requireNonNull(resourceType, "resourceType");
 
         this.url = url;
-        this.id = StringUtil.isNullOrEmpty(id) ? urlToFileName() : id;
+        this.id = resolveResourceId(id, url);
         this.resourceType = resourceType;
     }
 
@@ -171,11 +169,5 @@ public class ResourceConfig implements IdentifiedDataSerializable {
         id = in.readString();
         resourceType = ResourceType.getById(in.readShort());
         url = in.readObject();
-    }
-
-    @Nonnull
-    private String urlToFileName() {
-        String filename = new File(url.getPath()).getName();
-        return Preconditions.checkHasText(filename, "URL has no path: " + url);
     }
 }

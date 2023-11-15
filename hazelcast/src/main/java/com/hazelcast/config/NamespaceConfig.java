@@ -99,6 +99,17 @@ public class NamespaceConfig implements NamedConfig, IdentifiedDataSerializable 
         return Set.copyOf(resourceDefinitions.values());
     }
 
+    /**
+     * Required for spring configuration processing.
+     * @param resourceDefinitions the resource definitions to set.
+     */
+    public void setResourceDefinitions(Map<String, ResourceDefinition> resourceDefinitions) {
+        this.resourceDefinitions.clear();
+        if (resourceDefinitions != null) {
+            this.resourceDefinitions.putAll(resourceDefinitions);
+        }
+    }
+
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeString(name);

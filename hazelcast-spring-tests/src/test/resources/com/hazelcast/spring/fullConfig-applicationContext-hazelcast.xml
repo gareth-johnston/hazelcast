@@ -1147,6 +1147,24 @@
             <hz:tpc enabled="true">
                 <hz:eventloop-count>12</hz:eventloop-count>
             </hz:tpc>
+            <hz:namespaces enabled="true">
+                <hz:namespace name="ns1">
+                    <hz:jar id="ns1jar">
+                        <hz:url>file:./src/test/resources/com/hazelcast/spring/namespaces/testjar.jar</hz:url>
+                    </hz:jar>
+                    <hz:jars-in-zip id="ns1jarsInZip">
+                        <hz:url>file:./src/test/resources/com/hazelcast/spring/namespaces/testjar.zip</hz:url>
+                    </hz:jars-in-zip>
+                </hz:namespace>
+                <hz:namespace name="ns2">
+                    <hz:jar id="ns2jar">
+                        <hz:url>file:./src/test/resources/com/hazelcast/spring/namespaces/testjar.jar</hz:url>
+                    </hz:jar>
+                    <hz:jars-in-zip>
+                        <hz:url>file:./src/test/resources/com/hazelcast/spring/namespaces/testjar.zip</hz:url>
+                    </hz:jars-in-zip>
+                </hz:namespace>
+            </hz:namespaces>
         </hz:config>
     </hz:hazelcast>
 

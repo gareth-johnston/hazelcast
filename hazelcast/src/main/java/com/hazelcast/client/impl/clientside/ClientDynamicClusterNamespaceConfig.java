@@ -57,7 +57,7 @@ public class ClientDynamicClusterNamespaceConfig extends NamespacesConfig {
     }
 
     @Override
-    protected Map<String, NamespaceConfig> getNamespaceConfigs() {
+    public Map<String, NamespaceConfig> getNamespaceConfigs() {
         throw new UnsupportedOperationException(ClientDynamicClusterConfig.UNSUPPORTED_ERROR_MESSAGE);
     }
 
