@@ -16,11 +16,14 @@
 
 package com.hazelcast.internal.namespace.impl;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.JavaSerializationFilterConfig;
 import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.internal.namespace.NamespaceService;
 import com.hazelcast.internal.namespace.ResourceDefinition;
 import com.hazelcast.internal.nio.ClassLoaderUtil;
 import com.hazelcast.internal.nio.IOUtil;
+import com.hazelcast.internal.serialization.SerializationClassNameFilter;
 import com.hazelcast.internal.util.ExceptionUtil;
 import com.hazelcast.jet.impl.JobRepository;
 import com.hazelcast.jet.impl.deployment.MapResourceClassLoader;
@@ -46,11 +49,19 @@ public final class NamespaceServiceImpl implements NamespaceService {
     final ConcurrentMap<String, MapResourceClassLoader> namespaceToClassLoader = new ConcurrentHashMap<>();
 
     private final ClassLoader configClassLoader;
+    private final SerializationClassNameFilter classFilter;
     private boolean hasDefaultNamespace;
 
-    public NamespaceServiceImpl(ClassLoader configClassLoader, Map<String, NamespaceConfig> nsConfigs) {
+    public NamespaceServiceImpl(ClassLoader configClassLoader, Map<String, NamespaceConfig> nsConfigs,
+                                Config nodeConfig) {
         this.configClassLoader = configClassLoader;
-        nsConfigs.forEach((nsName, nsConfig) -> addNamespace(nsName, resourceDefinitions(nsConfig)));
+        JavaSerializationFilterConfig filterConfig = nodeConfig.getSerializationConfig().getJavaSerializationFilterConfig();
+        if (filterConfig != null) {
+            this.classFilter = new SerializationClassNameFilter(filterConfig);
+        } else {
+            this.classFilter = null;
+        }
+        nsConfigs.forEach((nsName, nsConfig) -> addNamespace(nsName, nsConfig.getResourceConfigs()));
     }
 
     @Override
@@ -177,13 +188,13 @@ public final class NamespaceServiceImpl implements NamespaceService {
 
     // Resource/classloader handling functions
 
-    static void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
+    private void handleResource(ResourceDefinition resource, Map<String, byte[]> resourceMap) {
         switch (resource.type()) {
             case JAR:
                 handleJar(resource.id(), resource.payload(), resourceMap);
                 break;
             case CLASS:
-                handleClass(resource.id(), resource.payload(), resourceMap);
+                handleClass(resource.id(), resource.url(), resource.payload(), resourceMap);
                 break;
             default:
                 throw new IllegalArgumentException("Cannot handle resource type " + resource.type());
@@ -207,7 +218,7 @@ public final class NamespaceServiceImpl implements NamespaceService {
      * @see     JobRepository#classKeyName(String)
      * @see     JobRepository#fileKeyName(String)
      */
-    public static void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
+    private void handleJar(String id, byte[] jarBytes, Map<String, byte[]> resourceMap) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(jarBytes);
                 JarInputStream inputStream = new JarInputStream(bais)) {
             JarEntry entry;
@@ -217,6 +228,9 @@ public final class NamespaceServiceImpl implements NamespaceService {
                     break;
                 }
                 String className = ClassLoaderUtil.extractClassName(entry.getName());
+                if (classFilter != null) {
+                    classFilter.filter(className);
+                }
                 byte[] payload = IOUtil.compress(inputStream.readAllBytes());
                 inputStream.closeEntry();
                 resourceMap.put(className == null ? JobRepository.fileKeyName(entry.getName())
@@ -235,7 +249,11 @@ public final class NamespaceServiceImpl implements NamespaceService {
      * @param resourceMap resource map to add resource to
      * @see com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId
      */
-    public static void handleClass(String resourceId, byte[] classBytes, Map<String, byte[]> resourceMap) {
+    private void handleClass(String resourceId, String resourceUrl, byte[] classBytes, Map<String, byte[]> resourceMap) {
+        // TODO: Ensure we have a fully qualified class name available
+        if (classFilter != null) {
+//            classFilter.filter(className);
+        }
         resourceMap.put(classKeyName(resourceId), IOUtil.compress(classBytes));
     }
 
@@ -245,10 +263,6 @@ public final class NamespaceServiceImpl implements NamespaceService {
 
     private static void cleanUpClassLoader(String nsName, MapResourceClassLoader removedClassLoader) {
         NamespaceAwareDriverManagerInterface.cleanupJdbcDrivers(nsName, removedClassLoader);
-    }
-
-    private static Collection<ResourceDefinition> resourceDefinitions(NamespaceConfig nsConfig) {
-        return nsConfig.getResourceConfigs();
     }
 
     MapResourceClassLoader getClassLoaderForExactNamespace(@Nonnull String namespace) {

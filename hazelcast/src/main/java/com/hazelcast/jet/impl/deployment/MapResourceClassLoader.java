@@ -152,8 +152,8 @@ public class MapResourceClassLoader extends JetDelegatingClassLoader {
 
     /** Allow direct addition of a class to ensure that this classloader can load it in addition */
     public void addExtraClass(Class<?> clazz) throws IOException {
-        NamespaceServiceImpl.handleClass(ReflectionUtils.toClassResourceId(clazz),
-                ReflectionUtils.getClassContent(clazz.getName(), clazz.getClassLoader()), extraResources);
+        extraResources.put(ReflectionUtils.toClassResourceId(clazz),
+                ReflectionUtils.getClassContent(clazz.getName(), clazz.getClassLoader()));
     }
 
     @Override
