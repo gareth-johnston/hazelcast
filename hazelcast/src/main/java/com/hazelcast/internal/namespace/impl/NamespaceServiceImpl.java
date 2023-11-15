@@ -207,23 +207,23 @@ public final class NamespaceServiceImpl implements NamespaceService {
     }
 
     /**
-     * Add classes and files in the given {@code jarBytes} to the provided {@code resourceMap}, after appropriate encoding:
+     * Add classes and files in the given {@code jarBytes} to the provided {@code resourceMap}, after appropriate
+     * encoding:
      * <ul>
-     * <li>Payload is deflated</li>
-     * <li>For each JAR entry in {@code jarBytes} that is a class, its class name is converted to a resource ID with the
-     * {@code "c."} prefix followed by the class name converted to a path.</li>
-     * <li>For other JAR entries in {@code jarBytes}, its path is converted to a resource ID with the {@code "f."} prefix
-     * followed by the path.</li>
+     *     <li>Payload is deflated</li>
+     *     <li>For each JAR entry in {@code jarBytes} that is a class, its class name is converted to a resource ID with the
+     *     {@code "c."} prefix followed by the class name converted to a path.</li>
+     *     <li>For other JAR entries in {@code jarBytes}, its path is converted to a resource ID with the
+     *     {@code "f."} prefix followed by the path.</li>
      * </ul>
      * <p>
      * Caller is responsible for closing stream.
-     * 
      * @param id
      * @param jarBytes
      * @param resourceMap
-     * @see com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId(String)
-     * @see JobRepository#classKeyName(String)
-     * @see JobRepository#fileKeyName(String)
+     * @see     com.hazelcast.jet.impl.util.ReflectionUtils#toClassResourceId(String)
+     * @see     JobRepository#classKeyName(String)
+     * @see     JobRepository#fileKeyName(String)
      */
     private void handleJar(String id, InputStream inputStream, Map<String, byte[]> resourceMap) {
         try {
