@@ -205,7 +205,7 @@ public class DefaultQueryCacheEventData implements QueryCacheEventData, Versione
 
     @Override
     public String toString() {
-        return "DefaultSingleEventData{"
+        return "DefaultQueryCacheEventData{"
                 + "creationTime=" + creationTime
                 + ", eventType=" + eventType
                 + ", sequence=" + sequence

@@ -177,6 +177,9 @@ public class ReferenceObjects {
         if (a instanceof CacheSimpleEntryListenerConfig && b instanceof CacheSimpleEntryListenerConfig) {
             return isEqual((CacheSimpleEntryListenerConfig) a, (CacheSimpleEntryListenerConfig) b);
         }
+        if (a instanceof DefaultQueryCacheEventData && b instanceof DefaultQueryCacheEventData) {
+            return isEqual((DefaultQueryCacheEventData) a, (DefaultQueryCacheEventData) b);
+        }
         return a.equals(b);
     }
 
@@ -674,7 +677,7 @@ public class ReferenceObjects {
         return Objects.equals(a.getDiskTierConfig(), b.getDiskTierConfig());
     }
 
-    public static boolean isEqual(QueryCacheEventData a, QueryCacheEventData that) {
+    public static boolean isEqual(DefaultQueryCacheEventData a, DefaultQueryCacheEventData that) {
         if (a == that) {
             return true;
         }
