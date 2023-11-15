@@ -674,6 +674,33 @@ public class ReferenceObjects {
         return Objects.equals(a.getDiskTierConfig(), b.getDiskTierConfig());
     }
 
+    public static boolean isEqual(QueryCacheEventData a, QueryCacheEventData that) {
+        if (a == that) {
+            return true;
+        }
+        if (that == null) {
+            return false;
+        }
+
+        if (a.getSequence() != that.getSequence()) {
+            return false;
+        }
+        if (a.getEventType() != that.getEventType()) {
+            return false;
+        }
+        if (a.getPartitionId() != that.getPartitionId()) {
+            return false;
+        }
+        if (!Objects.equals(a.getDataKey(), that.getDataKey())) {
+            return false;
+        }
+        if (!Objects.equals(a.getDataNewValue(), that.getDataNewValue())) {
+            return false;
+        }
+
+        return Objects.equals(a.getDataOldValue(), that.getDataOldValue());
+    }
+
     private static boolean isEqualStackTrace(StackTraceElement stackTraceElement1, StackTraceElement stackTraceElement2) {
         //Not using stackTraceElement.equals
         //because in IBM JDK stacktraceElements with null method name are not equal
